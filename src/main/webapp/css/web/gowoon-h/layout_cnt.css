@@ -1,0 +1,8 @@
+#gnb .depth01 > ul {justify-content: space-between;}
+#gnb .depth01 > ul > li {flex: none;}
+#nav.oneDown .depth02 {width: 10rem; left: calc(50% - 5rem);}
+
+@media screen and (max-width:1440px) {
+    #gnb .depth01 > ul > li {flex: 1;}
+    #nav.oneDown .depth02 {width: 120%; left: -10%;}
+}

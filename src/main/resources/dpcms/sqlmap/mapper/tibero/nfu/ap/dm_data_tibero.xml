@@ -1,0 +1,1087 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="dm_data">
+
+<!--*****  전체 테이블 조회    *************************************************************  전체 테이블 조회  DmTable   *******************  -->
+
+	<!-- 전체 테이블 조회 (sql) -->
+	<sql id="selectTableListsql">
+		SELECT TABLE_NAME,
+			   TABLE_TYPE,
+			   COMMENTS
+		  FROM USER_TAB_COMMENTS
+		 WHERE 1=1
+		<if test="@egovframework.MybatisUtils@isNotEmpty(srchTxt)">
+		   AND (TABLE_NAME like '%'||#{srchTxt}||'%' OR COMMENTS LIKE '%'||#{srchTxt}||'%')
+	    </if>		 
+	</sql>
+
+	<!-- 전체 테이블 조회 리스트 -->
+    <select id="selectTableList" parameterType="map" resultType="egovMap">
+		<include refid="selectTableListsql" />  
+    </select>
+    
+	<!-- 전체 테이블 조회 리스트 (페이징) -->
+    <select id="selectTableListPaging" parameterType="map" resultType="egovMap">
+		SELECT PL.*
+		  FROM ( SELECT PO.* 
+		  		 	   ,ROWNUM AS RSN
+		           FROM ( <include refid="selectTableListsql" /> ) PO ) PL
+		 WHERE 1 = 1 
+		 <![CDATA[ 
+		   AND RSN <= #{maxSn}
+		   AND RSN > #{minSn} 
+		 ]]>		
+    </select>
+    
+    <!-- 전체 테이블 조회 리스트 (페이징 전체 카운트) -->
+    <select id="selectTableListPagingCount" parameterType="map" resultType="int">
+		SELECT COUNT(*)
+		  FROM USER_TAB_COMMENTS
+		 WHERE 1 = 1
+		<if test="@egovframework.MybatisUtils@isNotEmpty(srchTxt)">
+		   AND (TABLE_NAME like '%'||#{srchTxt}||'%' OR COMMENTS LIKE '%'||#{srchTxt}||'%')
+	    </if>
+	    <if test="@egovframework.MybatisUtils@isNotEmpty(useAt)">
+	       AND USE_AT = #{useAt}
+	    </if>			
+	    <if test="@egovframework.MybatisUtils@isNotEmpty(beginDt)">
+	       <![CDATA[
+		   AND TO_CHAR(UPDT_DT, 'YYYY/MM/DD') >= #{beginDt}
+		   AND TO_CHAR(UPDT_DT, 'YYYY/MM/DD') <=  #{endDt}
+		   ]]>
+	   </if>   	  
+    </select>
+
+	<!-- 테이블 정보 -->
+	<select id="selectTableInfo" parameterType="map" resultType="egovMap">
+		SELECT 
+			TCL.COLUMN_ID
+			, TCM.COMMENTS AS TBL_COMMENTS
+			, TBL.TABLE_NAME
+			, CCM.COMMENTS AS COL_COMMENTS
+			, TCL.COLUMN_NAME
+			, TCL.DATA_TYPE
+			, TCL.DATA_TYPE||'('||TCL.DATA_LENGTH||')' AS DATA_LENGTH
+			, TCL.DATA_PRECISION
+			, CON.PK
+			,CON.FK
+			, DECODE(NULLABLE , 'N' , 'NOT NULL' , 'NULL') NULL_CHK
+		FROM 
+			USER_TABLES TBL
+			, USER_TAB_COMMENTS TCM
+			, USER_TAB_COLUMNS TCL
+			, USER_COL_COMMENTS CCM
+			, ( SELECT
+					CCL.TABLE_NAME
+					, COLUMN_NAME
+					, CASE WHEN SUM(DECODE(CONSTRAINT_TYPE , 'P' , 1 , 0)) > 0 THEN 'Y' ELSE 'N' END AS PK 
+	    			, CASE WHEN SUM(DECODE(CONSTRAINT_TYPE , 'R' , 1 , 0)) > 0 THEN 'Y' ELSE 'N' END AS FK
+	         		, SUM(DECODE(CONSTRAINT_TYPE , 'C' , 0 , 'P' , 0 , 'R' , 0 , 1)) AS CCC             
+	     		FROM 
+	     			USER_CONS_COLUMNS CCL
+	     			, USER_CONSTRAINTS CNS
+	     		WHERE 
+	     			CCL.CONSTRAINT_NAME = CNS.CONSTRAINT_NAME
+	      			GROUP BY CCL.TABLE_NAME , COLUMN_NAME
+	      	) CON
+		WHERE 
+			TBL.TABLE_NAME = TCM.TABLE_NAME
+	      	AND TBL.TABLE_NAME = TCL.TABLE_NAME
+	      	AND TCL.TABLE_NAME = #{tableName}
+	      	AND TCL.TABLE_NAME = CCM.TABLE_NAME and TCL.COLUMN_NAME = CCM.COLUMN_NAME
+	      	AND TCL.TABLE_NAME = CON.TABLE_NAME(+) and TCL.COLUMN_NAME = CON.COLUMN_NAME(+)
+	      	AND TCL.TABLE_NAME NOT LIKE '%BAK%'
+	      	AND TCL.TABLE_NAME NOT LIKE '%#%'
+	      	AND TCL.TABLE_NAME NOT LIKE 'V_%'
+	      	AND TCL.TABLE_NAME NOT LIKE 'NTS%'
+	      	AND TCL.TABLE_NAME NOT LIKE 'EAI%' 
+	      	AND TCL.TABLE_NAME NOT LIKE '%API%'
+	      	AND TCL.TABLE_NAME NOT LIKE 'TAD_ORGNZT%'
+	      	AND TCL.TABLE_NAME NOT LIKE '%_TMP'
+	      	AND TCL.TABLE_NAME NOT LIKE 'TAX%'
+	      	AND TCL.TABLE_NAME NOT LIKE 'A_%'
+	      	AND TCL.TABLE_NAME NOT LIKE 'TAP_MM_MBER_MANAGE'
+		ORDER BY 
+			TBL.TABLE_NAME
+			, COLUMN_ID
+	</select>
+
+	<!-- 테이블 상세보기 - 공통코드정보 -->
+	<select id="selectAllCodeInfo" parameterType="map" resultType="egovMap">
+		SELECT
+			CMMN_DETAIL_CODE
+			, CMMN_DETAIL_CODE_NM
+			, CMMN_DETAIL_CODE_ORDR
+		FROM
+			TAP_CD_CMMNCODE_DETAIL
+		WHERE
+			CMMN_CODE = #{colCode}
+		ORDER BY CMMN_DETAIL_CODE_ORDR
+	</select>
+
+	<!-- 테이블 상세보기 - 사용코드정보 -->
+	<select id="selectUseCodeInfo" parameterType="map" resultType="egovMap">
+		SELECT * FROM TABLE(PA_CODELIST.selectCode(#{colCode},#{tblCode}))
+	</select>
+
+	<!-- 테이블 검색 -->
+	<sql id="tableListSearch">
+		<if test="@egovframework.MybatisUtils@isNotEmpty(srchTxt)">
+			AND (TABLE_NAME LIKE '%'||#{srchTxt}||'%' OR COMMENTS LIKE '%'||#{srchTxt}||'%')
+		</if>
+	</sql>
+	
+	<!-- 엑셀저장용 -->
+	<select id="selectExcelTableList" parameterType="map" resultType="egovMap">
+		SELECT
+			  TABLE_NAME,
+			  TABLE_TYPE,
+			  COMMENTS
+		FROM	
+			USER_TAB_COMMENTS A
+		WHERE
+			( TABLE_NAME NOT LIKE '%BAK%' AND TABLE_NAME NOT LIKE 'V_%' AND TABLE_NAME NOT LIKE '%#%' 
+			AND TABLE_NAME NOT LIKE 'EAI%'  AND TABLE_NAME NOT LIKE '%API%' AND TABLE_NAME NOT LIKE 'NTS%'
+			AND TABLE_NAME NOT LIKE 'TAD_ORGNZT%' AND TABLE_NAME NOT LIKE '%_TMP' AND TABLE_NAME NOT LIKE 'TAX%'
+			AND TABLE_NAME NOT LIKE 'A_%' AND TABLE_NAME NOT LIKE 'TAP_MM_MBER_MANAGE'
+			)
+			<include refid="tableListSearch" />
+		ORDER BY TABLE_NAME
+	</select>
+
+<!--**************************************************************************************************************************************  -->
+<!--***********   행정표준용어   ************************************************************   행정표준용어 DmStdCode    ***************************  -->    
+    <!-- 행정표준용어 검색 -->
+	<sql id="searchStdCodeSql">
+				AND 1=1
+		<if test='searchType == "1"'>
+			<if test="@egovframework.MybatisUtils@isNotEmpty(searchKeyword)">
+				<if test="searchCondition.equals('al')">
+				AND (WORD_NM LIKE '%'||#{searchKeyword}||'%' OR WORD_ENG_NM LIKE '%'||#{searchKeyword}||'%' OR ENG_ABRV_NM LIKE '%'||#{searchKeyword}||'%') 
+				</if>
+				<if test="searchCondition.equals('nm')">
+			    AND WORD_NM LIKE '%'||#{searchKeyword}||'%'
+			    </if>
+			    <if test="searchCondition.equals('en')">
+			    AND WORD_ENG_NM LIKE '%'||#{searchKeyword}||'%'
+			    </if>
+			    <if test="searchCondition.equals('ab')">
+			    AND ENG_ABRV_NM LIKE '%'||#{searchKeyword}||'%'
+			    </if>
+			</if>
+		</if>
+		<if test='searchType == "2"'>
+				<![CDATA[
+				AND WORD_NM >= #{startWord}
+				]]>
+				<if test='endWord != "힣" '>
+				<![CDATA[
+	    		AND WORD_NM <=  #{endWord}
+	    		]]>
+				</if>
+		</if>
+		<if test='searchType == "3" and searchWord!=""'>
+			AND SUBSTR(WORD_ENG_NM,0,1) = #{searchWord}
+		</if> 
+	</sql>
+	
+	<!-- 전체 테이블 조회 (sql) -->
+    <sql id="selectStdCodeListSql" >
+		SELECT WORD_NO,
+			   WORD_NM,
+			   WORD_ENG_NM,
+			   ENG_ABRV_NM,
+			   WORD_DC
+		  FROM 
+			   TAP_DM_WORD_MANAGE
+		 WHERE 1=1
+		 
+		<include refid="searchStdCodeSql" />
+		
+	  <if test='searchType == "1"'>
+	  ORDER BY WORD_NM ASC
+	  </if>
+	  <if test='searchType == "2"'>
+	  ORDER BY WORD_NM ASC
+	  </if>
+	  <if test='searchType == "3"'>
+	  ORDER BY WORD_ENG_NM ASC
+	  </if>
+	  
+    </sql>
+
+	<!-- 행정표준용어 목록 조히 -->
+	<select id="selectStdCodeList" parameterType="map" resultType="egovMap">
+		<include refid="selectStdCodeListSql"/> 
+	</select>
+	
+	<!-- 행정표준용어 목록 조회(페이징) -->
+    <select id="selectStdCodeListPaging" parameterType="map" resultType="egovMap">
+    	SELECT
+    		PL.*
+    	FROM (
+        	SELECT 
+        		PO.*
+        		,rownum as rsn
+			FROM (
+	    		<include refid="selectStdCodeListSql"/> 
+				) PO
+		) PL
+		WHERE
+		<![CDATA[
+  			rsn <= #{maxSn}   
+  			AND rsn > #{minSn}  
+  		]]> 
+    </select>
+   
+    <!-- 행정표준용어 목록 조회(카운트) -->
+    <select id="selectStdCodeListPagingCount" parameterType="map" resultType="int">
+    	SELECT 
+		 COUNT(*) 
+		FROM
+			TAP_DM_WORD_MANAGE
+		WHERE
+			1 = 1
+			<include refid="searchStdCodeSql" />		
+    </select>
+    
+
+    <!-- 행정표준용어 정보 조회 -->
+    <select id="selectStdCodeInfo" parameterType="map" resultType="egovMap">
+		SELECT
+			WORD_NO,
+			WORD_NM,
+			WORD_ENG_NM,
+			ENG_ABRV_NM,
+			WORD_DC
+		FROM 
+			TAP_DM_WORD_MANAGE
+		WHERE
+			WORD_NO =#{wordNo}	
+    </select>
+    
+    <!-- 행정표준용어 단어 영문명 중복 조회 -->
+    <select id="selectEngAbrvInfo" parameterType="map" resultType="egovMap">
+       	  SELECT  COUNT(*) AS ENG_ABRV_NM_CNT
+		    FROM  TAP_DM_WORD_MANAGE	
+		   WHERE  ENG_ABRV_NM = #{engAbrvNm}
+    </select>
+    
+		 
+    <!-- 표준코드입력/수정 -->
+	<update id="updateStdCode" parameterType="map">
+		MERGE INTO TAP_DM_WORD_MANAGE 
+	    	 USING DUAL 
+	       		ON (WORD_NO =#{wordNo})
+		WHEN MATCHED THEN
+		    UPDATE 
+		       SET 	WORD_NM = #{wordNm},
+					WORD_ENG_NM = #{wordEngNm},
+					ENG_ABRV_NM = #{engAbrvNm},
+					WORD_DC = #{wordDc}
+		WHEN NOT MATCHED THEN
+		<selectKey keyProperty="wordNoSeq" resultType="java.lang.Integer" order="BEFORE">
+			SELECT SEQ_DM_WORD_SN.NEXTVAL FROM DUAL
+		</selectKey>
+		    INSERT
+		        (
+		            WORD_NO,
+					WORD_NM,
+					WORD_ENG_NM,
+					ENG_ABRV_NM,
+					WORD_DC
+		        )
+		    VALUES
+		        (
+		            #{wordNoSeq},
+					#{wordNm},
+					#{wordEngNm},
+					#{engAbrvNm},
+					#{wordDc}
+		        )
+	</update>
+	
+    <!-- 표준코드 삭제 -->
+	<delete id="deleteStdCode" parameterType="map">
+		DELETE FROM TAP_DM_WORD_MANAGE
+		WHERE WORD_NO =#{wordNo}
+	</delete>
+	
+	
+<!--********    추가 컬럼 관리     *************************************************   추가 컬럼 관리 DmSnwd    ***************************************  -->
+	<!-- 추가 컬럼 -->
+    <sql id="selectSnwdListSql" >
+		SELECT
+			A.SNWD_NO,
+			A.SNWD_ENG_NM,
+			A.SNWD_NM,
+			A.DOMN_NO,
+			A.WORD1_NO,
+			A.WORD2_NO,
+			A.WORD3_NO,
+			A.WORD4_NO,
+			B.DOMN_ENG_ABRV_NM,
+			B.DOMN_NM,
+			B.DOMN_TY_CODE,
+			DECODE(B.DOMN_SIZE,'0','','('||DOMN_SIZE||')') AS DOMN_SIZE
+		FROM 
+			TAP_DM_SNWD_MANAGE A,TAP_DM_DOMN_MANAGE B
+		WHERE 
+			A.DOMN_NO=B.DOMN_NO
+			<include refid="searchSnwdSql" />
+			ORDER BY A.DOMN_NO DESC
+    </sql>
+    <!-- 추가 컬럼 검색 -->
+	<sql id="searchSnwdSql">
+	
+		<if test="@egovframework.MybatisUtils@isNotEmpty(searchValue)">
+			<if test="searchType.equals('al')">
+				AND (A.SNWD_ENG_NM LIKE '%'||#{searchValue}||'%' OR A.SNWD_NM LIKE '%'||#{searchValue}||'%' ) 
+			</if>
+			<if test="!searchType.equals('al')">
+		   		AND A.DOMN_NO = (SELECT DDM.DOMN_NO FROM TAP_DM_DOMN_MANAGE DDM where DOMN_ENG_ABRV_NM=#{searchType})
+		   		AND (A.SNWD_ENG_NM LIKE '%'||#{searchValue}||'%' OR A.SNWD_NM LIKE '%'||#{searchValue}||'%' )
+		    </if>
+		</if>
+		<if test="@egovframework.MybatisUtils@isEmpty(searchValue)">
+			<if test="!searchType.equals('al')">
+		   		AND A.DOMN_NO = (SELECT DDM.DOMN_NO FROM TAP_DM_DOMN_MANAGE DDM where DOMN_ENG_ABRV_NM=#{searchType})
+		    </if>
+		</if>
+	</sql>	
+   <!--추가 컬럼 목록 조회 -->
+	<select id="selectSnwdList" parameterType="map" resultType="egovMap">
+		<include refid="selectSnwdListSql" /> 
+	</select>
+	
+	<!-- 추가 컬럼 목록 조회(페이징) -->
+    <select id="selectSnwdListPaging" parameterType="map" resultType="egovMap">
+    	SELECT
+    		PL.*
+    	FROM (
+        	SELECT 
+        		PO.*
+        		,rownum as rsn
+			FROM (
+	    		<include refid="selectSnwdListSql" /> 
+				) PO
+		) PL
+		WHERE
+		<![CDATA[
+  			rsn <= #{maxSn}   
+  			AND rsn > #{minSn}  
+  		]]> 
+    </select>
+   
+    <!-- 추가 컬럼 목록 조회(카운트) -->
+    <select id="selectSnwdListPagingCount" parameterType="map" resultType="int">
+    	SELECT 
+		 COUNT(*) 
+		FROM 
+			TAP_DM_SNWD_MANAGE A,TAP_DM_DOMN_MANAGE B
+		WHERE 
+			 A.DOMN_NO=B.DOMN_NO
+			<include refid="searchSnwdSql" />		
+    </select>
+
+	<!-- 도메인명 표준용어 조회 -->
+	<select id="selectDomnSnwdList" parameterType="map" resultType="egovMap">
+		SELECT
+			A.DOMN_NO,
+			A.DOMN_GROUP_CODE,
+			A.DOMN_ENG_NM,
+			A.DOMN_ENG_ABRV_NM,
+			A.DOMN_NM,
+			A.DOMN_TY_CODE,
+			A.DOMN_SIZE,
+			A.DOMN_DC,
+			B.CMMN_DETAIL_CODE_NM
+		FROM 
+			TAP_DM_DOMN_MANAGE A,TAP_CD_CMMNCODE_DETAIL B
+		WHERE 
+		B.CMMN_CODE='DOMN_GROUP_CODE'
+		AND A.DOMN_GROUP_CODE=B.CMMN_DETAIL_CODE
+		ORDER BY B.CMMN_DETAIL_CODE_ORDR ASC,DOMN_ENG_NM ASC 
+	</select>
+
+	<!-- 표준용어명(한글) 중복검사 --> 
+    <select id="selectSnwdNmCnt" parameterType="map" resultType="egovMap">
+       	  SELECT  COUNT(*) AS SNWD_NM_CNT
+		    FROM  TAP_DM_SNWD_MANAGE	
+		   WHERE  SNWD_NM = #{snwdNm}
+    </select>
+
+	<!-- 표준용어 영문명 중복검사 --> 
+    <select id="selectSnwdEngNmCnt" parameterType="map" resultType="egovMap">
+       	  SELECT  COUNT(*) AS SNWD_ENG_NM_CNT
+		    FROM  TAP_DM_SNWD_MANAGE	
+		   WHERE  SNWD_ENG_NM = #{snwdEngNm}
+    </select>
+
+	<!-- 표준용어정보조회 -->
+    <select id="selectSnwdInfo" parameterType="map" resultType="egovMap">
+		SELECT
+			A.SNWD_NO,
+			A.SNWD_ENG_NM,
+			A.SNWD_NM,
+			A.SNWD_DC,
+			A.DOMN_NO,
+			A.WORD1_NO,
+			A.WORD2_NO,
+			A.WORD3_NO,
+			A.WORD4_NO,
+			(SELECT C.WORD_NM FROM TAP_DM_WORD_MANAGE C WHERE C.WORD_NO=A.WORD1_NO) AS WORD1_NM,
+			(SELECT C.WORD_NM FROM TAP_DM_WORD_MANAGE C WHERE C.WORD_NO=A.WORD2_NO) AS WORD2_NM,
+			(SELECT C.WORD_NM FROM TAP_DM_WORD_MANAGE C WHERE C.WORD_NO=A.WORD3_NO) AS WORD3_NM,
+			(SELECT C.WORD_NM FROM TAP_DM_WORD_MANAGE C WHERE C.WORD_NO=A.WORD4_NO) AS WORD4_NM,
+			(SELECT C.ENG_ABRV_NM FROM TAP_DM_WORD_MANAGE C WHERE C.WORD_NO=A.WORD1_NO) AS WORD1_EN,
+			(SELECT C.ENG_ABRV_NM FROM TAP_DM_WORD_MANAGE C WHERE C.WORD_NO=A.WORD2_NO) AS WORD2_EN,
+			(SELECT C.ENG_ABRV_NM FROM TAP_DM_WORD_MANAGE C WHERE C.WORD_NO=A.WORD3_NO) AS WORD3_EN,
+			(SELECT C.ENG_ABRV_NM FROM TAP_DM_WORD_MANAGE C WHERE C.WORD_NO=A.WORD4_NO) AS WORD4_EN,
+			(LENGTH(SNWD_ENG_NM) - LENGTH( REPLACE(SNWD_ENG_NM,'_',''))+1) AS WORD_DIV_COUNT,
+			B.DOMN_ENG_ABRV_NM,
+			B.DOMN_NM,
+			B.DOMN_TY_CODE,
+			B.DOMN_SIZE
+		FROM 
+			TAP_DM_SNWD_MANAGE A,TAP_DM_DOMN_MANAGE B
+		WHERE 
+			A.DOMN_NO=B.DOMN_NO
+			AND A.SNWD_NO =#{snwdNo}	
+    </select>
+
+    <!-- 표준용어입력/수정 -->
+	<update id="updateSnwd" parameterType="map">
+		MERGE INTO TAP_DM_SNWD_MANAGE 
+	    	 USING DUAL 
+	       		ON (SNWD_NO =#{snwdNo})
+		WHEN MATCHED THEN
+		    UPDATE 
+		       SET 	
+					SNWD_ENG_NM  = #{snwdEngNm},
+					SNWD_NM  = #{snwdNm},
+					DOMN_NO  = #{domnNo},
+					WORD1_NO = #{word1No},
+					WORD2_NO = #{word2No},
+					WORD3_NO = #{word3No},
+					WORD4_NO = #{word4No},
+					SNWD_DC	= #{snwdDc}
+		WHEN NOT MATCHED THEN
+		<selectKey keyProperty="snwdNoSeq" resultType="java.lang.Integer" order="BEFORE">
+			SELECT SEQ_DM_SNWD_SN.NEXTVAL FROM DUAL
+		</selectKey>
+		    INSERT
+		        (
+					SNWD_NO ,
+					SNWD_ENG_NM,
+					SNWD_NM,
+					DOMN_NO,
+					WORD1_NO,
+					WORD2_NO,
+					WORD3_NO,
+					WORD4_NO,
+					SNWD_DC
+		        )
+		    VALUES
+		        (
+		            #{snwdNoSeq},
+					#{snwdEngNm},
+					#{snwdNm},
+					#{domnNo},
+					#{word1No},
+					#{word2No},
+					#{word3No},
+					#{word4No},
+					#{snwdDc}
+		        )
+	</update>
+
+    <!-- 표준용어 삭제 -->
+	<delete id="deleteSnwd" parameterType="map">
+		DELETE FROM TAP_DM_SNWD_MANAGE
+		WHERE SNWD_NO =#{snwdNo}
+	</delete>
+<!-- ***  추가 표준 도메인   *************************************************  추가 표준 도메인 DmDomn   *************** -->
+
+	<!-- 도메인조회 -->
+    <sql id="selectDomnListSql" >
+		SELECT
+			A.DOMN_NO,
+			A.DOMN_GROUP_CODE,
+			A.DOMN_ENG_NM,
+			A.DOMN_ENG_ABRV_NM,
+			A.DOMN_NM,
+			A.DOMN_TY_CODE,
+			A.DOMN_SIZE,
+			A.DOMN_DC,
+			B.CMMN_DETAIL_CODE_NM
+		FROM 
+			TAP_DM_DOMN_MANAGE A,TAP_CD_CMMNCODE_DETAIL B
+		WHERE 
+		B.CMMN_CODE='DOMN_GROUP_CODE'
+		AND A.DOMN_GROUP_CODE=B.CMMN_DETAIL_CODE
+		<include refid="searchDomnSql" />
+		ORDER BY B.CMMN_DETAIL_CODE_ORDR ASC,DOMN_ENG_NM ASC
+    </sql>
+    
+    <!-- 도메인검색 -->
+	<sql id="searchDomnSql">
+	
+		<if test="@egovframework.MybatisUtils@isNotEmpty(searchValue)">
+			<if test="searchType.equals('al')">
+				AND (A.DOMN_NM LIKE '%'||#{searchValue}||'%' OR A.DOMN_ENG_ABRV_NM LIKE '%'||#{searchValue}||'%' ) 
+			</if>
+			<if test="!searchType.equals('al')">
+		   		AND A.DOMN_GROUP_CODE = #{searchType}
+		   		AND (A.DOMN_NM LIKE '%'||#{searchValue}||'%' OR A.DOMN_ENG_ABRV_NM LIKE '%'||#{searchValue}||'%' )
+		    </if>
+		</if>
+		<if test="@egovframework.MybatisUtils@isEmpty(searchValue)">
+			<if test="!searchType.equals('al')">
+		   		AND A.DOMN_GROUP_CODE = #{searchType}
+		    </if>
+		</if>
+	</sql>
+	
+    <!--도메인리스트 조회 -->
+	<select id="selectDomnList" parameterType="map" resultType="egovMap">
+		<include refid="selectDomnListSql" /> 
+	</select>
+	
+	<!-- 도메인리스트 조회(페이징) -->
+    <select id="selectDomnListPaging" parameterType="map" resultType="egovMap">
+    	SELECT
+    		PL.*
+    	FROM (
+        	SELECT 
+        		PO.*
+        		,rownum as rsn
+			FROM (
+	    		<include refid="selectDomnListSql" /> 
+				) PO
+		) PL
+		WHERE
+		<![CDATA[
+  			rsn <= #{maxSn}   
+  			AND rsn > #{minSn}  
+  		]]> 
+    </select>
+   
+    <!-- 도메인리스트 조회(카운트) -->
+    <select id="selectDomnListPagingCount" parameterType="map" resultType="int">
+    	SELECT 
+		 COUNT(*) 
+		FROM 
+			TAP_DM_DOMN_MANAGE A,TAP_CD_CMMNCODE_DETAIL B
+		WHERE 
+			B.CMMN_CODE='DOMN_GROUP_CODE'
+			AND A.DOMN_GROUP_CODE=B.CMMN_DETAIL_CODE
+			<include refid="searchDomnSql" />		
+    </select>
+
+    <!-- 도메인입력/수정 -->
+	<update id="updateDomn" parameterType="map">
+		MERGE INTO TAP_DM_DOMN_MANAGE 
+	    	 USING DUAL 
+	       		ON (DOMN_NO =#{domnNo})
+		WHEN MATCHED THEN
+		    UPDATE 
+		       SET 	
+			   		DOMN_GROUP_CODE = #{domnGroupCode},
+					DOMN_ENG_NM = #{domnEngNm},
+					DOMN_ENG_ABRV_NM = #{domnEngAbrvNm},
+					DOMN_NM = #{domnNm},
+					DOMN_TY_CODE = #{domnTyCode},
+					DOMN_SIZE = #{domnSize},
+					DOMN_DC = #{domnDc}
+		WHEN NOT MATCHED THEN
+		<selectKey keyProperty="domnNoSeq" resultType="java.lang.Integer" order="BEFORE">
+			SELECT SEQ_DM_DOMN_SN.NEXTVAL FROM DUAL
+		</selectKey>
+		    INSERT
+		        (
+					DOMN_NO,
+					DOMN_GROUP_CODE,
+					DOMN_ENG_NM,
+					DOMN_ENG_ABRV_NM,
+					DOMN_NM,
+					DOMN_TY_CODE,
+					DOMN_SIZE,
+					DOMN_DC
+		        )
+		    VALUES
+		        (
+		            #{domnNoSeq},
+					#{domnGroupCode},
+					#{domnEngNm},
+					#{domnEngAbrvNm},
+					#{domnNm},
+					#{domnTyCode},
+					#{domnSize},
+					#{domnDc}
+		        )
+	</update>
+
+    <!-- 도메인 삭제 -->
+	<delete id="deleteDomn" parameterType="map">
+		DELETE FROM TAP_DM_DOMN_MANAGE
+		WHERE DOMN_NO =#{domnNo}
+	</delete>
+
+	<!-- 도메인 영문명 중복검사 -->
+    <select id="selectDomnEngAbrvCnt" parameterType="map" resultType="egovMap">
+       	  SELECT  COUNT(*) AS DOMN_ENG_ABRV_NM_CNT
+		    FROM  TAP_DM_DOMN_MANAGE	
+		   WHERE  DOMN_ENG_ABRV_NM = #{domnEngAbrvNm}
+    </select>
+    
+    <!-- 도메인명 중복검사 -->
+    <select id="selectDomnNmCnt" parameterType="map" resultType="egovMap">
+       	  SELECT  COUNT(*) AS DOMN_NM_CNT
+		    FROM  TAP_DM_DOMN_MANAGE	
+		   WHERE  DOMN_NM = #{domnNm}
+    </select>
+
+	<!-- 도메인정보조회 -->
+    <select id="selectDomnInfo" parameterType="map" resultType="egovMap">
+		SELECT
+				DOMN_NO,
+				DOMN_GROUP_CODE,
+				DOMN_ENG_NM,
+				DOMN_ENG_ABRV_NM,
+				DOMN_NM,
+				DOMN_TY_CODE,
+				DOMN_SIZE,
+				DOMN_DC
+		FROM 
+			TAP_DM_DOMN_MANAGE
+		WHERE
+			DOMN_NO =#{domnNo}
+    </select>
+
+<!-- ***  데이터 표준 준수 여부   *************************************************  데이터 표준 준수 여부 DmConfirm   *************** -->
+<!-- tapty == al -->
+    <sql id="selectDataStdListSql" >
+	SELECT
+		COLUMN_NO,TABLE_ID,TABLE_NAME,COLUMN_ID,COLUMN_NAME,DATA_TYPE,DATA_LENGTH,DATA_PRECISION,NULLYN,P1,P2,P3,P4,P5,TDOMN,T_DOMN_SIZE,DB_DOMN,DOMN_YN,SNWN_YN,TWORD1,TWORD2,TWORD3,TWORD4,TWORD5,DB_WORD1_YN
+		,DB_WORD2_YN,DB_WORD3_YN,DB_WORD4_YN,DB_WORD5_YN,DB_DOMN_TY,WORD1_YN,WORD2_YN,WORD3_YN,WORD4_YN,WORD5_YN,DOMN_TY_YN,DOMN_SIZE_YN
+		,WORD_EN_YN
+		,WORD_NM_YN
+		,SNWN_NM_YN
+	FROM
+	(<include refid="dataStdSql_check" />)
+		WHERE 1=1
+		<include refid="searchDataStdSql" />
+		ORDER BY TABLE_NAME ASC, COLUMN_ID ASC
+    </sql>
+    <!-- 데이터표준검색 -->
+	<sql id="searchDataStdSql">
+		<if test="@egovframework.MybatisUtils@isNotEmpty(searchStd)">
+			<if test="searchStd.equals('wdeno')">
+		    	AND WORD_EN_YN = 'Y'
+		    </if>
+		    <if test="searchStd.equals('wdenx')">
+		    	AND WORD_EN_YN = 'N'
+		    </if>
+		    <if test="searchStd.equals('wdnmo')">
+		    	AND WORD_NM_YN = 'Y'
+		    </if>
+		    <if test="searchStd.equals('wdnmx')">
+		    	AND WORD_NM_YN = 'N'
+		    </if>
+		    <if test="searchStd.equals('snwdo')">
+		    	AND SNWN_YN ='Y'
+		    </if>
+		    <if test="searchStd.equals('snwdx')">
+		    	AND SNWN_YN ='N'
+		    </if>
+		    <if test="searchStd.equals('domno')">
+		    	AND DOMN_YN ='Y'
+		    </if>
+		    <if test="searchStd.equals('domnx')">
+		    	AND DOMN_YN ='N'
+		    </if>
+		    <if test="searchStd.equals('domntyo')">
+		    	AND DOMN_TY_YN ='Y'
+		    </if>
+		    <if test="searchStd.equals('domntyx')">
+		    	AND DOMN_TY_YN ='N'
+		    </if>
+		    <if test="searchStd.equals('domnszo')">
+		    	AND DOMN_SIZE_YN ='Y'
+		    </if>
+		    <if test="searchStd.equals('domnszx')">
+		    	AND DOMN_SIZE_YN ='N'
+		    </if>
+		</if>
+		<if test="@egovframework.MybatisUtils@isNotEmpty(searchValue)">
+			<if test="searchType.equals('al')">
+			AND (TABLE_ID LIKE '%'||UPPER(#{searchValue})||'%' OR TABLE_NAME LIKE '%'||#{searchValue}||'%' OR COLUMN_ID LIKE '%'||UPPER(#{searchValue})||'%' OR COLUMN_NAME LIKE '%'||#{searchValue}||'%') 
+			</if>
+			<if test="searchType.equals('tid')">
+		    AND TABLE_ID LIKE '%'||UPPER(#{searchValue})||'%'
+		    </if>
+		    <if test="searchType.equals('tnm')">
+		    AND TABLE_NAME LIKE '%'||#{searchValue}||'%'
+		    </if>
+		    <if test="searchType.equals('cid')">
+		    AND COLUMN_ID LIKE '%'||UPPER(#{searchValue})||'%'
+		    </if>
+		    <if test="searchType.equals('cnm')">
+		    AND COLUMN_NAME LIKE '%'||#{searchValue}||'%'
+		    </if>
+		    
+		    
+		</if>
+	</sql>
+		
+    <!--데이터표준리스트 조회 -->
+	<select id="selectDataStdList" parameterType="map" resultType="egovMap">
+		<include refid="selectDataStdListSql" /> 
+	</select>
+	
+	<!-- 데이터표준리스트 조회(페이징) -->
+    <select id="selectDataStdListPaging" parameterType="map" resultType="egovMap">
+    	SELECT
+    		PL.*
+    	FROM (
+        	SELECT 
+        		PO.*
+        		,rownum as rsn
+			FROM (
+	    		<include refid="selectDataStdListSql" /> 
+				) PO
+		) PL
+		WHERE
+		<![CDATA[
+  			rsn <= #{maxSn}   
+  			AND rsn > #{minSn}  
+  		]]> 
+    </select>
+   
+   	<sql id="dataStdSql" >
+		  SELECT 
+			     TCM.COLUMN_ID  AS COLUMN_NO
+			     ,TCM.TABLE_NAME AS TABLE_ID
+			     ,UTC.COMMENTS AS TABLE_NAME
+			     ,TCM.COLUMN_NAME AS COLUMN_ID
+			     ,CCM.COMMENTS AS COLUMN_NAME
+			     ,TCM.DATA_TYPE  
+			     ,TCM.DATA_TYPE || '(' || TCM.DATA_LENGTH || ')' AS DATA_LENGTH
+			    ,NVL(TCM.DATA_PRECISION,0) AS DATA_PRECISION
+			    ,DECODE(TCM.NULLABLE, 'N', 'NOT NULL', 'NULL') NULLYN
+		    FROM USER_TAB_COMMENTS UTC,USER_TAB_COLUMNS TCM,USER_COL_COMMENTS CCM
+		    WHERE 
+			( 
+			TCM.TABLE_NAME NOT LIKE '%BAK%' AND TCM.TABLE_NAME NOT LIKE '%TMP#%' AND TCM.TABLE_NAME NOT LIKE 'V_%'
+			AND TCM.TABLE_NAME NOT LIKE '%2%' 
+			AND TCM.TABLE_NAME NOT LIKE 'TEST%'
+			AND TCM.TABLE_NAME NOT LIKE '%API%'
+	      	AND TCM.TABLE_NAME NOT LIKE 'TAD_ORGNZT%'
+	      	AND TCM.TABLE_NAME NOT LIKE 'TAD_PRGN%'
+	      	AND TCM.TABLE_NAME NOT LIKE '%TMP'
+	      	AND TCM.TABLE_NAME NOT LIKE '%BAK%'
+	      	AND TCM.TABLE_NAME NOT LIKE '%#%'
+	      	AND TCM.TABLE_NAME NOT LIKE 'NTS%'
+	      	AND TCM.TABLE_NAME NOT LIKE 'EAI%'
+	      	AND TCM.TABLE_NAME NOT LIKE '%_TMP'
+	      	AND TCM.TABLE_NAME NOT LIKE 'TAX%'  
+	      	AND TCM.TABLE_NAME NOT LIKE 'TAP_MM_MBER_MANAGE'
+	      	AND TCM.TABLE_NAME NOT LIKE 'A_%'     	 	
+			 )		    
+		     AND TCM.TABLE_NAME=UTC.TABLE_NAME
+		     AND TCM.COLUMN_NAME=CCM.COLUMN_NAME
+		     AND TCM.TABLE_NAME=CCM.TABLE_NAME
+   	</sql>
+   	
+   	<sql id="dataStdSql_check" >
+			SELECT F.*
+				,DECODE(INSTR( WORD1_YN||WORD2_YN||WORD3_YN||WORD4_YN||WORD5_YN,'N',1,1),0,'Y','N') AS WORD_EN_YN
+			 	FROM (
+					SELECT E.* 
+							,DECODE(P1,'0','0',DB_WORD1_YN) AS WORD1_YN
+							,DECODE(P2,'0','0',DB_WORD2_YN) AS WORD2_YN
+							,DECODE(P3,'0','0',DB_WORD3_YN) AS WORD3_YN
+							,DECODE(P4,'0','0',DB_WORD4_YN) AS WORD4_YN
+							,DECODE(P5,'0','0',DB_WORD5_YN) AS WORD5_YN
+							,DECODE(DB_DOMN_TY,DATA_TYPE,'Y','N') AS DOMN_TY_YN
+							,DECODE(DB_DOMN_SIZE,T_DOMN_SIZE,'Y','N') AS DOMN_SIZE_YN
+							,DECODE(COLUMN_NAME,T_WORDT_NM,'Y','N') AS WORD_NM_YN
+						FROM  (
+						SELECT D.* 
+							,DECODE(NVL((SELECT ENG_ABRV_NM FROM TAP_DM_WORD_MANAGE B WHERE B.ENG_ABRV_NM=D.TWORD1 ),'0'),TWORD1,'Y','N') AS DB_WORD1_YN
+							,DECODE(NVL((SELECT ENG_ABRV_NM FROM TAP_DM_WORD_MANAGE B WHERE B.ENG_ABRV_NM=D.TWORD2 ),'0'),TWORD2,'Y','N') AS DB_WORD2_YN
+							,DECODE(NVL((SELECT ENG_ABRV_NM FROM TAP_DM_WORD_MANAGE B WHERE B.ENG_ABRV_NM=D.TWORD3 ),'0'),TWORD3,'Y','N') AS DB_WORD3_YN
+							,DECODE(NVL((SELECT ENG_ABRV_NM FROM TAP_DM_WORD_MANAGE B WHERE B.ENG_ABRV_NM=D.TWORD4 ),'0'),TWORD4,'Y','N') AS DB_WORD4_YN
+							,DECODE(NVL((SELECT ENG_ABRV_NM FROM TAP_DM_WORD_MANAGE B WHERE B.ENG_ABRV_NM=D.TWORD5 ),'0'),TWORD5,'Y','N') AS DB_WORD5_YN
+							,(SELECT B.DOMN_TY_CODE FROM TAP_DM_DOMN_MANAGE B WHERE B.DOMN_ENG_ABRV_NM=D.DB_DOMN) AS DB_DOMN_TY
+							,(SELECT B.DOMN_SIZE FROM TAP_DM_DOMN_MANAGE B WHERE B.DOMN_ENG_ABRV_NM=D.DB_DOMN) AS DB_DOMN_SIZE
+							,((SELECT B.WORD_NM FROM TAP_DM_WORD_MANAGE B WHERE B.ENG_ABRV_NM=TWORD1)||	(SELECT B.WORD_NM FROM TAP_DM_WORD_MANAGE B WHERE B.ENG_ABRV_NM=TWORD2)
+								|| (SELECT B.WORD_NM FROM TAP_DM_WORD_MANAGE B WHERE B.ENG_ABRV_NM=TWORD3)	|| (SELECT B.WORD_NM FROM TAP_DM_WORD_MANAGE B WHERE B.ENG_ABRV_NM=TWORD4)
+								|| (SELECT B.WORD_NM FROM TAP_DM_WORD_MANAGE B WHERE B.ENG_ABRV_NM=TWORD5))	AS T_WORDT_NM			
+						FROM (
+						SELECT C.*
+								,NVL((SELECT DOMN_ENG_ABRV_NM FROM TAP_DM_DOMN_MANAGE B WHERE B.DOMN_ENG_ABRV_NM=C.TDOMN ),'0') AS DB_DOMN
+								,DECODE((SELECT DOMN_ENG_ABRV_NM FROM TAP_DM_DOMN_MANAGE B WHERE B.DOMN_ENG_ABRV_NM=C.TDOMN ),C.TDOMN,'Y','N') AS DOMN_YN
+								,NVL((SELECT 'Y' FROM TAP_DM_SNWD_MANAGE B WHERE B.SNWD_ENG_NM=C.COLUMN_ID ),'N') AS SNWN_YN
+								,NVL((SELECT 'Y' FROM TAP_DM_SNWD_MANAGE B WHERE B.SNWD_NM=C.COLUMN_NAME ),'N') AS SNWN_NM_YN
+								,SUBSTR(COLUMN_ID,0,P1-1)  AS TWORD1
+								,SUBSTR(COLUMN_ID,DECODE(P2,'0','0',P1+1),P2-P1-1)  AS TWORD2
+								,SUBSTR(COLUMN_ID,DECODE(P3,'0','0',P2+1),P3-P2-1)  AS TWORD3
+								,SUBSTR(COLUMN_ID,DECODE(P4,'0','0',P3+1),P4-P3-1)  AS TWORD4
+								,SUBSTR(COLUMN_ID,DECODE(P5,'0','0',P4+1),P5-P4-1)  AS TWORD5
+					 			FROM (
+									SELECT 
+								     TCM.COLUMN_ID  AS COLUMN_NO
+								     ,TCM.TABLE_NAME AS TABLE_ID
+								     ,UTC.COMMENTS AS TABLE_NAME
+								     ,TCM.COLUMN_NAME AS COLUMN_ID
+								     ,CCM.COMMENTS AS COLUMN_NAME
+								     ,TCM.DATA_TYPE  
+								     ,TCM.DATA_TYPE || '(' || TCM.DATA_LENGTH || ')' AS DATA_LENGTH
+								    ,NVL(TCM.DATA_PRECISION,0) AS DATA_PRECISION
+								    ,DECODE(TCM.NULLABLE, 'N', 'NOT NULL', 'NULL') NULLYN
+								    ,INSTR(CCM.COLUMN_NAME||'_','_',1,1) AS P1
+									,INSTR(CCM.COLUMN_NAME||'_','_',1,2) AS P2
+									,INSTR(CCM.COLUMN_NAME||'_','_',1,3) AS P3
+									,INSTR(CCM.COLUMN_NAME||'_','_',1,4) AS P4
+									,INSTR(CCM.COLUMN_NAME||'_','_',1,5) AS P5 
+									,REPLACE(SUBSTR(TCM.COLUMN_NAME,INSTR(TCM.COLUMN_NAME,'_',-1),LENGTH(TCM.COLUMN_NAME)),'_','') AS TDOMN
+									,NVL(DECODE(TCM.DATA_TYPE,'VARCHAR',TCM.DATA_LENGTH,'NUMBER',TCM.DATA_PRECISION,'DATE','0','CLOB','0',TCM.DATA_LENGTH),'') AS T_DOMN_SIZE
+								      FROM USER_TAB_COMMENTS UTC,USER_TAB_COLUMNS TCM,USER_COL_COMMENTS CCM
+								    WHERE 
+									( TCM.TABLE_NAME NOT LIKE '%BAK%' AND TCM.TABLE_NAME NOT LIKE '%TMP#%' AND TCM.TABLE_NAME NOT LIKE 'V_%' AND TCM.TABLE_NAME NOT LIKE 'EAI%'
+									AND TCM.TABLE_NAME NOT LIKE '%2%' 
+									AND TCM.TABLE_NAME NOT LIKE 'TEST%' 
+									 AND TCM.TABLE_NAME NOT LIKE '%API%'
+									 AND TCM.TABLE_NAME NOT LIKE 'TAD_ORGNZT%'
+									 AND TCM.TABLE_NAME NOT LIKE 'TAD_PRGN%'
+									 AND TCM.TABLE_NAME NOT LIKE '%TMP'
+							      	 AND TCM.TABLE_NAME NOT LIKE '%BAK%'
+							      	 AND TCM.TABLE_NAME NOT LIKE '%#%'
+							      	 AND TCM.TABLE_NAME NOT LIKE 'NTS%'
+							      	 AND TCM.TABLE_NAME NOT LIKE 'EAI%'
+							      	 AND TCM.TABLE_NAME NOT LIKE '%_TMP'
+							      	 AND TCM.TABLE_NAME NOT LIKE 'TAX%'
+							      	 AND TCM.TABLE_NAME NOT LIKE 'TAP_MM_MBER_MANAGE'
+							      	 AND TCM.TABLE_NAME NOT LIKE 'A_%'
+									 )		    
+								     AND TCM.TABLE_NAME=UTC.TABLE_NAME
+								     AND TCM.COLUMN_NAME=CCM.COLUMN_NAME
+								     AND TCM.TABLE_NAME=CCM.TABLE_NAME
+								) C
+						) D
+					) E
+				) F
+   	</sql>   
+   	
+    <!-- 데이터표준리스트 조회(카운트) -->
+    <select id="selectDataStdListPagingCount" parameterType="map" resultType="int">
+    	SELECT 
+		 COUNT(*) 
+		FROM
+			(<include refid="dataStdSql_check" />)
+		WHERE
+			1 = 1
+			<include refid="searchDataStdSql" />		
+    </select>
+<!-- //tapty == al -->
+
+
+
+	<!-- 데이터표준타입 조회 -->
+    <sql id="selectDataStdTyListSql" >
+		SELECT
+			COLUMN_NO,TABLE_ID,TABLE_NAME,COLUMN_ID,COLUMN_NAME,DATA_TYPE,DATA_LENGTH,DATA_PRECISION,NULLYN,P1,P2,P3,P4,P5,TDOMN,T_DOMN_SIZE,DB_DOMN,DOMN_YN,SNWN_YN,TWORD1,TWORD2,TWORD3,TWORD4,TWORD5,DB_WORD1_YN
+			,DB_WORD2_YN,DB_WORD3_YN,DB_WORD4_YN,DB_WORD5_YN,DB_DOMN_TY,WORD1_YN,WORD2_YN,WORD3_YN,WORD4_YN,WORD5_YN,DOMN_TY_YN,DOMN_SIZE_YN
+			,WORD_EN_YN
+			,WORD_NM_YN	
+			,SNWN_NM_YN
+		FROM 
+			<if test="tabTy.equals('cid')">
+			(<include refid="dataStdTySql_id" />)
+			</if>
+			<if test="tabTy.equals('cnm')">
+			(<include refid="dataStdTySql_nm" />)
+			</if>
+			<if test="tabTy.equals('cty')">
+			(<include refid="dataStdTySql_ty" />)
+			</if>
+		WHERE 1=1
+		<include refid="searchDataStdTySql" />
+		<if test="tabTy.equals('cid')">
+		ORDER BY COLUMN_NAME ASC, COLUMN_ID ASC, TABLE_NAME ASC
+		</if>
+		<if test="tabTy.equals('cnm')">
+		ORDER BY COLUMN_ID ASC, COLUMN_NAME ASC, TABLE_NAME ASC
+		</if>
+		<if test="tabTy.equals('cty')">
+		ORDER BY COLUMN_ID ASC, DATA_TYPE ASC, TABLE_NAME ASC
+		</if>
+			
+    </sql>
+    <!-- 데이터표준타입검색 -->
+	<sql id="searchDataStdTySql">
+		<if test="@egovframework.MybatisUtils@isNotEmpty(searchStd)">
+			<if test="searchStd.equals('wdeno')">
+		    	AND WORD_EN_YN = 'Y'
+		    </if>
+		    <if test="searchStd.equals('wdenx')">
+		    	AND WORD_EN_YN = 'N'
+		    </if>
+		    <if test="searchStd.equals('wdnmo')">
+		    	AND WORD_NM_YN = 'Y'
+		    </if>
+		    <if test="searchStd.equals('wdnmx')">
+		    	AND WORD_NM_YN = 'N'
+		    </if>
+		    <if test="searchStd.equals('snwdo')">
+		    	AND SNWN_YN ='Y'
+		    </if>
+		    <if test="searchStd.equals('snwdx')">
+		    	AND SNWN_YN ='N'
+		    </if>
+		    <if test="searchStd.equals('domno')">
+		    	AND DOMN_YN ='Y'
+		    </if>
+		    <if test="searchStd.equals('domnx')">
+		    	AND DOMN_YN ='N'
+		    </if>
+		    <if test="searchStd.equals('domntyo')">
+		    	AND DOMN_TY_YN ='Y'
+		    </if>
+		    <if test="searchStd.equals('domntyx')">
+		    	AND DOMN_TY_YN ='N'
+		    </if>
+		    <if test="searchStd.equals('domnszo')">
+		    	AND DOMN_SIZE_YN ='Y'
+		    </if>
+		    <if test="searchStd.equals('domnszx')">
+		    	AND DOMN_SIZE_YN ='N'
+		    </if>
+		</if>
+		<if test="@egovframework.MybatisUtils@isNotEmpty(searchValue)">
+			<if test="searchType.equals('al')">
+			AND (TABLE_ID LIKE '%'||UPPER(#{searchValue})||'%' OR TABLE_NAME LIKE '%'||#{searchValue}||'%' OR COLUMN_ID LIKE '%'||UPPER(#{searchValue})||'%' OR COLUMN_NAME LIKE '%'||#{searchValue}||'%') 
+			</if>
+			<if test="searchType.equals('tid')">
+		    AND TABLE_ID LIKE '%'||UPPER(#{searchValue})||'%'
+		    </if>
+		    <if test="searchType.equals('tnm')">
+		    AND TABLE_NAME LIKE '%'||#{searchValue}||'%'
+		    </if>
+		    <if test="searchType.equals('cid')">
+		    AND COLUMN_ID LIKE '%'||UPPER(#{searchValue})||'%'
+		    </if>
+		    <if test="searchType.equals('cnm')">
+		    AND COLUMN_NAME LIKE '%'||#{searchValue}||'%'
+		    </if>
+		</if>
+	</sql>
+
+    <!--데이터표준타입 리스트 조회 -->
+	<select id="selectDataStdTyList" parameterType="map" resultType="egovMap">
+		<include refid="selectDataStdTyListSql" /> 
+	</select>
+	
+	<!-- 데이터표준타입 리스트 조회(페이징) -->
+    <select id="selectDataStdTyListPaging" parameterType="map" resultType="egovMap">
+    	SELECT
+    		PL.*
+    	FROM (
+        	SELECT 
+        		PO.*
+        		,rownum as rsn
+			FROM (
+	    		<include refid="selectDataStdTyListSql" /> 
+				) PO
+		) PL
+		WHERE
+		<![CDATA[
+  			rsn <= #{maxSn}   
+  			AND rsn > #{minSn}  
+  		]]> 
+    </select>
+
+   <!-- 데이터표준타입 -->
+   	<sql id="dataStdTySql_id" >
+		SELECT  
+			COLUMN_NO,TABLE_ID,TABLE_NAME,COLUMN_ID,COLUMN_NAME,DATA_TYPE,DATA_LENGTH,DATA_PRECISION,NULLYN,P1,P2,P3,P4,P5,TDOMN,T_DOMN_SIZE,DB_DOMN,DOMN_YN,SNWN_YN,TWORD1,TWORD2,TWORD3,TWORD4,TWORD5,DB_WORD1_YN
+			,DB_WORD2_YN,DB_WORD3_YN,DB_WORD4_YN,DB_WORD5_YN,DB_DOMN_TY,WORD1_YN,WORD2_YN,WORD3_YN,WORD4_YN,WORD5_YN,DOMN_TY_YN,DOMN_SIZE_YN
+			,WORD_EN_YN
+			,WORD_NM_YN	
+			,SNWN_NM_YN
+		FROM (<include refid="dataStdSql_check" />) C  
+		WHERE COLUMN_NAME IN 
+		 (
+			SELECT 
+			 	A.COLUMN_NAME
+			FROM
+				( <include refid="dataStdSql" /> ) A,
+				( <include refid="dataStdSql" /> ) B
+			WHERE A.COLUMN_NAME=B.COLUMN_NAME AND A.COLUMN_ID!=B.COLUMN_ID
+		 )
+   	</sql>
+   	
+   	<sql id="dataStdTySql_nm" >
+		SELECT  
+			COLUMN_NO,TABLE_ID,TABLE_NAME,COLUMN_ID,COLUMN_NAME,DATA_TYPE,DATA_LENGTH,DATA_PRECISION,NULLYN,P1,P2,P3,P4,P5,TDOMN,T_DOMN_SIZE,DB_DOMN,DOMN_YN,SNWN_YN,TWORD1,TWORD2,TWORD3,TWORD4,TWORD5,DB_WORD1_YN
+			,DB_WORD2_YN,DB_WORD3_YN,DB_WORD4_YN,DB_WORD5_YN,DB_DOMN_TY,WORD1_YN,WORD2_YN,WORD3_YN,WORD4_YN,WORD5_YN,DOMN_TY_YN,DOMN_SIZE_YN
+			,WORD_EN_YN
+			,WORD_NM_YN	
+			,SNWN_NM_YN
+		FROM (<include refid="dataStdSql_check" />) C  
+		WHERE COLUMN_ID IN 
+		 (
+			SELECT 
+			 	A.COLUMN_ID
+			FROM
+				( <include refid="dataStdSql" /> ) A,
+				( <include refid="dataStdSql" /> ) B
+			WHERE A.COLUMN_ID=B.COLUMN_ID AND A.COLUMN_NAME!=B.COLUMN_NAME
+		 )
+   	</sql>
+   	
+   	<sql id="dataStdTySql_ty" >
+		SELECT  
+			COLUMN_NO,TABLE_ID,TABLE_NAME,COLUMN_ID,COLUMN_NAME,DATA_TYPE,DATA_LENGTH,DATA_PRECISION,NULLYN,P1,P2,P3,P4,P5,TDOMN,T_DOMN_SIZE,DB_DOMN,DOMN_YN,SNWN_YN,TWORD1,TWORD2,TWORD3,TWORD4,TWORD5,DB_WORD1_YN
+			,DB_WORD2_YN,DB_WORD3_YN,DB_WORD4_YN,DB_WORD5_YN,DB_DOMN_TY,WORD1_YN,WORD2_YN,WORD3_YN,WORD4_YN,WORD5_YN,DOMN_TY_YN,DOMN_SIZE_YN
+			,WORD_EN_YN
+			,WORD_NM_YN	
+			,SNWN_NM_YN
+		FROM (<include refid="dataStdSql_check" />) C  
+		WHERE COLUMN_ID IN 
+		 (
+			SELECT 
+			 	A.COLUMN_ID
+			FROM
+				( <include refid="dataStdSql" /> ) A,
+				( <include refid="dataStdSql" /> ) B
+			WHERE A.COLUMN_ID=B.COLUMN_ID AND A.DATA_TYPE!=B.DATA_TYPE
+		 )
+   	</sql>
+   	
+    <!-- 데이터표준타입 리스트 조회(카운트) -->
+    <select id="selectDataStdTyListPagingCount" parameterType="map" resultType="int">
+    	SELECT 
+		 COUNT(*) 
+		FROM
+			<if test="tabTy.equals('cid')">
+			(<include refid="dataStdTySql_id" />)
+			</if>
+			<if test="tabTy.equals('cnm')">
+			(<include refid="dataStdTySql_nm" />)
+			</if>
+			<if test="tabTy.equals('cty')">
+			(<include refid="dataStdTySql_ty" />)
+			</if>
+		WHERE
+			1 = 1
+			<include refid="searchDataStdTySql" />		
+    </select>
+    
+    
+
+</mapper>

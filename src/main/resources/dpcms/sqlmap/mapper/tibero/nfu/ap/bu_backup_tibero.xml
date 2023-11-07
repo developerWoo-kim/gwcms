@@ -1,0 +1,569 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="bu_backup">
+
+	<!-- 백업 시퀀스 조회 -->
+	<select id="selectBackupSeq" parameterType="map" resultType="egovMap">
+		
+	</select>
+	
+	<!-- 백업관리 시스템 리스트 통계 sql -->
+	<sql id="selectBackupState">
+		SELECT COUNT(*) FROM TAP_BU_BACKUP_MANAGE WHERE SYS_ID= SM.SYS_ID
+	</sql>
+	
+	<!-- 백업관리 시스템 리스트 sql -->
+	<sql id="selectBackupSmList">
+		SELECT IT.INSTT_CODE
+	          ,IT.INSTT_NM
+	          ,IT.INSTT_TY
+	          ,SM.SYS_ID
+			  ,SM.SYS_NM 
+			  ,( <include refid="selectBackupState" /> ) AS TOTAL_CNT
+			  FROM TAP_IM_INSTT_MANAGE IT, TAP_SM_SYS_MANAGE SM 
+			  WHERE IT.INSTT_CODE = SM.INSTT_CODE
+			  AND SM.SYS_STTUS = 'O'
+			
+			<if test='@egovframework.MybatisUtils@isEmpty(author) || author != "master"'>
+	         AND SM.SYS_ID NOT IN ('apple')
+	        </if>
+	        
+	        <if test="@egovframework.MybatisUtils@isNotEmpty(insttCode)">
+		     AND   ( IT.INSTT_CODE =  #{insttCode}
+		     
+	                    OR  IT.UPPER_INSTT_CODE = #{upperInsttCode}
+	                    OR  IT.BSIS_INSTT_CODE = #{bsisInsttCode}
+	                    
+	               	)
+	         </if>
+	         
+		     <if test="@egovframework.MybatisUtils@isNotEmpty(insttGrad)">
+		     AND   ( IT.INSTT_GRAD IS NULL
+		     
+		     		 <if test="@egovframework.MybatisUtils@isNotEmpty(dtnt)">
+		                OR IT.INSTT_GRAD = #{dtnt}
+		             </if>
+		             <if test="@egovframework.MybatisUtils@isNotEmpty(elesch)">
+		                OR IT.INSTT_GRAD = #{elesch}
+		             </if>
+		             <if test="@egovframework.MybatisUtils@isNotEmpty(mskul)">    
+		                OR IT.INSTT_GRAD = #{mskul}
+		             </if> 
+		             <if test="@egovframework.MybatisUtils@isNotEmpty(hgschl)">
+		                OR IT.INSTT_GRAD = #{hgschl}
+		             </if>
+		             <if test="@egovframework.MybatisUtils@isNotEmpty(kndrgr)">     
+		                OR IT.INSTT_GRAD = #{kndrgr}
+		             </if>
+		             <if test="@egovframework.MybatisUtils@isNotEmpty(spcl)">
+		                OR IT.INSTT_GRAD = #{spcl}
+		             </if>
+		             
+		           )
+		     </if>
+
+		     
+		     <if test="@egovframework.MybatisUtils@isNotEmpty(sysTy)">
+		      AND   SM.SYS_TY = #{sysTy}
+		     </if>
+		     
+		     <if test="@egovframework.MybatisUtils@isNotEmpty(srchTxt)">
+		       AND  (  		 
+       				 SM.SYS_NM like '%'||#{srchTxt}||'%'
+              	  OR SM.SYS_TY like '%'||#{srchTxt}||'%' 
+              	  OR SM.SYS_ID like '%'||#{srchTxt}||'%'
+		       )
+		    </if>
+			 
+			 ORDER BY   IT.INSTT_CODE, IT.INSTT_LEVEL DESC
+	</sql>
+	
+	<!-- 백업관리 시스템 리스트 -->
+	<select id="selectBackupSmList" parameterType="map" resultType="egovMap">
+		<include refid="selectBackupSmList"/>
+	</select>
+	
+	<!-- 백업관리 시스템 페이징 -->
+	<select id="selectBackupSmListPaging" parameterType="map" resultType="egovMap">
+		SELECT
+    		PL.*
+    	FROM (
+        	SELECT 
+        		PO.*
+        		,rownum as rsn
+			FROM (
+	    		<include refid="selectBackupSmList" /> 
+				) PO
+		) PL
+		WHERE
+		<![CDATA[
+			rsn <= #{maxSn} 
+			AND rsn > #{minSn}
+		]]>
+	</select>
+	
+	<!-- 백업관리 시스템 페이징 카운트 -->
+	<select id="selectBackupSmListPagingCount" parameterType="map" resultType="int">
+		SELECT 
+			COUNT(*)
+			FROM TAP_IM_INSTT_MANAGE IT, TAP_SM_SYS_MANAGE SM 
+			  WHERE IT.INSTT_CODE = SM.INSTT_CODE
+			  AND SM.SYS_STTUS = 'O'
+			
+<!-- 			<if test='@egovframework.MybatisUtils@isEmpty(author) || author != "master"'> -->
+	         AND SM.SYS_ID NOT IN ('apple')
+<!-- 	        </if> -->
+	        
+	        <if test="@egovframework.MybatisUtils@isNotEmpty(insttCode)">
+		     AND   ( IT.INSTT_CODE =  #{insttCode}
+		     
+	                    OR  IT.UPPER_INSTT_CODE = #{upperInsttCode}
+	                    OR  IT.BSIS_INSTT_CODE = #{bsisInsttCode}
+	                    
+	               	)
+	         </if>
+	         
+		     <if test="@egovframework.MybatisUtils@isNotEmpty(insttGrad)">
+		     AND   ( IT.INSTT_GRAD IS NULL
+		     
+		     		 <if test="@egovframework.MybatisUtils@isNotEmpty(dtnt)">
+		                OR IT.INSTT_GRAD = #{dtnt}
+		             </if>
+		             <if test="@egovframework.MybatisUtils@isNotEmpty(elesch)">
+		                OR IT.INSTT_GRAD = #{elesch}
+		             </if>
+		             <if test="@egovframework.MybatisUtils@isNotEmpty(mskul)">    
+		                OR IT.INSTT_GRAD = #{mskul}
+		             </if> 
+		             <if test="@egovframework.MybatisUtils@isNotEmpty(hgschl)">
+		                OR IT.INSTT_GRAD = #{hgschl}
+		             </if>
+		             <if test="@egovframework.MybatisUtils@isNotEmpty(kndrgr)">     
+		                OR IT.INSTT_GRAD = #{kndrgr}
+		             </if>
+		             <if test="@egovframework.MybatisUtils@isNotEmpty(spcl)">
+		                OR IT.INSTT_GRAD = #{spcl}
+		             </if>
+		             
+		           )
+		     </if>
+		     
+		     <if test="@egovframework.MybatisUtils@isNotEmpty(sysTy)">
+		      AND   SM.SYS_TY = #{sysTy}
+		     </if>
+		     
+		     <if test="@egovframework.MybatisUtils@isNotEmpty(srchTxt)">
+		       AND  (  		 
+       				 SM.SYS_NM like '%'||#{srchTxt}||'%'
+              	  OR SM.SYS_TY like '%'||#{srchTxt}||'%' 
+		              	 
+		       )
+		    </if>
+			 
+			 ORDER BY   IT.INSTT_CODE, IT.INSTT_LEVEL DESC
+	</select>	
+	
+	<!-- 기능리스트 조회 -->
+	<sql id="selectSkllSql" >
+		SELECT 
+			B.SKLL_NM
+			,B.SKLL_SN
+			,( SELECT COUNT(*) FROM TAP_BU_BACKUP_MANAGE A WHERE  A.SKLL_SN = B.SKLL_SN AND SYS_ID = #{sysId}) AS TOTAL_CNT
+		FROM 
+			TAP_BU_SKLLLIST_MANAGE B
+		<if test="@egovframework.MybatisUtils@isNotEmpty(srchTxt)">
+			<![CDATA[
+			WHERE SKLL_NM LIKE '%'||#{srchTxt}||'%'
+			]]>
+		</if>
+	</sql>
+	
+	<!-- 기능리스트조회 -->
+	<select id="selectSkllList" parameterType="map" resultType="egovMap">
+		<include refid="selectSkllSql" /> 
+	</select>
+	
+	<!-- 기능 리스트 조회(페이징) -->
+    <select id="selectSkllListPaging" parameterType="map" resultType="egovMap">
+    	SELECT
+    		PL.*
+    	FROM (
+        	SELECT 
+        		PO.*
+        		,rownum as rsn
+			FROM (
+	    		<include refid="selectSkllSql" />
+				) PO
+		) PL
+		WHERE
+		<![CDATA[
+			rsn <= #{maxSn} 
+			AND rsn > #{minSn}
+		]]>
+    </select>
+    
+    <!-- 기능목록 카운트 -->
+    <select id="selectSkllListPagingCount" parameterType="map" resultType="int">
+    	SELECT
+	    	COUNT(*)
+		FROM 
+			TAP_BU_SKLLLIST_MANAGE
+		<if test="@egovframework.MybatisUtils@isNotEmpty(srchTxt)">
+			<![CDATA[
+			WHERE SKLL_NM LIKE '%'||#{srchTxt}||'%'
+			]]>
+		</if>
+    </select>
+    
+    <!-- 기능 상세조회 -->
+    <select id="selectSkllInfo" parameterType="map" resultType="egovMap">
+    	SELECT
+    		SKLL_NM,
+    		SKLL_SN
+    	FROM 
+    		TAP_BU_SKLLLIST_MANAGE
+    	WHERE
+    		SKLL_SN = #{skllSn}
+    </select>
+    
+    <!-- 기능명 중복확인 -->
+    <select id="selectSkllNmChk" parameterType="map" resultType="int">
+    	SELECT
+	    	COUNT(*)
+	    FROM
+	    	TAP_BU_SKLLLIST_MANAGE
+	    WHERE
+	    	SKLL_NM = TRIM(#{skllNm})
+    </select>
+    
+    <!-- 기능 추가 -->
+    <insert id="insertSkll" parameterType="map">
+	    INSERT INTO
+	    	TAP_BU_SKLLLIST_MANAGE
+	    	(
+	    		SKLL_NM
+				,SKLL_SN
+	    	) VALUES (
+	    		TRIM(#{skllNm})
+	    		,SEQ_BACKUP_SN.NEXTVAL
+	    	)
+    </insert>
+    
+    <!-- 기능 수정 -->
+    <update id="updateSkll" parameterType="map">
+    	UPDATE 
+    		TAP_BU_SKLLLIST_MANAGE
+    	SET 
+    		SKLL_NM = #{skllNm}
+    	WHERE 
+    		SKLL_SN = #{skllSn}
+    </update>
+    
+    <!-- 기능 삭제 -->
+    <delete id="deleteSkll" parameterType="map">
+    	DELETE 
+    	FROM 
+    		TAP_BU_SKLLLIST_MANAGE
+    	WHERE 
+    		SKLL_SN = #{skllSn}
+    </delete>
+    
+    <!-- 테이블정보 목록 -->
+    <select id="selectSkllTbList" parameterType="map" resultType="egovMap">
+    	SELECT 
+    		TABLE_NM
+			,SKLL_SN
+			,TABLE_CN
+			,TABLE_SN
+		FROM 
+			TAP_BU_SKLLTB_MANAGE
+		WHERE 
+			SKLL_SN = #{skllSn}
+		ORDER BY 
+			TABLE_SN
+    </select>
+    
+    <!-- 테이블정보 상세보기 -->
+    <select id="selectSkllTbInfo" parameterType="map" resultType="egovMap">
+    	SELECT  
+			TABLE_NM
+			,SKLL_SN
+			,TABLE_CN
+			,TABLE_SN
+		FROM 
+			TAP_BU_SKLLTB_MANAGE
+		WHERE 
+			TABLE_SN = #{tableSn}
+    </select> 
+    
+    <!-- 테이블 있는지 확인 -->
+    <select id="selectSkllTbChk" parameterType="map" resultType="int">
+		SELECT 
+			COUNT(*) CNT
+		FROM 
+			ALL_TAB_COMMENTS
+		WHERE 
+			TABLE_NAME = UPPER(#{tableNm})
+		AND 
+			OWNER = UPPER(#{owner})
+    </select>
+    
+    <!-- 테이블 정보 등록 -->
+    <insert id="insertSkllTb" parameterType="map">
+    	INSERT INTO
+	    	TAP_BU_SKLLTB_MANAGE
+	    	(
+	    		TABLE_NM
+				,SKLL_SN
+				,TABLE_CN
+				,TABLE_SN
+	    	) VALUES (
+	    		TRIM(#{tableNm})
+	    		,#{skllSn}
+	    		,#{tableCn}
+	    		,SEQ_BACKUP_SN.NEXTVAL
+	    	)
+    </insert>
+    
+    <!-- 테이블 정보 수정 -->
+    <update id="updateSkllTb" parameterType="map">
+    	UPDATE 
+    		TAP_BU_SKLLTB_MANAGE
+    	SET 
+    		TABLE_NM = #{tableNm},
+    		TABLE_CN = #{tableCn}
+    	WHERE 
+    		TABLE_SN = #{tableSn}
+    </update>
+    
+    <!-- 테이블 정보 삭제 -->
+    <delete id="deleteSkllTb" parameterType="map">
+    	DELETE 
+    	FROM 
+    		TAP_BU_SKLLTB_MANAGE
+    	WHERE 
+    		TABLE_SN = #{tableSn}
+    </delete>
+    
+    <!-- 테이블 정보 상세보기 -->
+    <select id="selectSkllTbView" parameterType="map" resultType="egovMap">
+		SELECT
+			A.COLUMN_ID,       <!-- 컬럼순서 -->
+			B.COMMENTS,        <!-- 컬럼코멘트 --> 
+			A.COLUMN_NAME,     <!-- 컬럼명 --> 
+			A.DATA_TYPE || '(' ||
+			  DECODE( 
+			        A.DATA_TYPE, 
+			        'NUMBER', 
+			        A.DATA_PRECISION || 
+			          DECODE(A.DATA_SCALE, 0, '', ',' || A.DATA_SCALE), 
+			        A.DATA_LENGTH) || ')' AS DATA_TYPE, <!--타입 -->
+<!-- 			A.DATA_SCALE, -->
+			A.NULLABLE        <!-- NULLABLE -->
+<!-- 			,A.DATA_DEFAULT     디폴트값 -->
+		FROM 
+			USER_TAB_COLUMNS A, 
+			USER_COL_COMMENTS B
+		WHERE 
+				A.TABLE_NAME = B.TABLE_NAME 
+			AND 
+				A.COLUMN_NAME = B.COLUMN_NAME 
+			AND
+				A.TABLE_NAME = #{tableNm}
+		ORDER BY
+			A.COLUMN_ID
+    
+    </select>
+    
+    <!-- 기능 백업 리스트 -->
+    <select id="selectSkllBackupList" parameterType="map" resultType="egovMap">
+    	SELECT 
+			SYS_ID
+			,BACKUP_DT
+			,BACKUP_SN
+			,HASHCD
+			,SKLL_NM
+			,FILE_ID
+			,REG_USNM
+			,REG_USID
+			,SKLL_SN
+		FROM 
+			TAP_BU_BACKUP_MANAGE
+		WHERE 
+			SKLL_SN = #{skllSn}
+		<if test="@egovframework.MybatisUtils@isNotEmpty(sysId)">
+		AND 
+			SYS_ID = #{sysId}
+		</if>
+		<if test="@egovframework.MybatisUtils@isEmpty(sysId)">
+		AND 
+			SYS_ID IS NULL
+		</if>
+		ORDER BY
+			BACKUP_SN DESC
+    </select>
+    
+    <!-- 테이블 컬럼  조회 -->
+    <select id="selectCol" parameterType="map" resultType="egovMap">
+    	SELECT 
+    		LISTAGG(COLUMN_NAME, ',') WITHIN GROUP (ORDER BY COLUMN_ID)  AS COL
+		FROM 
+			(
+				SELECT 
+					COLUMN_NAME
+					,COLUMN_ID  
+				FROM 
+					USER_TAB_COLUMNS 
+				WHERE 
+					TABLE_NAME = #{tableNm}
+			)
+    </select>
+    
+    <resultMap id="clobMap" type="egovMap">
+        <result property="QESTNR_CN" column="QESTNR_CN" jdbcType="CLOB" javaType="java.lang.String"/>
+        <result property="CLAS_INTRCN" column="CLAS_INTRCN" jdbcType="CLOB" javaType="java.lang.String"/>
+        <result property="CLAS_REPRSNT" column="CLAS_REPRSNT" jdbcType="CLOB" javaType="java.lang.String"/>
+        <result property="IN_EDITR_CN" column="IN_EDITR_CN" jdbcType="CLOB" javaType="java.lang.String"/>
+        <result property="IN_VEDITR_CN" column="IN_VEDITR_CN" jdbcType="CLOB" javaType="java.lang.String"/>
+        <result property="QUSTNR_CN" column="QUSTNR_CN" jdbcType="CLOB" javaType="java.lang.String"/>
+        <result property="REQST_CN" column="REQST_CN" jdbcType="CLOB" javaType="java.lang.String"/>
+        <result property="NTT_CN" column="NTT_CN" jdbcType="CLOB" javaType="java.lang.String"/>
+
+        <result property="ANSWER_CN" column="ANSWER_CN" jdbcType="CLOB" javaType="java.lang.String"/>
+
+		<result property="CNTNTS_CN" column="CNTNTS_CN" jdbcType="CLOB" javaType="java.lang.String"/>
+    </resultMap>
+    
+    <!-- 테이블의 Key값 알아오기 -->
+    <select id="selectKeyInfo" parameterType="map" resultType="egovMap">
+    	SELECT 
+    		A.CONSTRAINT_NAME
+    		,A.TABLE_NAME
+    		,B.COLUMN_NAME
+    		,A.CONSTRAINT_TYPE
+    		,A.R_CONSTRAINT_NAME
+		FROM 
+			USER_CONSTRAINTS A
+			,USER_CONS_COLUMNS B
+		WHERE
+			A.CONSTRAINT_NAME=B.CONSTRAINT_NAME
+		AND 
+			A.OWNER = UPPER(#{owner})
+		AND 
+			A.CONSTRAINT_TYPE IN(#{constraintType})
+		AND 
+			A.TABLE_NAME = #{tableNm}
+    </select>
+    
+    <!-- 해당pk를 갖는 tb조회 -->
+    <select id="selectPkInfo" parameterType="map" resultType="egovMap">
+    	SELECT 
+    		A.CONSTRAINT_NAME
+    		,A.TABLE_NAME
+    		,B.COLUMN_NAME
+    		,A.CONSTRAINT_TYPE
+    		,A.R_CONSTRAINT_NAME
+		FROM 
+			USER_CONSTRAINTS A, USER_CONS_COLUMNS B
+		WHERE
+			A.CONSTRAINT_NAME=B.CONSTRAINT_NAME
+		AND 
+			A.OWNER = UPPER(#{owner})
+		AND 
+			A.CONSTRAINT_TYPE IN('P')
+		AND 
+			A.CONSTRAINT_NAME = #{rConstraintName}
+    </select>
+    
+    <!-- 참조테이블 데이터 조회(조인) -->
+    <select id="selectSkllTbDataJoin" parameterType="map" resultMap="clobMap">
+    	SELECT A.*
+		FROM
+		    ${tableName} A
+		    ${baseTableNm}
+		WHERE 
+			1 = 1
+		<if test="@egovframework.MybatisUtils@isNotEmpty(sysId)">
+		AND 
+			SYS_ID = #{sysId}
+		</if>
+		
+    </select>
+    
+    <!-- 테이블 데이터 전체 조회 -->
+    <select id="selectSkllTbData" parameterType="map" resultMap="clobMap">
+    	SELECT 
+			*
+		FROM 
+			${tableNm}
+		<if test="@egovframework.MybatisUtils@isNotEmpty(sysId)">
+		WHERE
+			SYS_ID = #{sysId}
+		</if>
+		
+    </select>
+    
+    <!-- 백업테이블 입력 -->
+    <insert id="insertBackup" parameterType="map">
+    	INSERT INTO
+	    	TAP_BU_BACKUP_MANAGE
+	    	(
+	    		SYS_ID
+				,BACKUP_DT
+				,BACKUP_SN
+				,HASHCD
+				,SKLL_NM
+				,FILE_ID
+				,REG_USNM
+				,REG_USID
+				,SKLL_SN
+	    	) VALUES (
+	    		#{sysId}
+	    		,SYSDATE
+	    		,SEQ_BACKUP_SN.NEXTVAL
+	    		,#{hashcd}
+	    		,#{skllNm}
+	    		,#{fileId}
+	    		,#{regUsnm}
+	    		,#{regUsId}
+	    		,#{skllSn}
+	    	)
+    </insert>
+    
+    
+    <!-- 파일 위변조 판단(해시코드 확인) -->
+    <select id="selectRestoreFileChk" parameterType="map" resultType="int">
+    	SELECT 
+    		COUNT(*)
+		FROM 
+			TAP_BU_BACKUP_MANAGE
+		WHERE 
+			SKLL_SN = #{skllSn}
+		AND 
+			HASHCD = #{hashcd}
+    
+    </select>
+    
+    <!-- 백업테이블 생성하기 -->
+    <select id="createBakTb" parameterType="map">
+    	${createBakTb} 
+    </select>
+    
+    <!-- 백업테이블에 데이터 저장 -->
+    <!-- 2023-03-09 취약점 조치 -->
+<!--     <insert id="insertInfo">
+    	INSERT INTO
+	    	${tableNm} 
+	    	 VALUES 
+		    	<foreach collection="insertInfoList" item="item" index="index" open="(" close=")" separator=",">
+				#{item}
+				</foreach>
+    </insert> -->
+    
+    <!-- 백업테이블있으면 삭제 -->
+    <delete id="deleteBakTb" parameterType="map">
+    	${deleteBakTb} 
+    </delete>
+    
+</mapper>

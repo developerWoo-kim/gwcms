@@ -1,0 +1,317 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="im_instt">
+
+	<sql id ="selectInsttList">
+		SELECT  INSTT_CODE
+		       ,INSTT_NM
+		       ,INSTT_TY
+		       ,INSTT_GRAD
+		       ,INSTT_LEVEL
+		       ,MOPAS_CODE
+		       ,UPPER_INSTT_CODE
+		       ,UPPER_INSTT_NM
+		       ,UPPER_MOPAS_CODE
+		       ,BSIS_INSTT_CODE
+		       ,BSIS_INSTT_NM
+		       ,BSIS_MOPAS_CODE
+		       ,FOND
+		       ,AREA
+		  FROM  TAP_IM_INSTT_MANAGE
+		 WHERE  1 = 1
+		 <if test="@egovframework.MybatisUtils@isNotEmpty(srchTxt)">
+		   AND  ( INSTT_NM like '%'||#{srchTxt}||'%' or INSTT_CODE like '%'||#{srchTxt}||'%' )
+		 </if>
+
+		 <if test='@egovframework.MybatisUtils@isEmpty(author) || author != "master"'>
+         AND	INSTT_GRAD NOT IN ('apple')
+        </if>
+
+		 <if test="@egovframework.MybatisUtils@isNotEmpty(insttCode)">
+	     AND   ( INSTT_CODE =  #{insttCode}
+
+                    OR  UPPER_INSTT_CODE = #{upperInsttCode}
+                    OR  BSIS_INSTT_CODE = #{bsisInsttCode}
+
+               	)
+         </if>
+
+	     <if test="@egovframework.MybatisUtils@isNotEmpty(insttGrad)">
+	     AND   (
+<!-- 	     		INSTT_GRAD IS NULL -->
+
+<!-- 	     		 <if test="@egovframework.MybatisUtils@isNotEmpty(dtnt)"> -->
+<!-- 	                OR INSTT_GRAD = #{dtnt} -->
+<!-- 	             </if> -->
+<!-- 	             <if test="@egovframework.MybatisUtils@isNotEmpty(elesch)"> -->
+<!-- 	                OR INSTT_GRAD = #{elesch} -->
+<!-- 	             </if> -->
+<!-- 	             <if test="@egovframework.MybatisUtils@isNotEmpty(mskul)">     -->
+<!-- 	                OR INSTT_GRAD = #{mskul} -->
+<!-- 	             </if>  -->
+<!-- 	             <if test="@egovframework.MybatisUtils@isNotEmpty(hgschl)"> -->
+<!-- 	                OR INSTT_GRAD = #{hgschl} -->
+<!-- 	             </if> -->
+<!-- 	             <if test="@egovframework.MybatisUtils@isNotEmpty(kndrgr)">      -->
+<!-- 	                OR INSTT_GRAD = #{kndrgr} -->
+<!-- 	             </if> -->
+<!-- 	             <if test="@egovframework.MybatisUtils@isNotEmpty(spcl)"> -->
+<!-- 	                OR INSTT_GRAD = #{spcl} -->
+<!-- 	             </if> -->
+
+				INSTT_GRAD = #{insttGrad}
+
+	           )
+	     </if>
+	     ORDER BY INSTT_CODE DESC
+	</sql>
+
+	<!-- 기관 리스트 조회 -->
+    <select id="selectInsttList" parameterType="egovMap" resultType="egovMap">
+	 	<include refid="selectInsttList" />
+    </select>
+
+	<!-- 기관 정보 조회 -->
+    <select id="selectInsttInfo" parameterType="egovMap" resultType="egovMap">
+		SELECT  INSTT_CODE
+		       ,INSTT_NM
+		       ,INSTT_TY
+		       ,INSTT_GRAD
+		       ,INSTT_LEVEL
+		       ,MOPAS_CODE
+		       ,UPPER_INSTT_CODE
+		       ,UPPER_INSTT_NM
+		       ,UPPER_MOPAS_CODE
+		       ,BSIS_INSTT_CODE
+		       ,BSIS_INSTT_NM
+		       ,BSIS_MOPAS_CODE
+		       ,FOND
+		       ,AREA
+		  FROM  TAP_IM_INSTT_MANAGE
+		  WHERE 1 = 1
+		 <if test="@egovframework.MybatisUtils@isNotEmpty(insttCode)">
+		   AND  INSTT_CODE = #{insttCode}
+		 </if>
+		 <if test="@egovframework.MybatisUtils@isNotEmpty(insttNm)">
+		   AND  INSTT_NM = #{insttNm}
+		 </if>
+    </select>
+
+     <!-- 기관 리스트  조회(페이징) -->
+    <select id="selectInsttListPaging" parameterType="map" resultType="egovMap">
+    	SELECT
+    		PL.*
+    	FROM (
+        	SELECT
+        		PO.*
+        			,rownum as rsn
+			FROM (
+	    		<include refid="selectInsttList" />
+				) PO
+		) PL
+		WHERE
+		<![CDATA[
+			rsn <= #{maxSn}
+			AND rsn > #{minSn}
+		]]>
+    </select>
+
+     <!--기관 리스트 조회(페이징 전체 카운트) -->
+    <select id="selectInsttListPagingCount" parameterType="map" resultType="int">
+    	SELECT  COUNT(*)
+	      FROM  TAP_IM_INSTT_MANAGE
+	     WHERE  1 = 1
+	     		 <if test="@egovframework.MybatisUtils@isNotEmpty(srchTxt)">
+		   AND  ( INSTT_NM like '%'||#{srchTxt}||'%' or INSTT_CODE like '%'||#{srchTxt}||'%' )
+		 </if>
+
+		 <if test='@egovframework.MybatisUtils@isEmpty(author) || author != "master"'>
+         AND	INSTT_GRAD NOT IN ('apple')
+        </if>
+
+		 <if test="@egovframework.MybatisUtils@isNotEmpty(insttCode)">
+	     AND   ( INSTT_CODE =  #{insttCode}
+
+                    OR  UPPER_INSTT_CODE = #{upperInsttCode}
+                    OR  BSIS_INSTT_CODE = #{bsisInsttCode}
+
+               	)
+         </if>
+
+	     <if test="@egovframework.MybatisUtils@isNotEmpty(insttGrad)">
+	       AND  INSTT_GRAD = #{insttGrad}
+	     </if>
+
+		 <if test="@egovframework.MybatisUtils@isNotEmpty(insttLevel)">
+		  <choose>
+		   <when test="insttLevel == 1">
+		   AND  INSTT_LEVEL = #{insttLevel}
+		   </when>
+		   <when test="insttLevel == 2">
+		   AND  INSTT_LEVEL = #{insttLevel}
+		   </when>
+		   <when test="insttLevel == 3">
+		   AND  INSTT_LEVEL = #{insttLevel}
+		   </when>
+		   </choose>
+		 </if>
+    </select>
+
+    <!-- 기관 추가 -->
+    <insert id="im_instt.insertInsttInfo" parameterType="egovMap">
+		INSERT INTO TAP_IM_INSTT_MANAGE
+		 (
+			 INSTT_CODE
+			,INSTT_NM
+			,INSTT_TY
+			,INSTT_GRAD
+			,INSTT_LEVEL
+			,MOPAS_CODE
+			,NEIS_CODE
+			,UPPER_INSTT_CODE
+			,UPPER_INSTT_NM
+			,UPPER_MOPAS_CODE
+			,BSIS_INSTT_CODE
+			,BSIS_INSTT_NM
+			,BSIS_MOPAS_CODE
+			,FOND
+			,AREA
+		 ) VALUES (
+			 #{insttCode}
+			,#{insttNm}
+			,#{insttTy}
+			,#{insttGrad}
+			,#{insttLevel}
+			,#{mopasCode}
+			,#{neisCode}
+			,#{upperInsttCode}
+			,#{upperInsttNm}
+			,#{upperMopasCode}
+			,#{bsisInsttCode}
+			,#{bsisInsttNm}
+			,#{bsisMopasCode}
+			,#{fond}
+			,#{area}
+		 )
+    </insert>
+
+    <!-- 기관 정보 수정 -->
+    <update id="updateInsttInfo" parameterType="egovMap">
+		UPDATE  TAP_IM_INSTT_MANAGE
+		   SET  INSTT_NM         = #{insttNm}
+		       ,INSTT_TY         = #{insttTy}
+		       ,INSTT_GRAD       = #{insttGrad}
+		       ,INSTT_LEVEL      = #{insttLevel}
+		       ,NEIS_CODE        = #{neisCode}
+		       ,MOPAS_CODE       = #{mopasCode}
+		       ,UPPER_INSTT_CODE = #{upperInsttCode}
+		       ,UPPER_INSTT_NM   = #{upperInsttNm}
+		       ,UPPER_MOPAS_CODE = #{upperMopasCode}
+		       ,BSIS_INSTT_CODE  = #{bsisInsttCode}
+		       ,BSIS_INSTT_NM    = #{bsisInsttNm}
+		       ,BSIS_MOPAS_CODE  = #{bsisMopasCode}
+		       ,FOND			 = #{fond}
+		       ,AREA			 = #{area}
+		 WHERE  INSTT_CODE = #{insttCode}
+    </update>
+
+    <!-- 관리자 시스템 접속 통계 기관 정보 수정 -->
+    <update id="updateMngrInstt" parameterType="egovMap">
+		UPDATE  TAP_ST_MNGR_ACCES
+		   SET  INSTT_NM   = #{insttNm}
+		 WHERE  INSTT_CODE = #{insttCode}
+    </update>
+
+    <!-- 사용자 개인정보제공 동의 이력 기관 정보 수정 -->
+    <update id="updateMberInstt" parameterType="egovMap">
+		UPDATE  TAP_MM_AGRE_HIST
+		   SET  INSTT_NM   = #{insttNm}
+		 WHERE  INSTT_CODE = #{insttCode}
+    </update>
+
+    <!-- 멤버타입 기관 정보 수정 -->
+    <update id="updateMberTyInstt" parameterType="egovMap">
+		UPDATE  TAP_MM_MBER_TY
+		   SET  INSTT_NM   = #{insttNm}
+		 WHERE  INSTT_CODE = #{insttCode}
+    </update>
+
+    <!-- 사용자 접속 통계 기관 정보 수정 -->
+    <update id="updateAgreInstt" parameterType="egovMap">
+		UPDATE  TAP_ST_MBER_ACCES
+		   SET  INSTT_NM   = #{insttNm}
+		 WHERE  INSTT_CODE = #{insttCode}
+    </update>
+
+    <!-- 기관 삭제 -->
+    <delete id="deleteInsttInfo" parameterType="egovMap">
+    	DELETE
+    	  FROM  TAP_IM_INSTT_MANAGE
+    	 WHERE  INSTT_CODE = #{insttCode}
+    </delete>
+
+
+    <!-- 기관구분리스트 조회 -->
+
+    <select id="insttGradList" parameterType="map" resultType="egovMap">
+    	SELECT *
+    	FROM TAP_CD_CMMNCODE_DETAIL
+    	WHERE CMMN_CODE = 'insttGrad'
+    	AND USE_AT = 'Y'
+    </select>
+
+    <select id="selectUpperInsttList" parameterType="map" resultType="egovMap">
+    	SELECT *
+    	FROM TAP_IM_INSTT_MANAGE
+		WHERE INSTT_LEVEL IN(1,2)
+		ORDER BY INSTT_LEVEL
+    </select>
+
+    <select id="selectBsisInsttList" parameterType="map" resultType="egovMap">
+    	SELECT *
+    	FROM TAP_IM_INSTT_MANAGE
+		WHERE INSTT_LEVEL IN(1)
+		ORDER BY INSTT_LEVEL
+    </select>
+
+    <!-- 상위코드(레벨2)아래의 하위코드 정보수정 -->
+    <update id="updateBsisInsttInfo" parameterType="egovMap">
+    	UPDATE  TAP_IM_INSTT_MANAGE
+		   SET BSIS_INSTT_CODE  = #{bsisInsttCode}
+		       ,BSIS_INSTT_NM    = #{bsisInsttNm}
+		       ,UPPER_INSTT_NM    = #{upperInsttNm}
+		 WHERE  UPPER_INSTT_CODE = #{insttCode}
+    </update>
+
+    <!-- 최상위코드(레벨1)아래의 상위코드(레벨2) 정보수정 -->
+    <update id="updateUpperNmInsttInfo" parameterType="egovMap">
+    	UPDATE  TAP_IM_INSTT_MANAGE
+		   SET BSIS_INSTT_NM    = #{insttNm}
+		       ,UPPER_INSTT_NM    = #{insttNm}
+		 WHERE  UPPER_INSTT_CODE = #{insttCode}
+    </update>
+
+    <!-- 최상위코드(레벨1)아래의 하위코드(레벨3) 정보수정 -->
+    <update id="updateBsisNmInsttInfo" parameterType="egovMap">
+    	UPDATE  TAP_IM_INSTT_MANAGE
+		   SET BSIS_INSTT_NM    = #{insttNm}
+		 WHERE  BSIS_INSTT_CODE = #{insttCode}
+    </update>
+
+	<select id="selectInsttChk" parameterType="map" resultType="egovMap">
+		SELECT * FROM TAP_IM_INSTT_MANAGE
+		WHERE UPPER_INSTT_CODE = #{insttCode}
+		OR BSIS_INSTT_CODE = #{insttCode}
+	</select>
+
+    <!-- NIESCODE 수정 -->
+    <update id="updateNeisCodeInsttInfo" parameterType="egovMap">
+    	UPDATE  TAP_IM_INSTT_MANAGE
+		   SET
+		   	 NEIS_CODE    = #{neisCode}
+		   	,MOPAS_CODE    = #{mopasCode}
+		 WHERE  INSTT_CODE = #{insttCode}
+    </update>
+    <!-- //NIESCODE 수정 -->
+</mapper>

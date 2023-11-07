@@ -1,0 +1,111 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+ 
+<mapper namespace="rq_reqst">
+
+	<!-- 요청게시판 통계현황 조회 -->
+	<select id="selectReqstBbsStats" parameterType="map" resultType="egovMap">
+		SELECT
+			(select COUNT(*) from TCO_NA_NTT_MANAGE where bbs_id = #{bbsId} and ntt_use_at = 'Y') AS SUM_CNT
+			,NVL(SUM(NTT_STTUS_W), 0) AS W_STTUS_CNT
+			,NVL(SUM(NTT_STTUS_R), 0) AS R_STTUS_CNT
+			,NVL(SUM(NTT_STTUS_C), 0) AS C_STTUS_CNT
+		FROM (
+			SELECT
+				CASE WHEN NTT_STTUS = 'W' THEN COUNT(*) ELSE 0 END AS NTT_STTUS_W
+				,CASE WHEN NTT_STTUS = 'R' THEN COUNT(*) ELSE 0 END AS NTT_STTUS_R
+				,CASE WHEN NTT_STTUS = 'C' THEN COUNT(*) ELSE 0 END AS NTT_STTUS_C
+			FROM
+				TCO_NA_NTT_MANAGE
+			WHERE
+				BBS_ID = #{bbsId}
+			AND
+				NTT_USE_AT = 'Y'
+			<if test="@egovframework.MybatisUtils@isNotEmpty(selectTy)">
+				<if test='selectTy == "today"'>
+					AND
+						TO_CHAR(SYSDATE, 'YYYYMMDD') = TO_CHAR(REG_DT, 'YYYYMMDD')
+				</if>
+			</if>
+			GROUP BY
+				NTT_STTUS
+		)
+	</select>
+	
+	<!-- 요청게시판 통계현황 상세 조회 -->
+	<select id="selectReqstBbsDetailStats" parameterType="map" resultType="egovMap">
+		SELECT 
+			ADIT_VALUE
+			,TO_CHAR(SUM(W_CNT)) AS W_CNT
+			,TO_CHAR(SUM(R_CNT)) AS R_CNT
+			,TO_CHAR(SUM(C_CNT)) AS C_CNT
+			,TO_CHAR(SUM(W_CNT + R_CNT + C_CNT)) AS SUM_CNT
+		FROM (
+			SELECT
+				BA.ADIT_VALUE
+				,CASE <!-- 대기 -->
+					WHEN NT.NTT_STTUS = 'W'
+					THEN COUNT(*)
+					ELSE 0
+				END AS W_CNT
+				,CASE <!-- 접수 -->
+					WHEN NT.NTT_STTUS = 'R'
+					THEN COUNT(*)
+					ELSE 0
+				END AS R_CNT
+				,CASE <!-- 완료 -->
+					WHEN NT.NTT_STTUS = 'C'
+					THEN COUNT(*)
+					ELSE 0
+				END AS C_CNT
+			FROM
+				(
+					SELECT * 
+					FROM TCO_NA_NTT_MANAGE 
+					WHERE NTT_USE_AT = 'Y'
+				) NT
+				,(
+					SELECT 
+						REGEXP_SUBSTR(ADIT_VALUE, '[^||]+', 1, LEVEL) AS ADIT_VALUE
+					FROM (
+						SELECT ADIT_VALUE 
+						FROM TAP_BM_BBS_ADIT 
+						WHERE BBS_ID = #{bbsId}
+						AND ADIT_TY = 'SELECT'
+					)
+					CONNECT BY LEVEL <![CDATA[<=]]> REGEXP_COUNT(ADIT_VALUE, '[^||]+')
+				) BA
+			WHERE
+			 	BA.ADIT_VALUE = NT.ADIT_COL1(+)
+			GROUP BY
+				BA.ADIT_VALUE, NT.NTT_STTUS
+			ORDER BY
+				BA.ADIT_VALUE
+		)
+		GROUP BY
+			ADIT_VALUE
+	</select>
+	
+	<!-- 요청게시판 현황 조회 -->
+	<select id="selectReqstBbsList" parameterType="map" resultType="egovMap">
+		SELECT
+			REG_NM 
+			,NTT_SJ 
+			,TO_CHAR(REG_DT, 'YYYY-MM-DD') AS REG_DT 
+			,ADIT_COL1
+			,CASE 
+				WHEN NTT_STTUS = 'W' THEN '대기'
+				WHEN NTT_STTUS = 'R' THEN '접수'
+				WHEN NTT_STTUS = 'C' THEN '완료'
+				ELSE ''
+			END AS NTT_STTUS_NM
+		FROM
+			TCO_NA_NTT_MANAGE
+		WHERE
+			BBS_ID = #{bbsId}
+		AND
+			NTT_USE_AT = 'Y'
+		ORDER BY
+			REG_DT DESC
+	</select>
+</mapper>

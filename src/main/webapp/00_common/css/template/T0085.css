@@ -1,0 +1,48 @@
+﻿/* 메인 컨테이너 */
+#container { position:relative; z-index:2; width:100%; }
+#container *{ scrollbar-arrow-color:#ddd; scrollbar-Track-Color:#ddd; scrollbar-base-color:#aaa; scrollbar-Face-Color:#aaa; scrollbar-3dLight-Color:#aaa; scrollbar-DarkShadow-Color:#aaa; scrollbar-Highlight-Color:#aaa; scrollbar-Shadow-Color:#aaa;}
+#container ::-webkit-scrollbar { width:5px; }
+#container ::-webkit-scrollbar-thumb { background-color:#aaa; border-radius:10px; }
+#container ::-webkit-scrollbar-track { background-color:#ddd; border-radius:10px; }
+
+.MC_wrap1 {position:relative; z-index:2;}
+.MC_wrap1 .container{ position: relative; }
+.MC_wrap1 .container:before {content:""; position:absolute; left: -15rem; top:10rem; width:314px; height:339px; background:url('/images/template/T0085/main/0085_bg_img.png') no-repeat; z-index: 1;}
+.MC_wrap2 {position:relative; margin:1rem 0 2rem; }
+.MC_wrap2 .container:before { content:""; position:absolute; left:-4.5rem; top:0; width:200%; height:100%; border-radius:2rem 0 0 0; } 
+
+.MC_box1 {position:relative; width:78rem; height:25.5rem;} /* 비주얼 */ 
+.MC_box2 {position:relative; width:19.5rem; margin-top:-7rem; padding:1rem 2rem 0 0; float:left;} /* 팝업존 */
+.MC_box2:before {content:""; position:absolute; right:0; top:0; width:500%; height:12rem; border-radius:0 2rem 2rem 0; background:#fff;}
+.MC_box3 {position:relative; width:calc(100% - 19.5rem); float:right; } /* 바로가기 */
+.MC_box4 {position:relative; width:100%; float:left; margin:2rem 0 2.5rem; } /* 공지사항 */
+.MC_box5 {position:relative; width:100%; clear: both; padding: 2rem 0; } /* 포토갤러리 */
+.MC_box5:before{position: absolute; content: ''; width: 300%; height: 100%; top: 0; left: -100%; background: url(/images/template/T0085/main/0085_bg_ptrn.png);}
+.MC_box6 {position:relative; width:64%; float:left;}/* 행사일정 */
+.MC_box7 {position:relative; width:33%; float:right; height:17.5rem;}/* 식단 */ 
+
+@media (max-width:1440px) {
+    .MC_wrap2:before { display:none; }
+}
+@media (max-width:1240px) {  
+    .MC_box1 {width:calc(100% + 2rem); left:-1rem; }   /* 비주얼 */  
+}
+@media (max-width: 1024px) {  
+    #container{ padding-top: 3.5rem; }
+    .MC_box1 {height:auto;} /* 비주얼 */  
+    .MC_box2 {margin-top:0;}
+}
+@media (max-width:980px) {  
+    .MC_wrap2 {margin: 0;} 
+
+    .MC_box2 {width:100%; padding:1rem 0 0;} /* 팝업존 */
+    .MC_box2:before { right:-1rem; border-radius:0;}
+    .MC_box3 {width:100%; margin-top:1rem;} /* 바로가기 */
+    .MC_box4 {margin:1.5rem 0 1rem;} /* 공지사항 */
+    .MC_box5 {padding:1rem 0; } /* 포토갤러리 */ 
+    .MC_box6 {width:100%; margin-top:1rem;} /* 행사일정 */
+    .MC_box7 {width:100%; height:14rem; margin: 1rem 0;} /* 식단 */
+}
+@media (max-width:380px){
+    .MC_box7 {height:13rem;}
+}

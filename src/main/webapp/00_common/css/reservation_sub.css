@@ -1,0 +1,268 @@
+@charset "utf-8"; 
+@import url('/00_common/css/basic.css');
+@import url('/00_common/css/con_com.css');
+.reserContent {overflow:hidden; margin-left: 14rem; padding: 2rem 5rem 3rem 4rem;}
+
+/* 타이틀 */
+.reserContent > .tit:first-child {margin-bottom: 2.5rem; padding-bottom: 3.25rem; text-align: center; position: relative;}
+.reserContent > .tit:first-child::after { content: ""; display: block; width: 100%; height: .5rem; background: url('/00_common/images/reservation/sub/pttrn01.png'); position: absolute; bottom: 0; left: 0;}
+.reserContent > .tit:first-child h2 {font-size: 1.3rem; font-weight: 700; color: #000;}
+.reserContent + h3[class^='tit'], p + h3[class^='tit']{ margin-top:1rem !important; }
+/* 탭메뉴 */   
+.reserContent .reser_tab {margin-bottom: 2rem;}
+.reserContent .reser_tab ul{display: flex; flex-wrap: wrap; font-weight: 600; border:1px solid #d1d8e3; border-radius:.5rem;}
+.reserContent .reser_tab li { position:relative; flex-shrink: 0; width:33.333333%; padding:.125rem; }
+.reserContent .reser_tab li a { position:relative; display:flex; align-items: center; justify-content: center; height: 100%; padding:1rem 0.5rem ; line-height:1.3; font-size:0.8rem; text-align: center; }
+.reserContent .reser_tab li a span {position: relative;}
+.reserContent .reser_tab li a span:after { content: ""; display: block; width: 5px; height: 5px; border-radius: 50%; background: #005fd4; position: absolute; top: calc(50% - 2.5px); right: -.5rem; opacity: 0;}
+.reserContent .reser_tab li + li a:before { content:""; display:block; width:1px; height:15px; background:#bcbcbc; position:absolute; top:calc(50% - 7.5px); left:0;}
+.reserContent .reser_tab li a span{position: relative; padding: 0 0.5rem; z-index: 1;}
+.reserContent .reser_tab li.on a {color: #005fd4; font-weight:700; }
+.reserContent .reser_tab li:not(.on) a:hover,
+.reserContent .reser_tab li:not(.on) a:focus {color: #000; font-weight:700; }
+.reserContent .reser_tab li.on a:hover:after,
+.reserContent .reser_tab li.on a:focus:after,
+.reserContent .reser_tab li.on a span:after { opacity: 1;}
+
+/* 버튼 */
+.reserContent .br0 {border-radius: 0; padding: 0.25rem 1rem;}
+
+/* common form */
+.reserContent label { margin-right:0; }
+.reserContent .fcy label { margin-left:.5rem; }
+.reserContent label input { margin-right:0; }
+
+/* 체크박스 */
+.form_ele_group {position: relative; display: inline-block; margin-right: 1.5rem; padding-left: 1.2rem; min-height: 1rem; font-size: 0.75rem; cursor: pointer; -webkit-user-select: none; -moz-user-select: none; -ms-user-select: none; user-select: none;}
+.form_ele_group input {position: absolute; width: 0; height: 0; opacity: 0; cursor: pointer;}
+.checkmark {position: absolute; top: 2px; left: 0; width: 1rem; height: 1rem; border-radius: 0; background: #fff; border: 2px solid #005fd4;}
+.checkmark:after {position: absolute; display: none; content: "";}
+.form_ele_group input:checked + .checkmark {border-color: #027ceb;}
+.form_ele_group input:checked + .checkmark + span {font-weight: 600; color: #000;}
+.form_ele_group input:checked ~ .checkmark:after {display: block;}
+.form_ele_group input[type="radio"] + .checkmark {border-radius: 50%;}
+.form_ele_group input[type="radio"] + .checkmark:after {top: 50%; left: 50%; margin: -0.2rem 0 0 -0.2rem; width: 0.4rem; height: 0.4rem; background: #005fd4; border-radius: 50%;}
+.form_ele_group input[type="checkbox"] + .checkmark {border-radius: 0;}
+.form_ele_group input[type="checkbox"] + .checkmark:after {content: "\e92d"; margin: -0.2rem 0 0 -0.2rem; font-family: 'xeicon'; width: 1rem; height: 1rem; color: #005fd4; font-size: 1.2rem; }
+
+/* 시설물 신청 상세 */
+.reserContent .reser_box_st { border: 1px solid #d9d9d9; padding:2rem; margin-top: 2rem;}
+.reserContent .detail {margin: 2rem 0;}
+.reserContent .detail .img {width: 26.25rem; height: 17.5rem; float: left; border: 1px solid #0076dd; text-align: center; background-color: rgba(0,0,0,.3); box-shadow: 5px 9px 0 rgba(197,201,214,.4); overflow: hidden;}
+.reserContent .detail .img img { width: 100%; height: 100%; }
+.reserContent .detail .right {width: calc(100% - 28.3rem); height: auto; float: right; margin-top: 0;}
+.reserContent .detail .tbl_st table th { line-height: 1.94; }
+ 
+.reserContent .calendar { padding: 1rem 2rem; border: 1px solid #dbdbdb;}
+.reserContent .calendar::after { content: ""; display: block; clear: both;}
+.reserContent .sche_wrap { position:relative; width: 14.5rem; border-radius:1.5rem; float: left;}
+.reserContent .month { margin-bottom:.75rem; text-align:center;}
+.reserContent .month a { display:inline-block; vertical-align:middle; font-size:1.1rem; font-family:"xeicon"; text-align:center; transition: all .15s; -webkit-transition: all .15s; }
+.reserContent .month a.prev:hover { transform: translateX(-3px); -webkit-transform: translateX(-3px); }
+.reserContent .month a.next:hover { transform: translateX(3px); -webkit-transform: translateX(3px); }
+.reserContent .month a i { -webkit-transition:all .3s; transition:all .3s; }
+.reserContent .month span { display:inline-block; color:#000; font-size:1.2rem; line-height:1.5rem; font-weight:400; margin:0 1rem; vertical-align:middle; }
+.reserContent .month span em { position:relative; display:inline-block; font-size:1.2rem; font-weight:700; text-align:center; color:#000; line-height:1.5rem; vertical-align:top; }
+.reserContent .sche_table { overflow:hidden; }
+.reserContent .sche_table table { text-align:center; }
+.reserContent .sche_table table thead th { padding:.42rem; color:#000; font-size: 0.9rem; }
+.reserContent .sche_table table thead th.sat { color:#0066ff; }
+.reserContent .sche_table table thead th.sun { color:#ff0000; } 
+.reserContent .sche_table table tbody { padding: .3rem 0; }
+.reserContent .sche_table table tbody td { background:#fff; font-size:0.8rem; text-align:center; }
+.reserContent .sche_table table tbody td a { padding:.2rem; display:inline-block; width:100%; border: 1px solid transparent; transition: all .15s; -webkit-transition: all .15s; }
+.reserContent .sche_table table tbody td a:hover { border: 1px solid #ccc; background: #fff; }
+.reserContent .sche_table table tbody td .npos { background: #dcdcdc; }
+.reserContent .sche_table table tbody td .pos { background: #fffdc0; }
+.reserContent .sche_table table tbody td .today { background: #1cc9c9; color:#fff;}
+.reserContent .sche_table table tbody td .today:hover { border: 1px solid #ccc; background: #fff; color: #000; }
+.reserContent .sche_table table tbody td .sat { color:#0066ff; }
+.reserContent .sche_table table tbody td .sun { color:#ff0000; }     
+.reserContent .sche_wrap ul { margin-top: .9rem; padding-top: .9rem; border-top: 1px dashed #7f7f7f;}
+.reserContent .sche_wrap ul li { position: relative; display: inline-block; padding-left: 1.3rem;}
+.reserContent .sche_wrap ul li + li { margin-left: 1rem;}
+.reserContent .sche_wrap ul li::before { content: ""; width: .9rem; height: .85rem; position: absolute; top: calc(50% - .45rem); left: 0; border: 1px solid #ccc; display: inline-block; margin-right: 6px; }
+.reserContent .sche_wrap ul li.pos::before { background: #fffdc0;}
+.reserContent .sche_wrap ul li.npos::before { background: #dcdcdc;}
+
+.reserContent .time_wrap { width: calc(100% - 16.5rem); float: right;}
+.reserContent .time_wrap.fn { float: none; margin: 0 auto; width: 100%;}
+.reserContent .time_wrap .tit_wrap { position: relative; border-radius: .5rem; text-align: left; padding: .8rem 0.8rem .9rem; border: 1px solid #d9d9d9; background: #f9f9f9; }
+.reserContent .time_wrap .tit_wrap:after { content: ""; display: block; clear: both;}
+.reserContent .time_wrap .tit_wrap em { font-size: 0.85rem; font-weight: 600; color: #000; display: inline-block; }
+.reserContent .time_wrap .tit_wrap p { position: absolute; right: .7rem; top: calc(50% - .575rem); }
+.reserContent .time_wrap .tit_wrap p span { position: relative; color: #555; padding-left: 1.2rem;}
+.reserContent .time_wrap .tit_wrap p span::before { content: ""; width: .9rem; height: .85rem; position: absolute; top: calc(50% - .45rem); left: 0; border: 1px solid #ccc; display: inline-block; margin-right: 6px; }
+.reserContent .time_wrap .tit_wrap p span + span { margin-left: 1.2rem; }
+.reserContent .time_wrap .tit_wrap p span.npos::before { background: #dcdcdc;}
+.reserContent .time_wrap .tit_wrap p span.under::before { background: #d6e7fc;}
+.reserContent .time_wrap .tit_wrap p span.pos::before { background: #fffdc0;}
+.reserContent .time_wrap .time_list { padding: 0 2rem;}
+.reserContent .time_wrap .time_list div{ padding: 1.55rem 0;}
+.reserContent .time_wrap .time_list div + div { border-top: 1px dashed #7f7f7f;}
+.reserContent .time_wrap .time_list div:after { content: ""; display: block; clear: both;}
+.reserContent .time_wrap .time_list div p { width: 6.75rem; float: left; color: #000; font-size: 0.85rem; text-align: center; font-weight: 600; padding-top: 1.45rem;}
+.reserContent .time_wrap .time_list div ul { width: calc(100% - 6.75rem); float: right; padding: 0 .9rem;}
+.reserContent .time_wrap .time_list div ul li { width: calc(100% / 6); float: left; padding: 5px 2px;}
+.reserContent .time_wrap .time_list div ul li a { width: 100%; display: block; border: 1px solid #ccc; box-sizing: border-box; line-height: 1.85rem; text-align: center; color: #000;}
+.reserContent .time_wrap .time_list div ul li a.npos:hover, .reserContent .time_wrap .time_list div ul li a.pos:hover, .reserContent .time_wrap .time_list div ul li a.under:hover { background: #fff;}
+.reserContent .time_wrap .time_list div ul li a.npos { background: #dcdcdc;} 
+.reserContent .time_wrap .time_list div ul li a.under { background: #d6e7fc;} 
+.reserContent .time_wrap .time_list div ul li a.pos { background: #fffdc0;}
+.reserContent .time_wrap .time_list div ul li a.chk { border: 1px solid #005fd4; position: relative; color: #005fd4; }
+.reserContent .time_wrap .time_list div ul li a.chk::after { content: ""; width: 100%; height: 100%; display: block; border:1px solid #005fd4; position: absolute; top: 0; left: 0; }
+.reserContent .time_wrap .time_list div ul li a.chk::before { content: "\e92d"; margin: -0.2rem 0 0 -0.2rem; font-family: 'xeicon'; color: #005fd4; font-size: 1.2rem; vertical-align: top;}
+
+/* 시설물 신청상세: 예약날짜*/
+#tdDateBox img { width: 1.1rem; position:relative; top:5px; left:2px; }
+#tdDateBox ul li { margin-top:.5rem;}
+#tdDateBox input[type=checkbox] { margin-right:.25rem;}
+#tdDateBox a.btn_yel {border-color: #f58a00;}
+
+/* 시설물 신청 상세(일반) */
+.reserContent h4 { font-size: 0.85rem; color: #000; font-weight: 600; text-align: left; margin: 1.75rem 0 .25rem;}
+.reserContent table textarea { border: 1px solid #d9d9d9;}
+.reserContent .rule_txt { height: 6rem; border: 1px solid #d9d9d9; padding: .75rem; font-size: 0.75rem;}
+.reserContent .rule_txt p { height: 100%; overflow-y: scroll; line-height: 1.5;}
+
+/* 예약자정보입력 */
+.reserContent .top_info_box { border-radius: .5rem; border: 1px solid #d9d9d9; background: #f9f9f9; padding: .75rem 1.9rem;}
+.reserContent .top_info_box span i { font-size: 1.1rem; vertical-align: middle;}
+.reserContent .top_info_box span:nth-child(1) i { color: #000;}
+.reserContent .top_info_box span:nth-child(n + 2) {color: #555;}
+.reserContent .top_info_box span:nth-child(n + 2) i { color: #555;}
+.reserContent .top_info_box span + span {margin-left: 2.25rem;}
+.reserContent .info_box { border: 1px solid #d9d9d9; padding: 1.1rem 2rem; margin-top: .25rem;}
+.reserContent .info_box p {display: inline-block;}
+.reserContent .info_box p + p {margin-left: 2.9rem;}
+.reserContent .info_box p label { font-size: 0.85rem;}
+.reserContent .info_box input { height:38px; border:1px solid #d9d9d9; padding:0 .5rem; color:#555; }
+
+/* 시설구분 */
+.reserContent .fcy_list {float: right; font-size: 0.8rem;}
+.reserContent .fcy_list span { font-weight: 600;}
+.reserContent .fcy_list em {position: relative; display: inline-block; padding-left: 1.7rem; margin-left: .7rem; line-height: 1.5rem;}
+.reserContent .fcy_list em::before { content: ""; display: block; width: 1.5rem; height: 1.5rem; position: absolute; top: 50%; left: 0; transform: translateY(-50%); -webkit-transform: translateY(-50%); }
+.reserContent .fcy_list em.fcy1::before { background: url('/00_common/images/reservation/sub/fcy_ico01.png') no-repeat center / contain;}
+.reserContent .fcy_list em.fcy2::before { background: url('/00_common/images/reservation/sub/fcy_ico02.png') no-repeat center / contain;}
+.reserContent .fcy_list em.fcy3::before { background: url('/00_common/images/reservation/sub/fcy_ico03.png') no-repeat center / contain;}
+.reserContent .fcy_list em.fcy4::before { background: url('/00_common/images/reservation/sub/fcy_ico04.png') no-repeat center / contain;}
+.reserContent .fcy_list em.fcy5::before { background: url('/00_common/images/reservation/sub/fcy_ico05.png') no-repeat center / contain;}
+.reserContent .fcy_list em.fcy6::before { background: url('/00_common/images/reservation/sub/fcy_ico06.png') no-repeat center / contain;}
+ 
+
+/* 반응형 */
+@media screen and (max-width:1650px){  
+
+    /* 시설물 신청 상세 */ 
+    .reserContent .time_wrap .time_list div ul li { width: calc(100% / 4); }
+ 
+}
+@media screen and (max-width:1480px){  
+
+    /* 시설물 신청 상세 */ 
+    .reserContent .detail .img {width: 100%;position: relative;}
+    .reserContent .detail .img img {width: auto; height: 100%; position: absolute; left: 50%; transform: translateX(-50%); -webkit-transform: translateX(-50%);}
+    .reserContent .detail .right {width: 100%; margin-top:1rem; height:auto; } 
+    .reserContent .detail .tbl_st table th { line-height: 1.3; }
+    
+    .reserContent .calendar { padding: 1rem 1rem; }
+    .reserContent .sche_wrap { width: 14.5rem; float: none; margin:0 auto;}
+    .reserContent .time_wrap { width: 100%; margin-top:1rem;} 
+    .reserContent .time_wrap .tit_wrap {padding: .5rem 0 .5rem .9rem;}
+    .reserContent .time_wrap .tit_wrap p {position: relative; right: 0; top: 0; padding: .5rem 1rem 0 0; text-align: right;}
+    .reserContent .time_wrap .time_list { padding: 0;}
+    .reserContent .time_wrap .time_list div + div { padding: 1rem 0;}
+    .reserContent .time_wrap .time_list div p { padding-top: 3.9rem;}
+    .reserContent .time_wrap .time_list div ul li { width: calc(100% / 3); }
+ 
+}
+@media screen and (max-width:1200px){ 
+
+    .reserContent { padding: 2rem 3rem;}
+
+    /* 시설물 신청 상세 */ 
+    .reserContent .time_wrap .time_list div ul li { width: calc(100% / 3); }
+
+    /* 예약자정보입력 */ 
+    .reserContent .info_box p {display: block;}
+    .reserContent .info_box p + p {margin: .5rem 0 0 0;} 
+    .reserContent .info_box p input {width:calc((100% - 6.4rem) / 3);}
+}
+
+@media screen and (max-width:1024px){ 
+    
+    .reserContent { width:100%; margin-left: 0; margin-top:1rem; padding: 1.5rem 1rem;}
+
+    /* 타이틀 */
+    .reserContent > .tit:first-child {margin-bottom: 1.5rem; padding-bottom: 1.5rem; }
+ 
+}
+
+@media screen and (max-width:860px){ 	
+     /* 시설물 신청 상세 */ 
+    .reserContent .time_wrap .tit_wrap p {position: relative; right: 0; top: 0; padding: 0.5rem 1rem 0 0; text-align: right;}
+    .reserContent .time_wrap .time_list div p { padding-top: 3.9rem;}
+    .reserContent .time_wrap .time_list div ul li { width: calc(100% / 3); }
+}
+
+@media screen and (max-width:768px){ 	
+    .reserContent .reser_box_st {padding: 1rem;}
+  
+    /* 예약자정보입력 */ 
+    .reserContent .top_info_box span { display: block;}
+    .reserContent .top_info_box span + span {margin-left: 0;}
+    .reserContent .info_box { padding: 1rem; }
+   
+    /* 시설물 신청 상세 */ 
+    .reserContent .calendar { padding: 1rem .5rem; }
+    .reserContent .time_wrap .time_list div ul li { width: calc(100% / 2); }
+
+    /* 시설물 신청상세: 예약날짜*/
+    #tdDateBox img { width: 1.1rem; position:relative; top:5px; left:2px; }
+    #tdDateBox ul li { margin-top:.5rem;}
+    #tdDateBox ul li a.btn_bl { width: 100%;}
+    #tdDateBox input[type=checkbox] { margin-right:.25rem;}
+    #tdDateBox input[type=text] { width: calc(100% - 2rem);}
+    #tdDateBox select { width: calc(100% - 2.1rem);}
+}
+
+@media screen and (max-width:560px){	
+    /* 시설물 신청 상세 */  
+    .reserContent .detail .img {width: 100%; height: auto; font-size: 0; }
+    .reserContent .detail .img img {position: relative; top: 0; left: 0; width: 100%; height: auto; transform: none; }
+   .reserContent .time_wrap .tit_wrap p { position: relative; right: auto; top: 0; display:block; text-align:left;}
+   .reserContent .time_wrap .time_list div p { width:100%; padding-top: 0; float:none;}
+   .reserContent .time_wrap .time_list div ul {width:100%; padding: 0;}
+
+    /* 시설구분 */ 
+    .reserContent .fcy_list em { margin-top:.25rem;} 
+}
+
+@media screen and (max-width:480px){
+    /* 탭메뉴 */   
+    .reserContent .reser_tab ul{ padding:.5rem 0}
+    .reserContent .reser_tab li { width:100%; }
+    .reserContent .reser_tab li a { padding:0rem 0.5rem ; line-height:1.5; }
+    .reserContent .reser_tab li + li a:before { display:none; }
+
+    /* 예약자정보입력 */ 
+    .reserContent .info_box p:nth-child(1) input {width:100%;}
+    .reserContent .info_box p:nth-child(2) input {width:calc((100% - 1.5rem) / 3);}
+    .reserContent .info_box p label {display:block;}
+    
+    /* 시설물 신청 상세 */     
+    .reserContent .time_wrap .tit_wrap p span { display: block;}
+    .reserContent .time_wrap .tit_wrap p span + span {margin-left: 0;} 
+}
+
+@media screen and (max-width:360px){ 
+    /* 시설물 신청 상세 */    
+    .reserContent .sche_wrap {width: 100%;} 
+    
+    
+}
+
+@media screen and (max-width:320px){ 
+
+}

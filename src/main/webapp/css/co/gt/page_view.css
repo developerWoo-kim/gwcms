@@ -1,0 +1,114 @@
+﻿﻿@charset "utf-8";
+@import url(common.css);
+
+
+/* 인사말 */
+.greetTy_1{ position:relative; width:100%; overflow:hidden}
+.greetTy_1 .img_area{position:relative; float:left; width:28%;}
+.greetTy_1 .img_area img{width:100%; height:auto;}
+.greetTy_1 .img_area .greet_bg{position:absolute; left:5%; top:5%; width:105%; height:102%; background-color:#efefef; z-index:-1;}
+.greetTy_1 .txt_area{ float:right; text-align:left; width:65%; font-family:'NotoL'; font-size:16px; color:#7a7a7a; letter-spacing:-1px; line-height:160%; padding-top:10px; word-break:keep-all; }
+.greetTy_1 .txt_area .head{ font-family:'NotoR'; font-size:30px; color:#333333; margin-bottom:40px; line-height:120%}
+.greetTy_1 .txt_area .head em{ color:#8b7e6d}
+.greetTy_1 .txt_area .foot { color:#333; margin-top:50px}
+.greetTy_1 .txt_area .foot .sign{ line-height:50px;}
+.greetTy_1 .txt_area .foot em {font-family:'NanumBrush'; font-size:48px; margin-left:20px; letter-spacing:0}
+
+.greetTy_2{ position:relative; width:100%; overflow:hidden; font-family:'NotoR';}
+.greetTy_2 .txt_area{ float:left; text-align:left; width:46%; font-size:16px; color:#000; letter-spacing:-1px; line-height:160%; padding-top:20px;}
+.greetTy_2 .txt_area .head{font-size:24px; color:#000; margin-bottom:40px; line-height:150%}
+.greetTy_2 .txt_area .head .col_gr{ color:#438f15}
+.greetTy_2 .txt_area .head .col_bl{ color:#2b4380}
+.greetTy_2 .img_area{float:right; width:46%; background:url(/images/ap/gt/greeting2_bg.png)no-repeat 50% 11%; text-align:center;}
+.greetTy_2 .img_area .img_round{width:300px; height:300px; border-radius:1000px; overflow:hidden; margin:35px auto; }
+.greetTy_2 .img_area img{width:100%; height:auto; display:block}
+.greetTy_2 .img_area span{ display:block; font-size:16px; color:#000; margin-top:25px;}
+.greetTy_2 .img_area span em{ font-size:24px;}
+
+.greetTy_3{ position:relative; width:100%; overflow:hidden}
+.greetTy_3 .img_area{position:relative; text-align:left; background:url(/images/ap/gt/img_greeting_bg.png) repeat-x; background-size:cover; min-height:315px; padding:0 25px 25px 315px; color:#fff; letter-spacing:-1px}
+.greetTy_3 .img_area .img{ position:absolute; bottom:0; left:0;}
+.greetTy_3 .img_area .img img {width:260px;}
+.greetTy_3 .img_area .head p{font-size:24px; font-family:'NanumSquare'; line-height:120%}
+.greetTy_3 .img_area .head p:first-child {font-size:40px; font-family:'NanumSquareBold'; margin-bottom:25px; padding-top:75px}
+.greetTy_3 .txt_area{text-align:left; font-size:16px; color:#1f1b1b; line-height:160%; padding-top:40px; font-family:'NanumGothic'}
+.greetTy_3 .txt_area .foot{margin-top:40px; position:relative}
+.greetTy_3 .txt_area .foot .sign{ position:absolute; left:160px; top:10px; font-family:'NanumBrush'; font-size:48px; letter-spacing:0}
+
+.greetTy_4{ position:relative; overflow:hidden; padding:40px 0 0 70px;}
+.greetTy_4 .img_area{ position:absolute; width:220px; min-height:190px; max-height:310px; height:40%; top:98px; left:105px; }
+.greetTy_4 .img_area img{ width:220px; min-height:190px; max-height:310px; height:90%; }
+.greetTy_4 .txt_area{ background:url(/images/ap/gt/greet_pt.png) repeat; padding:15px;}
+.greetTy_4 .txt_area .inner{ background:#fff; padding:45px 45px 45px 267px; text-align:left; font-size:16px; color:#1f1b1b; line-height:160%; padding-top:40px; font-family:'NanumGothic'}
+.greetTy_4 .txt_area .foot{margin-top:40px; position:relative}
+.greetTy_4 .txt_area .foot .sign{ position:absolute; left:160px; top:10px; font-family:'NanumBrush'; font-size:48px; letter-spacing:0}
+
+
+
+
+
+@media screen and (max-width :1024px) {
+	.greetTy_2 .img_area{background-size:610px;}
+	.greetTy_2 .img_area .img_round{width:300px; height:300px;}
+}
+	
+@media screen and (max-width :992px) {
+
+	/* 인사말 */	
+	.greetTy_2 .txt_area{width:60%;}
+	.greetTy_2 .img_area{width:34%; background-size:410px;}
+	.greetTy_2 .img_area .img_round{width:200px; height:200px;}
+	.greetTy_2 .img_area span{margin-left:10%}	
+
+	.greetTy_3 .img_area{padding:0 25px 25px 250px;}
+	.greetTy_3 .img_area .img img{width:200px;}
+	.greetTy_3 .img_area .head p:first-child {padding-top:40px}
+
+	.greetTy_4{padding:40px 0 0 70px;}
+	.greetTy_4 .img_area{width:155px; height:auto;}
+	.greetTy_4 .img_area img{ width:100%; height:auto;}
+	.greetTy_4 .txt_area .inner{padding:45px 45px 45px 110px;}
+
+}
+	
+@media screen and (max-width :640px) {
+
+	/* 인사말 */
+	.greetTy_1 .img_area{width:23%}
+	.greetTy_1 .txt_area{width:72%}
+
+	.greetTy_2 .txt_area{width:70%;}
+	.greetTy_2 .img_area{width:27%; background-size:210px; background-position:50% 22%;}
+	.greetTy_2 .img_area .img_round{width:100px; height:100px;}
+	.greetTy_2 .img_area span em{display:block;}
+
+	.greetTy_3 .img_area{overflow:hidden;}
+	.greetTy_3 .img_area .head p{font-size:20px;}
+	.greetTy_3 .img_area .head p:first-child {font-size:30px;}
+
+
+
+}
+		
+@media screen and (max-width :530px) {
+
+	/* 인사말 */
+	.greetTy_1 .img_area{ float:none; width:50%; margin:0 auto;}
+	.greetTy_1 .txt_area{ float:none; width:100%; padding-top:30px}
+
+	.greetTy_2 .txt_area{ float:none; width:100%;}
+	.greetTy_2 .img_area{width:100%; float:none; background-size:410px; background-position:50% 0%;}	
+	.greetTy_2 .img_area .img_round{width:200px; height:200px;}
+	.greetTy_2 .img_area span em{display:inline;}
+
+	.greetTy_3 .img_area{padding:25px; overflow:hidden;}
+	.greetTy_3 .img_area .img {position:relative; bottom:auto; left:auto; width:100%; text-align:center; border-bottom:1px solid #fff;}
+	.greetTy_3 .img_area .img img {width:200px;}
+	.greetTy_3 .img_area .head p:first-child {padding-top:25px}
+
+	.greetTy_4{padding:100px 0 0 0;}
+	.greetTy_4 .img_area{width:100%; height:215px; text-align:center;}
+	.greetTy_4 .img_area img{ width:auto; height:100%;}
+	.greetTy_4 .txt_area .inner{padding:120px 25px 25px 25px;}
+
+}

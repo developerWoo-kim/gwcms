@@ -1,0 +1,137 @@
+@charset "utf-8";
+/* CSS Document */
+
+/* 메인 비주얼 */
+.main_visual{ height:260px; }
+.main_visual img{ border-radius:10px; overflow:hidden;}
+
+/* 우리반 급훈 */
+.class_slogun081 {height:50px;}
+.class_slogun081 h2 {width:20%; height:50px; float:left; line-height:50px; text-align:center; font-size:16px; color:#fff; letter-spacing:-1px;  background:#0074e0 url(/images/co/cv/template/00081/main/081_icon_slogun.png) no-repeat 20px center; }
+.class_slogun081 p {width:76.5%; float:right; line-height:50px; font-size:20px;color:#0074e0;  }
+
+/* 로그인 */
+.m_login_box081 {height:260px;}
+.m_login_box081 p.tit {position:absolute; top:20px; left:20px; font-family:'Arial'; font-size:12px; color:#fff;}
+.m_login_box081 h2 {height:60px; font-size:16px; line-height:60px; padding:20px 20px 0; color:#fff; background:#00a9e0 url(/images/co/cv/template/00081/main/081_icon_login.png) no-repeat 90% bottom;}
+.m_login_box081 .m_login {height:140px; padding:20px 19px 19px; font-family:'돋움',Dotum; border-radius:0 0 10px 10px; border:1px solid #c8d1db; border-top:none; background:#f0fbff; overflow:hidden;}
+.m_login_box081 .m_login .input_box dl {height:35px; overflow:hidden;}
+.m_login_box081 .m_login .input_box input {width:170px; padding:0 4px; height:28px; line-height:28px; border:solid 1px #cde5f7; font-size:12px; color:#6a96c2; }
+.m_login_box081 .m_login .input_box p {height:45px; margin-bottom:5px; padding:5px 0 15px 60px; font-size:12px; color:#555; line-height:20px; background: url(/images/co/cv/template/00081/main/081_icon_login2.gif) no-repeat left top;}
+.m_login_box081 .m_login .input_box p span {font-weight:bold; color:#048bdd;}
+.m_login .btn_login {width:180px; height:35px; line-height:35px; color:#fff; display:block; text-align:center; font-size:12px; font-weight:bold; border-radius:3px; background:#1d7693;}
+.m_login .btn_login a span {width:180px;height:35px;line-height:35px;color: #ffffff;display:block;text-align:center;font-size:12px;font-weight:bold;border-radius:3px;background:#1d7693;}
+.m_login_box081 .help {width:178px; height:33px; line-height:35px; margin-top:5px; border-radius:3px;  background:#2d4c56; overflow:hidden;}
+.m_login_box081 .help li{ float:left; font-size:12px; letter-spacing:-1px; padding:0 6px;  background:url(/images/co/cv/template/00081/main/081_login_line.gif) no-repeat 0 center; }
+.m_login_box081 .help li.btn_modi {float:none; text-align:center;}
+.m_login_box081 .help li:first-child {background-image:none;}
+.m_login_box081 .help li a { display:block; color:#fff; }
+.m_login_box081 .help li a:hover { text-decoration:underline}
+
+/* 카테고리 */
+.category081 {height:230px;}
+.category081 h2 {height:50px; font-size:20px; line-height:50px; padding:0 20px; color:#fff; background:#00b0a0 url(/images/co/cv/template/00081/main/081_icon_category.png) no-repeat 90% bottom;}
+.category081 ul{font-family:'돋움',Dotum; border-radius:0 0 10px 10px; border:1px solid #c8d1db; border-top:none; background:#f0fbff; overflow:hidden;}
+.category081 li {font-size:12px; line-height:20px; padding:12px 30px 12px; border-top:1px dotted #c8d1db; background:url(/images/co/cv/template/00081/main/081_bu_dat_green.gif) no-repeat 20px 18px;}
+.category081 li:first-child {border-top:none;}
+.category081 li a { display:block; color:#666;}
+.category081 li a:hover { color:#333; text-decoration:underline}
+
+/* 게시판1 */
+.notice081_1 { height:230px;}
+.notice081_1 h2{height:46px; font-size:16px; line-height:46px; padding-left:18px; border-bottom: 1px solid #d2d2d2;}
+.notice081_1 .list_box{overflow:hidden; font-family:'돋움',Dotum; font-size:12px; padding:20px 20px 0; line-height:39px; *line-height:37x}
+.notice081_1 .list_box li { width:100%; background:url(/images/co/cv/template/00081/main/081_bu_dot.gif) no-repeat 0 18px; overflow:hidden; font-size:12px; padding-left:12px; border-top:1px dashed #dedede;}
+.notice081_1 .list_box li:first-child { border-top:0;}
+.notice081_1 .list_box li a { float:left; width:70%; display:block; color:#555; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;}
+.notice081_1 .list_box li a:hover{ text-decoration:underline;}
+.notice081_1 .btn_more{font-size:0; line-height:0; text-indent:-9999em; position:absolute; top:12px;  right:20px;  width:23px; height:23px; background:url(/images/co/cv/template/00081/main/081_btn_more.gif) no-repeat;}
+.notice081_1 .list_box li span.date {display:block; width:25%; float:left; text-align:right;  }
+
+/* 게시판2 */
+.notice081_2 {height:230px;}
+.notice081_2 h2{height:46px; font-size:16px; line-height:46px; padding-left:18px; border-bottom: 1px solid #d2d2d2;}
+.notice081_2 .list_box{overflow:hidden; font-family:'돋움',Dotum; font-size:12px; padding:20px 20px 0; line-height:39px; *line-height:37x}
+.notice081_2 .list_box li { width:100%; background:url(/images/co/cv/template/00081/main/081_bu_dot.gif) no-repeat 0 18px; overflow:hidden; font-size:12px; padding-left:12px; border-top:1px dashed #dedede;}
+.notice081_2 .list_box li:first-child { border-top:0;}
+.notice081_2 .list_box li a { float:left; width:70%; display:block; color:#555; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;}
+.notice081_2 .list_box li a:hover{ text-decoration:underline;}
+.notice081_2 .btn_more{font-size:0; line-height:0; text-indent:-9999em; position:absolute; top:12px;  right:20px;  width:23px; height:23px; background:url(/images/co/cv/template/00081/main/081_btn_more.gif) no-repeat;}
+.notice081_2 .list_box li span.date {display:block; width:25%; float:left; text-align:right;  }
+
+
+/* 설문조사 */
+.survay{ height:255px;}
+.survay h2 {height:50px; font-size:16px; line-height:50px; padding-left:20px; color:#fff; background:#5a75cd url(/images/co/cv/template/00081/main/081_icon_survey.png) no-repeat 90% bottom;}
+.survay .cnt{height:204px; font-family:'돋움',Dotum; border-radius:0 0 10px 10px; border:1px solid #c8d1db; border-top:none; background:#f4f7ff;}
+.survay .survay_text {height:30px; padding-left:20px; font-size:12px; line-height:30px; color:#555; background:}
+.survay ul{height:60px; overflow:hidden; padding:20px 10px 10px; background:url(../images/main/bg_bar_dotted2.gif) repeat-y; line-height:21px}
+.survay ul li { float:left; width:33%; font-size:12px; color:#333;}
+.survay ul li label { margin-left:3px}
+.survay .btn_box {width:208px; margin:0 auto; overflow:hidden;}
+.survay .btn_box span {display:block; float:left; width:98px; height:28px; line-height:28px; *line-height:26px; margin:0 2px; font-size:12px; text-align:center}
+.survay .btn_box span a {display:inline-block; *display:inline; zoom:1;}
+.survay .btn_box .vote {border-radius:5px; background:#4646a7;}
+.survay .btn_box .vote a {color:#fff;} 
+.survay .btn_box .result {border:1px solid #c8d1db; border-radius:5px; background:#d6dce4; }
+.survay .btn_box .result a { color:#333;}
+
+/* 우리반시간표 */
+.schedule081{height:255px;  border-radius:10px; overflow:hidden;}
+.schedule081 h2 {height:50px; font-size:16px; line-height:50px; padding-left:20px; color:#fff; background:#7e7ee1 url(/images/co/cv/template/00081/main/081_icon_timetable.png) no-repeat 90% bottom;}
+.schedule081 .inner{height:204px; overflow:auto; white-space:nowrap; background:#fff; border-radius:0 0 10px 10px; border:1px solid #c8d1db; border-top:none;}
+.schedule081 table{ width:100%; font-size:12px; font-family:'돋움',Dotum;}
+.schedule081 table th {border-left:1px dotted #00a1b9; padding:6px 8px; line-height:18px}
+.schedule081 table td {border-left:1px dotted #d4d4d4; border-bottom:1px dotted #d4d4d4; padding:6px 8px; line-height:18px}
+.schedule081 table td b {color:#4646a7;}
+.schedule081 table th:first-child, .schedule081 table td:first-child{ border-left:0}
+.schedule081 table th { background-color:#adade4; text-align:center; color:#fff;}
+.schedule081 table td{  text-align:center; color:#666}
+
+
+/* 행사앨범 */
+.gallery081{ height:253px; background:#fff; }
+.gallery081 h2 {height:50px; font-size:16px; line-height:50px; padding-left:20px; color:#333; background:#ffffff; border-bottom:1px solid #d2d2d2 ;}
+.gallery081 .cnt{height:204px; font-family:'돋움',Dotum; border-radius:0 0 10px 10px;  border-top:none; background:#fff;}
+.gallery081 ul{margin:20px 0 0 20px; overflow:hidden; }
+.gallery081 ul li {width:150px; float:left; margin-left:20px; }
+.gallery081 ul li:first-child {margin-left:0}
+.gallery081 ul li a{ color:#555; font-size:12px; font-family:'돋움',Dotum;}
+.gallery081 ul li a:hover{ text-decoration:underline}
+.gallery081 ul li a .img {display:block;}
+.gallery081 ul li a .img img {width:100%; height:110px;}
+.gallery081 ul li a .txt {display:block; margin-top:10px; line-height:14px; text-align:center; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; text-align:center;}
+.gallery081 .btn_more{font-size:0; line-height:0; text-indent:-9999em; position:absolute; top:12px;  right:20px;  width:23px; height:23px; background:url(/images/co/cv/template/00081/main/081_btn_more.gif) no-repeat;}
+
+
+@media (max-width: 800px) {
+	
+
+	.class_slogun081, .category081, .schedule081, .schedule081 .inner, .notice081_1, .notice081_2,
+	.survay {-webkit-box-sizing:border-box; -moz-box-sizing:border-box; -ms-box-sizing:border-box; box-sizing:border-box}
+		
+	.main_visual, .class_slogun081, .m_login_box081, .category081,
+	.schedule081, .notice081_1, .notice081_2, .gallery081, .survay   {-webkit-transition:all 0.3s ease; -moz-transition:all 0.3s ease; -ms-transition:all 0.3s ease; transition:all 0.3s ease}
+
+	
+	
+	/* 우리반 급훈 */
+	.class_slogun081 h2 {width:28%; background-image:none}
+	.class_slogun081 p {width:70%;}
+
+  .main_visual{ height:auto; }
+	.main_visual img { width:100%;}
+	
+	/* 우리반시간표 */
+	.schedule081 .inner{ width:100%;}
+	.schedule081 table tr:last-child td{ border-bottom:0}
+
+	/* 행사앨범 */
+	.gallery081 ul {width:90%;  margin:20px auto 0;}/* */
+	.gallery081 ul li {width:47%; float:left; margin-left:6%; }
+
+
+
+}
+
+

@@ -1,0 +1,268 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="cs_csnst">
+
+	<!-- 등록여부확인 -->
+	<select id="selectCsnstList" parameterType="map" resultType="egovMap">
+	<![CDATA[
+		SELECT 
+			   A.MENU_ID,    
+		   	   A.MENU_NM,
+		       A.MENU_TY,
+		   	   A.MENU_LEVEL,
+		   	   A.UPPER_MENU_ID,
+		   	   ( SELECT COUNT(*) FROM TAP_CS_CSNST_MANAGE B WHERE A.MENU_ID = B.MENU_ID AND B.SYS_ID = #{sysId} AND B.CSNST_SCORE = 1 ) AS SCORE1,
+		   	   ( SELECT COUNT(*) FROM TAP_CS_CSNST_MANAGE B WHERE A.MENU_ID = B.MENU_ID AND B.SYS_ID = #{sysId} AND B.CSNST_SCORE = 2 ) AS SCORE2,
+		   	   ( SELECT COUNT(*) FROM TAP_CS_CSNST_MANAGE B WHERE A.MENU_ID = B.MENU_ID AND B.SYS_ID = #{sysId} AND B.CSNST_SCORE = 3 ) AS SCORE3,
+		   	   ( SELECT COUNT(*) FROM TAP_CS_CSNST_MANAGE B WHERE A.MENU_ID = B.MENU_ID AND B.SYS_ID = #{sysId} AND B.CSNST_SCORE = 4 ) AS SCORE4,
+		   	   ( SELECT COUNT(*) FROM TAP_CS_CSNST_MANAGE B WHERE A.MENU_ID = B.MENU_ID AND B.SYS_ID = #{sysId} AND B.CSNST_SCORE = 5 ) AS SCORE5,
+		   	   ( SELECT COUNT(*) FROM TAP_CS_CSNST_MANAGE B WHERE A.MENU_ID = B.MENU_ID AND B.SYS_ID = #{sysId} ) AS TOTAL_CNT,
+		   	   ( SELECT SUM(CSNST_SCORE) FROM TAP_CS_CSNST_MANAGE B WHERE A.MENU_ID = B.MENU_ID AND B.SYS_ID = #{sysId} ) AS TOTAL_SCORE
+		  FROM TAP_MN_MENU_MANAGE A
+		 WHERE A.SYS_ID = #{sysId}
+	  ORDER BY SORT_ORDR
+	]]>
+	</select>
+
+	<!-- 등록여부확인 -->
+	<select id="selectCsnstExistYn" parameterType="map" resultType="int">
+	<![CDATA[
+		SELECT COUNT(*)
+		  FROM TAP_CS_CSNST_MANAGE
+		 WHERE SYS_ID = #{sysId}
+		   AND MENU_ID = #{menuId}
+		   AND CSNST_USIP = #{csnstUsip}
+		   AND CSNST_DT = #{csnstDt}
+		   AND CSNST_USID = #{csnstUsid}
+	]]>
+	</select>
+	
+	<!-- 해당메뉴 만족도 조회  -->
+	<select id="selectOpinionList" parameterType="map" resultType="egovMap">
+		SELECT 
+			   SYS_ID,
+			   MENU_ID,
+			   CSNST_USID,
+			   CSNST_USIP,
+			   CSNST_DT,
+			   CSNST_SCORE,
+			   CSNST_OPINION
+		  FROM TAP_CS_CSNST_MANAGE
+		 WHERE 1 = 1
+		   AND SYS_ID= #{sysId}
+		   AND MENU_ID = #{menuId}
+	</select>
+
+	<!-- 만족도 등록 -->
+	<insert id="insertCsnstInfo" parameterType="map">
+		INSERT INTO TAP_CS_CSNST_MANAGE
+			   (
+			    SYS_ID,
+				MENU_ID,
+				CSNST_USID,
+				CSNST_USIP,
+				CSNST_DT,
+				CSNST_SN,
+				CSNST_SCORE,
+				CSNST_OPINION
+			   )
+				VALUES 
+			   (
+				#{sysId},
+				#{menuId},
+				#{csnstUsid},
+				#{csnstUsip},
+				#{csnstDt},
+				SEQ_CSNST_SN.NEXTVAL,
+				#{csnstScore},
+				<choose>
+					<when test="@egovframework.MybatisUtils@isEmpty(csnstOpinion)">NULL</when>
+					<otherwise>#{csnstOpinion}</otherwise>
+				</choose>
+			   )
+	</insert>
+	
+	<!-- 만족도 시스템 리스트 통계 sql -->
+	<sql id="selectCsnstState">
+		SELECT COUNT(*) FROM TAP_CS_CSNST_MANAGE B WHERE B.SYS_ID = SM.SYS_ID
+	</sql>
+	
+	<!-- 만족도 시스템 리스트 sql -->
+	<sql id="selectCsnstSmList">
+		SELECT IT.INSTT_CODE
+	          ,IT.INSTT_NM
+	          ,IT.INSTT_TY
+	          ,SM.SYS_ID
+			  ,SM.SYS_NM 
+			  ,( <include refid="selectCsnstState" /> AND B.CSNST_SCORE = 1 ) AS SCORE1
+		   	  ,( <include refid="selectCsnstState" /> AND B.CSNST_SCORE = 2 ) AS SCORE2
+		   	  ,( <include refid="selectCsnstState" /> AND B.CSNST_SCORE = 3 ) AS SCORE3
+		   	  ,( <include refid="selectCsnstState" /> AND B.CSNST_SCORE = 4 ) AS SCORE4
+		   	  ,( <include refid="selectCsnstState" /> AND B.CSNST_SCORE = 5 ) AS SCORE5
+		   	  ,( <include refid="selectCsnstState" /> ) AS TOTAL_CNT                                                               
+			  FROM TAP_IM_INSTT_MANAGE IT, TAP_SM_SYS_MANAGE SM 
+			  WHERE IT.INSTT_CODE = SM.INSTT_CODE
+			  AND SM.SYS_STTUS = 'O'
+			
+			<if test='@egovframework.MybatisUtils@isEmpty(author) || author != "master"'>
+	         AND SM.SYS_ID NOT IN ('apple')
+	        </if>
+	        
+	        <if test="@egovframework.MybatisUtils@isNotEmpty(mberId)">
+		      AND SM.SYS_ID IN (
+					SELECT SYS_ID
+					  FROM TAP_AU_AUTHOR_MBER 
+					 WHERE MBER_ID = #{mberId}
+						   AND SYS_ID != 'apple'
+					   AND AUTHOR_CODE IN (1,2)	
+	        	)
+		     </if>
+		     
+	        <if test="@egovframework.MybatisUtils@isNotEmpty(insttCode)">
+		     AND   ( IT.INSTT_CODE =  #{insttCode}
+		     
+	                    OR  IT.UPPER_INSTT_CODE = #{upperInsttCode}
+	                    OR  IT.BSIS_INSTT_CODE = #{bsisInsttCode}
+	                    
+	               	)
+	         </if>
+	         
+		     <if test="@egovframework.MybatisUtils@isNotEmpty(insttGrad)">
+		     AND   ( IT.INSTT_GRAD IS NULL
+		     
+		     		 <if test="@egovframework.MybatisUtils@isNotEmpty(dtnt)">
+		                OR IT.INSTT_GRAD = #{dtnt}
+		             </if>
+		             <if test="@egovframework.MybatisUtils@isNotEmpty(elesch)">
+		                OR IT.INSTT_GRAD = #{elesch}
+		             </if>
+		             <if test="@egovframework.MybatisUtils@isNotEmpty(mskul)">    
+		                OR IT.INSTT_GRAD = #{mskul}
+		             </if> 
+		             <if test="@egovframework.MybatisUtils@isNotEmpty(hgschl)">
+		                OR IT.INSTT_GRAD = #{hgschl}
+		             </if>
+		             <if test="@egovframework.MybatisUtils@isNotEmpty(kndrgr)">     
+		                OR IT.INSTT_GRAD = #{kndrgr}
+		             </if>
+		             <if test="@egovframework.MybatisUtils@isNotEmpty(spcl)">
+		                OR IT.INSTT_GRAD = #{spcl}
+		             </if>
+		             
+		           )
+		     </if>
+		     
+		     <if test="@egovframework.MybatisUtils@isNotEmpty(sysTy)">
+		      AND   SM.SYS_TY = #{sysTy}
+		     </if>
+		     
+		     <if test="@egovframework.MybatisUtils@isNotEmpty(srchTxt)">
+		       AND  (  		 
+       				 SM.SYS_NM like '%'||#{srchTxt}||'%'
+              	  OR SM.SYS_TY like '%'||#{srchTxt}||'%' 
+              	  OR SM.SYS_ID like '%'||#{srchTxt}||'%' 
+		              	 
+		       )
+		    </if>
+			 
+			 ORDER BY   IT.INSTT_CODE, IT.INSTT_LEVEL DESC
+	</sql>
+	
+	<!-- 만족도 시스템 리스트 -->
+	<select id="selectCsnstSmList" parameterType="map" resultType="egovMap">
+		<include refid="selectCsnstSmList" /> 
+	</select>
+	
+	<!-- 만족도 시스템 페이징 -->
+	<select id="selectCsnstSmListPaging" parameterType="map" resultType="egovMap">
+		SELECT
+    		PL.*
+    	FROM (
+        	SELECT 
+        		PO.*
+        		,rownum as rsn
+			FROM (
+	    		<include refid="selectCsnstSmList" /> 
+				) PO
+		) PL
+		WHERE
+		<![CDATA[
+			rsn <= #{maxSn} 
+			AND rsn > #{minSn}
+		]]>
+	</select>
+	
+	<!-- 만족도 시스템 페이징 카운트 -->
+	<select id="selectCsnstSmListPagingCount" parameterType="map" resultType="int">
+		SELECT 
+			COUNT(*)
+			FROM TAP_IM_INSTT_MANAGE IT, TAP_SM_SYS_MANAGE SM 
+			  WHERE IT.INSTT_CODE = SM.INSTT_CODE
+			  AND SM.SYS_STTUS = 'O'
+			
+			<if test='@egovframework.MybatisUtils@isEmpty(author) || author != "master"'>
+	         AND SM.SYS_ID NOT IN ('apple')
+	        </if>
+	        
+	        <if test="@egovframework.MybatisUtils@isNotEmpty(insttCode)">
+		     AND   ( IT.INSTT_CODE =  #{insttCode}
+		     
+	                    OR  IT.UPPER_INSTT_CODE = #{upperInsttCode}
+	                    OR  IT.BSIS_INSTT_CODE = #{bsisInsttCode}
+	                    
+	               	)
+	         </if>
+	         
+		     <if test="@egovframework.MybatisUtils@isNotEmpty(insttGrad)">
+		     AND   ( IT.INSTT_GRAD IS NULL
+		     
+		     		 <if test="@egovframework.MybatisUtils@isNotEmpty(dtnt)">
+		                OR IT.INSTT_GRAD = #{dtnt}
+		             </if>
+		             <if test="@egovframework.MybatisUtils@isNotEmpty(elesch)">
+		                OR IT.INSTT_GRAD = #{elesch}
+		             </if>
+		             <if test="@egovframework.MybatisUtils@isNotEmpty(mskul)">    
+		                OR IT.INSTT_GRAD = #{mskul}
+		             </if> 
+		             <if test="@egovframework.MybatisUtils@isNotEmpty(hgschl)">
+		                OR IT.INSTT_GRAD = #{hgschl}
+		             </if>
+		             <if test="@egovframework.MybatisUtils@isNotEmpty(kndrgr)">     
+		                OR IT.INSTT_GRAD = #{kndrgr}
+		             </if>
+		             <if test="@egovframework.MybatisUtils@isNotEmpty(spcl)">
+		                OR IT.INSTT_GRAD = #{spcl}
+		             </if>
+		             
+		           )
+		     </if>
+	        
+	        <if test="@egovframework.MybatisUtils@isNotEmpty(mberId)">
+		      AND SM.SYS_ID IN (
+					SELECT SYS_ID
+					  FROM TAP_AU_AUTHOR_MBER 
+					 WHERE MBER_ID = #{mberId}
+						   AND SYS_ID != 'apple'
+					   AND AUTHOR_CODE IN (1,2)	
+	        	)
+		     </if>
+		     
+		     <if test="@egovframework.MybatisUtils@isNotEmpty(sysTy)">
+		      AND   SM.SYS_TY = #{sysTy}
+		     </if>
+		     
+		     <if test="@egovframework.MybatisUtils@isNotEmpty(srchTxt)">
+		       AND  (  		 
+       				 SM.SYS_NM like '%'||#{srchTxt}||'%'
+              	  OR SM.SYS_TY like '%'||#{srchTxt}||'%' 
+              	  OR SM.SYS_ID like '%'||#{srchTxt}||'%' 
+		       )
+		    </if>
+			 
+			 ORDER BY   IT.INSTT_CODE, IT.INSTT_LEVEL DESC
+	</select>
+    <!-- 만족도 총관리자 리스트-->
+	
+</mapper>

@@ -1,0 +1,103 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="ex_excptlog">
+
+	<resultMap id="clobMap" type="egovMap">
+        <result property="EXCEPTION_MSG" column="EXCEPTION_MSG" jdbcType="CLOB" javaType="java.lang.String"/>
+    </resultMap>
+
+	<!-- 오류발생 이력 목록 조회 -->
+	<sql id="selectExceptionLogListSql">
+		SELECT
+			EXCEPTION_SN
+			,CLASS_NM
+			,METHOD_NM
+			,EXCEPTION_TY
+			,EXCEPTION_MSG
+			,TO_CHAR(INST_DT, 'YYYY-MM-DD HH24:MI:SS') AS INST_DT
+		FROM
+			TAD_EXCEPTION_LOG
+		WHERE 1=1
+		<if test="@egovframework.MybatisUtils@isNotEmpty(searchText)">
+			AND (
+				UPPER(CLASS_NM) LIKE '%'||UPPER(#{searchText})||'%'
+				or UPPER(METHOD_NM) LIKE '%'||UPPER(#{searchText})||'%'
+			)
+		</if>
+		<if test="@egovframework.MybatisUtils@isNotEmpty(searchExcptTy)">
+			AND EXCEPTION_TY = #{searchExcptTy}
+		</if>
+		<if test="@egovframework.MybatisUtils@isNotEmpty(searchFromDt) and @egovframework.MybatisUtils@isNotEmpty(searchToDt)">
+			AND TO_CHAR(INST_DT, 'YYYY/MM/DD') between #{searchFromDt} and #{searchToDt}
+		</if>
+		ORDER BY
+			INST_DT DESC
+	</sql>
+
+	<select id="selectExceptionLogList" parameterType="map" resultMap="clobMap">
+		<include refid="selectExceptionLogListSql"/>
+	</select>
+	
+    <!-- 오류발생 이력 목록 조회(페이징) -->
+    <select id="selectExceptionLogListPaging" parameterType="map" resultMap="clobMap">
+    	SELECT
+    		PL.*
+    	FROM (
+        	SELECT 
+        		PO.*
+        		,ROWNUM AS RSN
+			FROM (
+	    		<include refid="selectExceptionLogListSql" />
+				) PO
+		) PL
+		WHERE
+		<![CDATA[
+			rsn <= #{maxSn} 
+			AND rsn > #{minSn}
+		]]>
+    </select>
+    
+    <!-- 오류발생 이력 목록 조회(페이징 전체 카운트) -->
+    <select id="selectExceptionLogListPagingCount" parameterType="map" resultType="int">
+    	SELECT
+	    	COUNT(*)
+	    FROM
+	    	(<include refid="selectExceptionLogListSql" />)
+	</select>
+
+	<!-- 오류발생 내용 입력 -->
+	<insert id="insertExceptionLog" parameterType="map">
+		INSERT INTO
+		TAD_EXCEPTION_LOG
+		(
+			EXCEPTION_SN
+			,CLASS_NM
+			,METHOD_NM
+			,EXCEPTION_TY
+			,EXCEPTION_MSG
+			,INST_DT
+		)
+		VALUES
+		(
+			SEQ_EXCEPTION_SN.NEXTVAL
+			,#{classNm}
+			,#{methodNm}
+			,#{exceptionTy}
+			,#{exceptionMsg}
+			,SYSDATE
+		)
+	</insert>
+	
+	<!-- 오류타입 목록 조회 -->
+	<select id="selectExceptionTyList" parameterType="map" resultType="egovMap">
+		SELECT
+			EXCEPTION_TY
+		FROM
+			TAD_EXCEPTION_LOG
+		GROUP BY
+			EXCEPTION_TY
+		ORDER BY
+			EXCEPTION_TY
+	</select>
+</mapper>

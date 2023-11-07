@@ -1,0 +1,984 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="cl_clas">
+<!-- 학급관리  -->
+
+<!-- 학급홈페이지 관리 시스템  리스트 sql-->
+	<sql id ="selectClasSmListSql">
+	  SELECT   IT.INSTT_CODE
+	          ,IT.INSTT_NM
+	          ,IT.INSTT_TY
+	          ,SM.SYS_ID
+	          ,SM.SYS_NM
+	          ,SM.SYS_TY
+              ,( <include refid="selectClasStats" />  ) AS TOTAL_CNT
+              ,( <include refid="selectClasStats" />  AND CLAS_TY = 'school' ) AS SCHOOL_CNT
+              ,( <include refid="selectClasStats" />  AND CLAS_TY = 'kndrgr' ) AS KNDRGR_CNT
+              ,( <include refid="selectClasStats" />  AND CLAS_TY = 'special' ) AS SPECIAL_CNT
+	    FROM   TAP_IM_INSTT_MANAGE IT, TAP_SM_SYS_MANAGE SM
+	   WHERE   IT.INSTT_CODE = SM.INSTT_CODE
+         AND   SM.SYS_STTUS = 'O'
+	   <include refid="srchClasSmSql" />
+	ORDER BY   IT.INSTT_CODE, IT.INSTT_LEVEL DESC
+	</sql>
+
+	<!--  학급홈페이지 관리 시스템  리스트 팝업 통계 sql-->
+	<sql id ="selectClasStats">
+		SELECT COUNT(*)
+          FROM TAP_CL_CLAS_MANAGE CM
+         WHERE CM.SYS_ID = SM.SYS_ID
+           AND CM.CLAS_YEAR = #{srchClasYear}
+	</sql>
+
+	 <!--  학급홈페이지 관리 시스템  리스트 검색조건 sql-->
+	<sql id ="srchClasSmSql">
+
+		<if test='@egovframework.MybatisUtils@isEmpty(author) || author != "master"'>
+         AND	SM.SYS_ID NOT IN ('apple')
+        </if>
+
+	     <if test="@egovframework.MybatisUtils@isNotEmpty(insttCode)">
+	     AND   ( IT.INSTT_CODE =  #{insttCode}
+
+                    OR  IT.UPPER_INSTT_CODE = #{upperInsttCode}
+                    OR  IT.BSIS_INSTT_CODE = #{bsisInsttCode}
+
+               	)
+         </if>
+
+	     <if test="@egovframework.MybatisUtils@isNotEmpty(insttGrad)">
+	     AND   ( IT.INSTT_GRAD IS NULL
+
+	     		 <if test="@egovframework.MybatisUtils@isNotEmpty(dtnt)">
+	                OR IT.INSTT_GRAD = #{dtnt}
+	             </if>
+	             <if test="@egovframework.MybatisUtils@isNotEmpty(elesch)">
+	                OR IT.INSTT_GRAD = #{elesch}
+	             </if>
+	             <if test="@egovframework.MybatisUtils@isNotEmpty(mskul)">
+	                OR IT.INSTT_GRAD = #{mskul}
+	             </if>
+	             <if test="@egovframework.MybatisUtils@isNotEmpty(hgschl)">
+	                OR IT.INSTT_GRAD = #{hgschl}
+	             </if>
+	             <if test="@egovframework.MybatisUtils@isNotEmpty(kndrgr)">
+	                OR IT.INSTT_GRAD = #{kndrgr}
+	             </if>
+	             <if test="@egovframework.MybatisUtils@isNotEmpty(spcl)">
+	                OR IT.INSTT_GRAD = #{spcl}
+	             </if>
+
+	           )
+	     </if>
+
+	     <if test="@egovframework.MybatisUtils@isNotEmpty(mberId)">
+	      AND SM.SYS_ID IN (
+
+					SELECT SYS_ID
+					  FROM TAP_AU_AUTHOR_MBER
+					 WHERE MBER_ID = #{mberId}
+ 					   AND SYS_ID != 'apple'
+					   AND AUTHOR_CODE IN (1,2)
+
+        	)
+	     </if>
+
+	     <if test="@egovframework.MybatisUtils@isNotEmpty(srchSmTxt)">
+	       AND  (
+	       				 SM.SYS_NM like '%'||#{srchSmTxt}||'%'
+	              	  OR SM.SYS_TY like '%'||#{srchSmTxt}||'%'
+
+	            )
+	    </if>
+
+	</sql>
+
+	<!--  학급홈페이지 관리 시스템  리스트  -->
+    <select id="selectClasSmList" parameterType="egovMap" resultType="egovMap">
+	 	<include refid="selectClasSmListSql" />
+	 </select>
+
+	<!-- 학급홈페이지 관리 시스템  리스트(페이징) -->
+    <select id="selectClasSmListPaging" parameterType="map" resultType="egovMap">
+    	SELECT
+    		PL.*
+    	FROM (
+        	SELECT
+        		PO.*
+        		,rownum as rsn
+			FROM (
+	    		<include refid="selectClasSmListSql" />
+				) PO
+		) PL
+		WHERE
+		<![CDATA[
+			rsn <= #{maxSn}
+			AND rsn > #{minSn}
+		]]>
+    </select>
+
+    <!-- 학급홈페이지 관리 시스템  리스트 (페이징 전체 카운트) -->
+    <select id="selectClasSmListPagingCount" parameterType="map" resultType="int">
+    	SELECT   COUNT(*)
+	      FROM  ( <include refid="selectClasSmListSql" /> ) A
+    </select>
+
+	<!--학급번호 조회 -->
+    <select id="selectClasNoInfo"  resultType="egovMap">
+    	SELECT NVL(MAX(CLAS_NO)+1,0) AS CLAS_NO
+    	  FROM TAP_CL_CLAS_MANAGE
+    	 WHERE SYS_ID = #{sysId}
+    </select>
+
+	<!--학급관리리스트 -->
+    <sql id="selectClasListSql">
+        SELECT   CA.SYS_ID
+				,CA.CLAS_CODE
+				,CA.CLAS_NO
+				,CA.CLAS_TY
+				,CA.CLAS_GRADE_CODE
+				,CA.CLAS_NM
+				,CA.CLAS_TCHER
+				,MM.MBER_NM
+				,CA.CLAS_CREAT_USID
+				,CA.CLAS_CREAT_USNM
+				,CA.CLAS_CREAT_USIP
+				,TO_CHAR(CA.CLAS_CREAT_DT, 'yyyy/mm/dd') as CLAS_CREAT_DT
+
+	      FROM   TAP_CL_CLAS_MANAGE CA
+					LEFT OUTER JOIN
+                     	TAP_MM_MBER_MANAGE MM
+                     		ON CA.CLAS_TCHER = MM.MBER_ID
+
+	     WHERE   CA.SYS_ID = #{sysId}
+	     <if test="@egovframework.MybatisUtils@isNotEmpty(srchGradeCode)">
+	       AND   ( CA.CLAS_GRADE_CODE = #{srchGradeCode} )
+	     </if>
+	     <if test="@egovframework.MybatisUtils@isNotEmpty(srchClas)">
+	       AND   ( CA.CLAS_NM like '%'||#{srchClas}||'%' )
+	     </if>
+	     ORDER BY CLAS_GRADE_CODE, CLAS_NM
+    </sql>
+
+   <!--학급관리리스트 -->
+   <select id="selectClasList" parameterType="map" resultType="egovMap">
+	    <include refid="selectClasListSql" />
+   </select>
+
+    <!-- 학급관리리스트 조회(페이징) -->
+   <select id="selectClasListPaging" parameterType="map" resultType="egovMap">
+    	SELECT
+    		PL.*
+    	FROM (
+        	SELECT
+        		PO.*
+        		,rownum as rsn
+			FROM (
+	    		<include refid="selectClasListSql" />
+				) PO
+		) PL
+		WHERE
+		<![CDATA[
+			rsn <= #{maxSn}
+			AND rsn > #{minSn}
+		]]>
+    </select>
+
+    <!--  학급관리조회(페이징 전체 카운트) -->
+   <select id="selectClasListPagingCount" parameterType="map" resultType="int">
+      SELECT  COUNT(*)
+	    FROM  TAP_CL_CLAS_MANAGE
+	   WHERE  SYS_ID = #{sysId}
+	   <if test="@egovframework.MybatisUtils@isNotEmpty(srchClas)">
+	     AND  ( CLAS_NM like '%'||#{srchClas}||'%')
+	   </if>
+    </select>
+
+    <!-- (회원구분) 담임교사 리스트 조회 Sql -->
+     <sql id="selectTcherListSql">
+	     SELECT  MM.MBER_ID
+			       ,MM.MBER_NM
+			       ,MT.MBER_TY
+			       ,SM.SYS_ID
+			       ,MM.MBTLNUM
+			       ,MM.TELNO
+			       ,MM.EMAIL
+			       ,MT.CLSF
+			       ,MT.DEPT
+			 FROM  V_TAP_MM_MBER_MANAGE MM, TAP_MM_MBER_TY MT, TAP_SM_SYS_MANAGE SM
+			WHERE  MM.MBER_ID = MT.MBER_ID
+			  AND  MT.INSTT_CODE = SM.INSTT_CODE
+			  AND  MT.MBER_TY = '3'
+			  AND  SM.SYS_ID = #{sysId}
+			<if test="@egovframework.MybatisUtils@isNotEmpty(srchTcherTxt)">
+		      AND  ( MM.MBER_ID like '%'||#{srchTcherTxt}||'%' OR MM.MBER_NM like '%'||#{srchTcherTxt}||'%')
+		   </if>
+     </sql>
+
+    <!-- (회원구분) 담임교사 리스트 조회  -->
+   <select id="selectTcherList" parameterType="map" resultType="egovMap">
+		<include refid="selectTcherListSql" />
+    </select>
+
+     <!-- 담임교사 리스트  조회(페이징) -->
+   <select id="selectTcherListPaging" parameterType="map" resultType="egovMap">
+    	SELECT
+    		PL.*
+    	FROM (
+        	SELECT
+        		PO.*
+        		,rownum as rsn
+			FROM (
+	    		<include refid="selectTcherListSql" />
+				) PO
+		) PL
+		WHERE
+		<![CDATA[
+			rsn <= #{maxSn}
+			AND rsn > #{minSn}
+		]]>
+    </select>
+
+    <!--  담임교사 조회(페이징 전체 카운트) -->
+   <select id="selectTcherListPagingCount" parameterType="map" resultType="int">
+      SELECT  COUNT(*)
+	    FROM  TAP_MM_MBER_MANAGE MM, TAP_MM_MBER_TY MT, TAP_SM_SYS_MANAGE SM
+	   WHERE  MM.MBER_ID = MT.MBER_ID
+		 AND  MT.INSTT_CODE = SM.INSTT_CODE
+		 AND  MT.MBER_TY = '8'
+		 AND  SM.SYS_ID = #{sysId}
+		<if test="@egovframework.MybatisUtils@isNotEmpty(srchTcherTxt)">
+	     AND  ( MM.MBER_ID like '%'||#{srchTcherTxt}||'%' OR MM.MBER_NM like '%'||#{srchTcherTxt}||'%')
+	   </if>
+    </select>
+
+    <!--학급명 중복체크-->
+   <select id="selectClasNmChk" parameterType="map" resultType="egovMap">
+   	    SELECT
+            COUNT(*) AS CLAS_NM_CNT
+       	FROM
+           	 TAP_CL_CLAS_MANAGE
+        WHERE
+             SYS_ID = #{sysId}
+          AND
+             CLAS_GRADE_CODE = #{clasGradeCode}
+          AND
+             CLAS_NM = #{clasNm}
+          AND
+          	 CLAS_YEAR = #{clasYear}
+   </select>
+
+    <!-- 학급관리정보 등록 -->
+	<insert id="insertClasInfo" parameterType="map" >
+    	INSERT INTO TAP_CL_CLAS_MANAGE (
+			 SYS_ID
+			,CLAS_YEAR
+			,CLAS_NO
+			,CLAS_TY
+			,CLAS_GRADE_CODE
+			,CLAS_CODE
+			,CLAS_NM
+			,CLAS_TCHER
+			,CLAS_CREAT_USID
+			,CLAS_CREAT_USNM
+			,CLAS_CREAT_USIP
+			,CLAS_CREAT_DT
+
+        ) VALUES (
+             #{sysId}
+            ,#{clasYear}
+			,#{clasNo}
+			,#{clasTy}
+			,#{clasGradeCode}
+			,#{clasCode}
+			,#{clasNm}
+			,#{clasTcher}
+			,#{clasCreatUsid}
+			,#{clasCreatUsnm}
+			,#{clasCreatUsip}
+			,sysdate
+        )
+	</insert>
+
+	<!-- 학급관리정보 수정 -->
+    <update id="updateClasInfo" parameterType ="map">
+		UPDATE   TAP_CL_CLAS_MANAGE
+		   SET   CLAS_NM         = #{clasNm}
+				,CLAS_TCHER      = #{clasTcher}
+		WHERE    CLAS_CODE       = #{clasCode}
+	</update>
+	<!--학급관리정보 삭제 -->
+	<delete id="deleteClasInfo" parameterType="map" >
+    	DELETE FROM TAP_CL_CLAS_MANAGE
+         WHERE CLAS_CODE = #{clasCode}
+   	</delete>
+<!-- //학급관리  -->
+
+<!-- 학급홈페이지관리  -->
+
+<!-- 학급홈페이지 관리 시스템  리스트 sql-->
+	<sql id ="selectClasHmpgSmListSql">
+	  SELECT   IT.INSTT_CODE
+	          ,IT.INSTT_NM
+	          ,IT.INSTT_TY
+	          ,SM.SYS_ID
+	          ,SM.SYS_NM
+	          ,SM.SYS_TY
+              ,( <include refid="selectClasHmpgStats" />  ) AS TOTAL_CNT
+              ,( <include refid="selectClasHmpgStats" />  AND CLAS_OPER_AT = 'O' ) AS OPER_CNT
+              ,( <include refid="selectClasHmpgStats" />  AND CLAS_OPER_AT = 'S' ) AS STOP_CNT
+              ,( <include refid="selectClasHmpgStats" />  AND CLAS_OPER_AT = 'W' ) AS WAIT_CNT
+	    FROM   TAP_IM_INSTT_MANAGE IT, TAP_SM_SYS_MANAGE SM
+	   WHERE   IT.INSTT_CODE = SM.INSTT_CODE
+         AND   SM.SYS_STTUS = 'O'
+	   <include refid="srchClasHmpgSmSql" />
+	ORDER BY   IT.INSTT_CODE, IT.INSTT_LEVEL DESC
+	</sql>
+
+	<!--  학급홈페이지 관리 시스템  리스트 팝업 통계 sql-->
+	<sql id ="selectClasHmpgStats">
+		SELECT COUNT(*)
+          FROM TAP_CL_CLAS_HMPG CH
+         WHERE CH.SYS_ID = SM.SYS_ID
+           AND CH.CLAS_YEAR = #{srchClasYear}
+	</sql>
+
+	 <!--  학급홈페이지 관리 시스템  리스트 검색조건 sql-->
+	<sql id ="srchClasHmpgSmSql">
+
+		<if test='@egovframework.MybatisUtils@isEmpty(author) || author != "master"'>
+         AND	SM.SYS_ID NOT IN ('apple')
+        </if>
+
+	     <if test="@egovframework.MybatisUtils@isNotEmpty(insttCode)">
+	     AND   ( IT.INSTT_CODE =  #{insttCode}
+
+                    OR  IT.UPPER_INSTT_CODE = #{upperInsttCode}
+                    OR  IT.BSIS_INSTT_CODE = #{bsisInsttCode}
+
+               	)
+         </if>
+
+	     <if test="@egovframework.MybatisUtils@isNotEmpty(insttGrad)">
+	     AND   ( IT.INSTT_GRAD IS NULL
+
+	     		 <if test="@egovframework.MybatisUtils@isNotEmpty(dtnt)">
+	                OR IT.INSTT_GRAD = #{dtnt}
+	             </if>
+	             <if test="@egovframework.MybatisUtils@isNotEmpty(elesch)">
+	                OR IT.INSTT_GRAD = #{elesch}
+	             </if>
+	             <if test="@egovframework.MybatisUtils@isNotEmpty(mskul)">
+	                OR IT.INSTT_GRAD = #{mskul}
+	             </if>
+	             <if test="@egovframework.MybatisUtils@isNotEmpty(hgschl)">
+	                OR IT.INSTT_GRAD = #{hgschl}
+	             </if>
+	             <if test="@egovframework.MybatisUtils@isNotEmpty(kndrgr)">
+	                OR IT.INSTT_GRAD = #{kndrgr}
+	             </if>
+	             <if test="@egovframework.MybatisUtils@isNotEmpty(spcl)">
+	                OR IT.INSTT_GRAD = #{spcl}
+	             </if>
+
+	           )
+	     </if>
+
+	     <if test="@egovframework.MybatisUtils@isNotEmpty(mberId)">
+	      AND SM.SYS_ID IN (
+
+					SELECT SYS_ID
+					  FROM TAP_AU_AUTHOR_MBER
+					 WHERE MBER_ID = #{mberId}
+ 					   AND SYS_ID != 'apple'
+					   AND AUTHOR_CODE IN (1,2)
+
+        	)
+	     </if>
+
+	     <if test="@egovframework.MybatisUtils@isNotEmpty(srchSmTxt)">
+	       AND  (
+	       				 SM.SYS_NM like '%'||#{srchSmTxt}||'%'
+	              	  OR SM.SYS_TY like '%'||#{srchSmTxt}||'%'
+
+	            )
+	    </if>
+
+	</sql>
+
+	<!--  학급홈페이지 관리 시스템  리스트  -->
+    <select id="selectClasHmpgSmList" parameterType="egovMap" resultType="egovMap">
+	 	<include refid="selectClasHmpgSmListSql" />
+	 </select>
+
+	<!-- 학급홈페이지 관리 시스템  리스트(페이징) -->
+    <select id="selectClasHmpgSmListPaging" parameterType="map" resultType="egovMap">
+    	SELECT
+    		PL.*
+    	FROM (
+        	SELECT
+        		PO.*
+        		,rownum as rsn
+			FROM (
+	    		<include refid="selectClasHmpgSmListSql" />
+				) PO
+		) PL
+		WHERE
+		<![CDATA[
+			rsn <= #{maxSn}
+			AND rsn > #{minSn}
+		]]>
+    </select>
+
+    <!-- 학급홈페이지 관리 시스템  리스트 (페이징 전체 카운트) -->
+    <select id="selectClasHmpgSmListPagingCount" parameterType="map" resultType="int">
+    	SELECT   COUNT(*)
+	      FROM  ( <include refid="selectClasHmpgSmListSql" /> ) A
+    </select>
+
+
+<resultMap id="clobMap" type="egovMap">
+        <result property="CLAS_INTRCN" column="CLAS_INTRCN" jdbcType="CLOB" javaType="java.lang.String"/>
+        <result property="CLAS_REPRSNT" column="CLAS_REPRSNT" jdbcType="CLOB" javaType="java.lang.String"/>
+</resultMap>
+
+	<!--학급명 중복체크-->
+   <select id="selectClasHmpgNmChk" parameterType="map" resultType="egovMap">
+   	    SELECT
+            COUNT(*) AS CLAS_NM_CNT
+       	FROM
+           	 TAP_CL_CLAS_HMPG
+        WHERE
+             SYS_ID = #{sysId}
+          AND
+             CLAS_CODE = #{clasCode}
+          AND
+             CLAS_HMPG_NM = #{clasHmpgNm}
+          AND
+          	 CLAS_YEAR = #{clasYear}
+   </select>
+
+	<!--학급홈페이지 아이디 조회 -->
+   <select id="selectChIdInfo" parameterType="map" resultType="egovMap">
+   		SELECT SEQ_CLAS_HMPG_SN.NEXTVAL AS CLAS_HMPG_ID FROM DUAL
+   </select>
+
+	<!--학급홈페이지리스트 -->
+    <sql id="selectClasHmpgListSql">
+     	 SELECT	 CH.SYS_ID
+			 	,CH.CLAS_HMPG_ID
+				,CH.CLAS_CODE
+				,NVL((SELECT CLAS_GRADE_CODE FROM TAP_CL_CLAS_MANAGE WHERE CLAS_CODE = CH.CLAS_CODE), 99) AS CLAS_GRADE_CODE
+				,CH.CLAS_OPER_AT
+				,CH.CLAS_HMPG_TY
+				,CH.CLAS_TMPLAT_ID
+				,CH.CLAS_HMPG_NM
+				,CH.CLAS_IMG_ID
+				,CH.CLAS_YEAR
+				,CH.CLAS_ACCES_AT
+				,CH.CLAS_REPRSNT
+				,CH.CLAS_INTRCN
+				,CH.CLAS_HMPG_LINK
+				,CH.CLAS_CREAT_USID
+				,CH.CLAS_CREAT_USNM
+				,CH.CLAS_CREAT_USIP
+				,TO_CHAR(CH.CLAS_CREAT_DT, 'yyyy/mm/dd') as CLAS_CREAT_DT
+				,CH.CLAS_CONFM_USID
+				,CH.CLAS_CONFM_USNM
+				,CH.CLAS_CONFM_USIP
+				,TO_CHAR(CH.CLAS_CONFM_DT, 'yyyy/mm/dd') as CLAS_CONFM_DT
+				,CM.CLAS_MBER_ID
+
+		  FROM   TAP_CL_CLAS_HMPG CH
+                    LEFT OUTER JOIN
+                        TAP_CL_CLAS_MBER CM
+                            ON CH.CLAS_HMPG_ID = CM.CLAS_HMPG_ID
+                                AND CM.CLAS_AUTHOR_TY = '0'
+
+         WHERE   CH.SYS_ID = #{sysId}
+	     <if test="@egovframework.MybatisUtils@isNotEmpty(srchClasNm)">
+	       AND   ( CH.CLAS_HMPG_NM like '%'||#{srchClasNm}||'%')
+	     </if>
+	     <if test="@egovframework.MybatisUtils@isNotEmpty(srchOperAt)">
+	       AND   ( CH.CLAS_OPER_AT like '%'||#{srchOperAt}||'%')
+	     </if>
+	     <if test="@egovframework.MybatisUtils@isNotEmpty(srchClasYear)">
+	       AND   ( CH.CLAS_YEAR = #{srchClasYear} )
+	     </if>
+	     <if test="@egovframework.MybatisUtils@isNotEmpty(srchClasCode)">
+	       AND   ( CH.CLAS_CODE like '%'||#{srchClasCode}||'%')
+	     </if>
+	  ORDER BY CLAS_GRADE_CODE, CLAS_HMPG_NM
+    </sql>
+
+    <!--학급홈페이지관리 리스트 -->
+   <select id="selectClasHmpgList" parameterType="map" resultType="egovMap">
+	    <include refid="selectClasHmpgListSql" />
+   </select>
+
+      <!-- 학급홈페이지관리 조회(페이징) -->
+   <select id="selectClasHmpgListPaging" parameterType="map" resultType="egovMap">
+    	SELECT
+    		PL.*
+    	FROM (
+        	SELECT
+        		PO.*
+        		,rownum as rsn
+			FROM (
+	    		<include refid="selectClasHmpgListSql" />
+				) PO
+		) PL
+		WHERE
+		<![CDATA[
+			rsn <= #{maxSn}
+			AND rsn > #{minSn}
+		]]>
+    </select>
+
+    <!--  학급홈페이지관리 조회(페이징 전체 카운트) -->
+   <select id="selectClasHmpgListPagingCount" parameterType="map" resultType="int">
+      SELECT  COUNT(*)
+	    FROM  TAP_CL_CLAS_HMPG
+	   WHERE  SYS_ID = #{sysId}
+	     <if test="@egovframework.MybatisUtils@isNotEmpty(srchClasNm)">
+	       AND   ( CLAS_HMPG_NM like '%'||#{srchClasNm}||'%')
+	     </if>
+	     <if test="@egovframework.MybatisUtils@isNotEmpty(srchOperAt)">
+	       AND   ( CLAS_OPER_AT like '%'||#{srchOperAt}||'%')
+	     </if>
+	     <if test="@egovframework.MybatisUtils@isNotEmpty(srchClasYear)">
+	       AND   ( CLAS_YEAR = #{srchClasYear} )
+	     </if>
+	     <if test="@egovframework.MybatisUtils@isNotEmpty(srchClasCode)">
+	       AND   ( CLAS_CODE like '%'||#{srchClasCode}||'%')
+	     </if>
+    </select>
+
+    <!--학급홈페이지 정보 조회 -->
+    <select id="selectClasHmpgInfo" parameterType="map" resultMap="clobMap">
+         SELECT	 NVL((SELECT SYS_NM FROM TAP_SM_SYS_MANAGE WHERE SYS_ID = CH.SYS_ID),0) AS SYS_NM
+         		,CH.SYS_ID
+			 	,CH.CLAS_HMPG_ID
+				,CH.CLAS_CODE
+				,CH.BASE_CLAS_HMPG_ID
+				,NVL((SELECT CLAS_GRADE_CODE FROM TAP_CL_CLAS_MANAGE WHERE CLAS_CODE = CH.CLAS_CODE), 99) AS CLAS_GRADE_CODE
+				,CH.CLAS_OPER_AT
+				,CH.CLAS_HMPG_TY
+				,CH.CLAS_TMPLAT_ID
+				,CH.CLAS_HMPG_NM
+				,CH.CLAS_IMG_ID
+				,CH.CLAS_YEAR
+				,CH.CLAS_ACCES_AT
+				,CH.CLAS_REPRSNT
+				,CH.CLAS_INTRCN
+				,CH.CLAS_HMPG_LINK
+				,CH.CLAS_CREAT_USID
+				,CH.CLAS_CREAT_USNM
+				,CH.CLAS_CREAT_USIP
+				,TO_CHAR(CH.CLAS_CREAT_DT, 'yyyy/mm/dd') as CLAS_CREAT_DT
+				,CH.CLAS_CONFM_USID
+				,CH.CLAS_CONFM_USNM
+				,CH.CLAS_CONFM_USIP
+				,TO_CHAR(CH.CLAS_CONFM_DT, 'yyyy/mm/dd') as CLAS_CONFM_DT
+				,CM.CLAS_MBER_ID
+                ,NVL((SELECT MBER_NM FROM TAP_MM_MBER_MANAGE WHERE MBER_ID = CM.CLAS_MBER_ID), '') AS MBER_NM
+	       FROM   TAP_CL_CLAS_HMPG CH
+                    LEFT OUTER JOIN
+                        TAP_CL_CLAS_MBER CM
+                            ON CH.CLAS_HMPG_ID = CM.CLAS_HMPG_ID
+                                AND CM.CLAS_AUTHOR_TY = '0'
+	     WHERE   CH.CLAS_HMPG_ID = #{clasHmpgId}
+	       AND   CH.CLAS_YEAR = #{srchClasYear}
+    </select>
+
+    <!-- 학급홈페이지 조회 ( 나의 학급 바로가기  ) -->
+    <select id="selectMbClasHmpgInfo" parameterType="map" resultMap="clobMap">
+         SELECT	 CLAS_HMPG_ID
+	       FROM  TAP_CL_CLAS_HMPG
+	     WHERE   CLAS_HMPG_NM = #{clasNm}
+	       AND   SYS_ID = #{sysId}
+	       AND   ( CLAS_CODE like #{clasCode} ||'%' )
+	       AND   CLAS_YEAR = #{srchClasYear}
+    </select>
+
+    <!-- 학급홈페이지 관리자 선택 ( 학생을 제외한 회원 조회 ) -->
+   <select id="selectNoneStdntList" parameterType="map" resultType="egovMap">
+		    SELECT  MM.MBER_ID
+			       ,MM.MBER_NM
+			       ,MT.MBER_TY
+			       ,SM.SYS_ID
+			       ,MM.MBTLNUM
+			       ,MM.TELNO
+			       ,MM.EMAIL
+			       ,MT.CLSF
+			       ,MT.DEPT
+			 FROM  V_TAP_MM_MBER_MANAGE MM, TAP_MM_MBER_TY MT, TAP_SM_SYS_MANAGE SM
+			WHERE  MM.MBER_ID = MT.MBER_ID
+			  AND  MT.INSTT_CODE = SM.INSTT_CODE
+			  AND  ( MT.MBER_TY != '5' AND  MT.MBER_TY != '7' )
+			  AND  SM.SYS_ID = #{sysId}
+			  AND  MT.CONFM_YN = 'Y'
+			<if test="@egovframework.MybatisUtils@isNotEmpty(srchMberTxt)">
+		      AND  ( MM.MBER_ID like '%'||#{srchMberTxt}||'%' OR MM.MBER_NM like '%'||#{srchMberTxt}||'%')
+		   </if>
+			<if test="@egovframework.MybatisUtils@isNotEmpty(mberTy)">
+		      AND   MT.MBER_TY = #{mberTy}
+		   </if>
+    </select>
+
+
+    <!--학급홈페이지 갱신 여부  -->
+    <select id="selectChUpdtInfo" parameterType="map" resultType="int">
+         SELECT	 COUNT(*)
+           FROM  TAP_CL_CLAS_HMPG
+	      WHERE  BASE_CLAS_HMPG_ID = #{baseClasHmpgId}
+	        AND  CLAS_YEAR = #{clasYear}
+    </select>
+
+    <!-- 학급홈페이지 등록 -->
+	<insert id="insertClasHmpgInfo" parameterType="map" >
+    	INSERT INTO TAP_CL_CLAS_HMPG (
+				 SYS_ID
+			 	,CLAS_HMPG_ID
+				,CLAS_CODE
+				,CLAS_OPER_AT
+				,CLAS_HMPG_TY
+				,CLAS_TMPLAT_ID
+				,CLAS_HMPG_NM
+				,CLAS_IMG_ID
+				,CLAS_YEAR
+				,CLAS_ACCES_AT
+				,CLAS_REPRSNT
+				,CLAS_INTRCN
+				,CLAS_HMPG_LINK
+				,CLAS_CREAT_USID
+				,CLAS_CREAT_USNM
+				,CLAS_CREAT_USIP
+				,CLAS_CREAT_DT
+				,CLAS_CONFM_USID
+				,CLAS_CONFM_USNM
+				,CLAS_CONFM_USIP
+				,CLAS_CONFM_DT
+				,BASE_CLAS_HMPG_ID
+
+        ) VALUES (
+	             #{sysId}
+				,#{clasHmpgId}
+				,#{clasCode}
+				,#{clasOperAt}
+				,#{clasHmpgTy}
+				,#{clasTmplatId}
+				,#{clasHmpgNm}
+				,#{clasImgId}
+				,#{clasYear}
+				,#{clasAccesAt}
+				,#{clasReprsnt}
+				,#{clasIntrcn}
+				,#{clasHmpgLink}
+				,#{clasCreatUsid}
+				,#{clasCreatUsnm}
+				,#{clasCreatUsip}
+				,sysdate
+				,#{clasConfmUsid}
+				,#{clasConfmUsnm}
+				,#{clasConfmUsip}
+				,TO_DATE(#{clasConfmDt}, 'YYYY/MM/DD')
+				,#{baseClasHmpgId}
+        )
+	</insert>
+
+    <!-- 학급홈페이지 기본정보 수정 -->
+    <update id="updateClasBaseHmpgInfo" parameterType ="map">
+		UPDATE   TAP_CL_CLAS_HMPG
+		   SET   CLAS_CODE      = #{clasCode}
+				,CLAS_OPER_AT   = #{clasOperAt}
+				,CLAS_HMPG_TY   = #{clasHmpgTy}
+				,CLAS_TMPLAT_ID = #{clasTmplatId}
+				,CLAS_HMPG_NM   = #{clasHmpgNm}
+				,CLAS_YEAR      = #{clasYear}
+				,CLAS_HMPG_LINK = #{clasHmpgLink}
+				,CLAS_ACCES_AT  = #{clasAccesAt}
+		WHERE    CLAS_HMPG_ID   = #{clasHmpgId}
+	</update>
+
+	<!--학급홈페이지 운영여부 수정 -->
+	<update id="updateClasHmpgOperAt" parameterType="map" >
+    	UPDATE TAP_CL_CLAS_HMPG
+           SET  CLAS_OPER_AT    = #{clasOperAt}
+           	   ,CLAS_CONFM_USID = #{clasConfmUsId}
+			   ,CLAS_CONFM_DT   = sysdate
+			   ,CLAS_CONFM_USNM = #{clasConfmUsnm}
+			   ,CLAS_CONFM_USIP = #{clasConfmUsip}
+         WHERE CLAS_HMPG_ID = #{clasHmpgId}
+   	</update>
+
+   	<!--학급홈페이지 회원 삭제 ( 승인 거부 시 ) -->
+   	<delete id="deleteClasAllMberInfo" parameterType="map" >
+    	DELETE FROM TAP_CL_CLAS_MBER
+         WHERE CLAS_HMPG_ID = #{clasHmpgId}
+   	</delete>
+
+   	<!--학급홈페이지 회원수 조회 ( 홈페이지 삭제 시 ) -->
+   	<select id="selectClasHmpgMberCnt" parameterType="map" resultType="int">
+    	SELECT COUNT(*)
+    	  FROM TAP_CL_CLAS_HMPG
+    	 WHERE SYS_ID=#{sysId}
+   	</select>
+
+   	<!--학급홈페이지 회원 조회 ( 홈페이지 삭제 시 ) -->
+   	<select id="selectClasHmpgMber" parameterType="map" resultType="egovMap">
+    	SELECT CLAS_HMPG_ID
+    	  FROM TAP_CL_CLAS_HMPG
+    	 WHERE SYS_ID=#{sysId}
+    	   AND ROWNUM = 1
+   	</select>
+
+   	<!--학급홈페이지 회원 삭제 ( 홈페이지 삭제 시 ) -->
+   	<delete id="deleteClasHmpgMber" parameterType="map" >
+    	DELETE FROM TAP_CL_CLAS_MBER
+         WHERE CLAS_HMPG_ID = #{clasHmpgId}
+   	</delete>
+
+   	<!--학급홈페이지 삭제 ( 홈페이지 삭제 시 ) -->
+   	<delete id="deleteClasHmpgSysId" parameterType="map" >
+    	DELETE FROM TAP_CL_CLAS_HMPG
+         WHERE CLAS_HMPG_ID = #{clasHmpgId}
+   	</delete>
+
+	<!--학급관리정보 삭제 ( 홈페이지 삭제 시 ) -->
+	<delete id="deleteClasHm" parameterType="map" >
+    	DELETE FROM TAP_CL_CLAS_MANAGE
+         WHERE SYS_ID = #{sysId}
+   	</delete>
+
+   	<!--학급홈페이지 삭제 ( 승인 거부 시 ) -->
+   	<delete id="deleteClasHmpgInfo" parameterType="map" >
+    	DELETE FROM TAP_CL_CLAS_HMPG
+         WHERE CLAS_HMPG_ID = #{clasHmpgId}
+   	</delete>
+
+
+   	<!--학급홈페이지 정보 조회 ( 학급홈페이지 백업 ) -->
+    <select id="selectDownClasHmpgInfo" parameterType="map" resultType="egovMap">
+         SELECT	 CH.CLAS_HMPG_ID
+				,CH.CLAS_CODE
+				,( SELECT
+                       CMMN_DETAIL_CODE_NM
+                     FROM
+                       TAP_CD_CMMNCODE_DETAIL
+                    WHERE
+                       CMMN_CODE = 'clasGradeCode'
+                      AND
+                	   CMMN_DETAIL_CODE = (NVL((SELECT CLAS_GRADE_CODE FROM TAP_CL_CLAS_MANAGE WHERE CLAS_CODE = CH.CLAS_CODE), 99))
+                 ) AS CLAS_GRADE
+				,CH.CLAS_TMPLAT_ID
+				,CH.CLAS_HMPG_NM
+				,CH.CLAS_YEAR
+				,TO_CHAR(CH.CLAS_CREAT_DT, 'yyyy/mm/dd') as CLAS_CREAT_DT
+				,TO_CHAR(CH.CLAS_CONFM_DT, 'yyyy/mm/dd') as CLAS_CONFM_DT
+	       FROM  TAP_CL_CLAS_HMPG CH
+                    LEFT OUTER JOIN
+                        TAP_CL_CLAS_MBER CM
+                            ON CH.CLAS_HMPG_ID = CM.CLAS_HMPG_ID
+                                AND CM.CLAS_AUTHOR_TY = '0'
+	     WHERE
+	       	CH.SYS_ID = #{sysId}
+	       <if test="@egovframework.MybatisUtils@isEmpty(viewAt)">
+	       AND
+	        CH.CLAS_HMPG_ID IN
+			     <foreach collection="clasHmpgIdList" item="item"  open="(" close=")" separator=",">
+			     	#{item}
+		 		</foreach>
+		    </if>
+
+		    <if test="@egovframework.MybatisUtils@isNotEmpty(viewAt)">
+		    AND
+		     CH.CLAS_HMPG_ID = #{clasHmpgId}
+		    </if>
+
+	  ORDER BY
+	        CH.CLAS_HMPG_ID
+    </select>
+
+    <resultMap id="clobNttMap" type="egovMap">
+        <result property="NTT_CN" column="NTT_CN" jdbcType="CLOB" javaType="java.lang.String"/>
+ 	</resultMap>
+
+    <!--학급홈페이지 게시물 정보 조회 ( 학급홈페이지 백업 ) -->
+    <select id="selectDownClasHmpgNttInfo" parameterType="map" resultMap="clobNttMap">
+         SELECT
+             CH.CLAS_YEAR
+            ,CH.CLAS_HMPG_ID
+            ,( SELECT
+                       CMMN_DETAIL_CODE_NM
+                     FROM
+                       TAP_CD_CMMNCODE_DETAIL
+                    WHERE
+                       CMMN_CODE = 'clasGradeCode'
+                      AND
+                	   CMMN_DETAIL_CODE = (NVL((SELECT CLAS_GRADE_CODE FROM TAP_CL_CLAS_MANAGE WHERE CLAS_CODE = CH.CLAS_CODE), 99))
+                 ) AS CLAS_GRADE
+            ,CH.CLAS_HMPG_NM
+            ,BM.BBS_ID
+            ,BM.BBS_SJ
+			,NT.NTT_SN
+			,NT.NTT_SJ
+            ,NT.NTT_CN
+            ,NT.NTT_RDCNT
+			,NT.REG_ID
+            ,NT.REG_NM
+			,NT.REG_IP
+			,TO_CHAR(NT.REG_DT, 'yyyy/mm/dd') AS REG_DT
+			,(SELECT COUNT(*) FROM TCO_NA_NTT_FILE NF WHERE NF.NTT_SN = NT.NTT_SN )  AS FILE_CHK
+		 FROM
+		 	TAP_CL_CLAS_HMPG CH,
+            TAP_CL_CLAS_BBS CB,
+            TCO_NA_NTT_MANAGE NT,
+            TAP_BM_BBS_MANAGE BM
+		WHERE
+		 	CH.CLAS_HMPG_ID = CB.CLAS_HMPG_ID
+          AND
+            CB.clas_bbs_id = BM.BBS_ID
+          AND
+            CB.clas_bbs_id = NT.BBS_ID
+          AND
+            BM.bbs_id = NT.BBS_ID
+          AND
+            BM.BBS_USE_AT = 'Y'
+          AND
+            NT.NTT_USE_AT = 'Y'
+          AND
+            CH.SYS_ID = #{sysId}
+          <if test="@egovframework.MybatisUtils@isEmpty(viewAt)">
+	       AND
+	        CH.CLAS_HMPG_ID IN
+			     <foreach collection="clasHmpgIdList" item="item"  open="(" close=")" separator=",">
+			     	#{item}
+		 		</foreach>
+		    </if>
+
+		    <if test="@egovframework.MybatisUtils@isNotEmpty(viewAt)">
+		    AND
+		     CH.CLAS_HMPG_ID = #{clasHmpgId}
+		    </if>
+	 ORDER BY
+	        CH.CLAS_HMPG_ID
+    </select>
+
+    <!--학급홈페이지 게시물 파일 정보 조회 ( 학급홈페이지 백업 ) -->
+    <select id="selectDownClasHmpgNttFileInfo" parameterType="map" resultType="egovMap">
+         SELECT
+             CH.CLAS_YEAR
+            ,CH.CLAS_HMPG_ID
+            ,CH.CLAS_HMPG_NM
+            ,BM.BBS_ID
+            ,BM.BBS_SJ
+			,NT.NTT_SN
+			,NT.NTT_SJ
+			,NT.REG_ID
+            ,NT.REG_NM
+			,NT.REG_IP
+			,TO_CHAR(NT.REG_DT, 'yyyy/mm/dd') AS REG_DT
+			,NF.FILE_SN
+			,NF.FILE_NM
+       		,NF.FLPTH
+       		,NF.THUMB_FILPTH
+		 FROM
+		 	TAP_CL_CLAS_HMPG CH,
+            TAP_CL_CLAS_BBS CB,
+            TCO_NA_NTT_MANAGE NT,
+            TCO_NA_NTT_FILE NF,
+            TAP_BM_BBS_MANAGE BM
+		WHERE
+		 	CH.CLAS_HMPG_ID = CB.CLAS_HMPG_ID
+          AND
+            CB.CLAS_BBS_ID = BM.BBS_ID
+          AND
+            CB.CLAS_BBS_ID = NT.BBS_ID
+          AND
+            BM.BBS_ID = NT.BBS_ID
+          AND
+            NT.NTT_SN = NF.NTT_SN
+          AND
+            BM.BBS_USE_AT = 'Y'
+          AND
+            NT.NTT_USE_AT = 'Y'
+          AND
+            CH.SYS_ID = #{sysId}
+          AND
+            CH.CLAS_HMPG_ID = #{clasHmpgId}
+	 	  AND
+	 	  	NT.NTT_SN = #{nttSn}
+	 ORDER BY
+	        CH.CLAS_HMPG_ID
+    </select>
+
+    <!-- 학급홈페이지 생성여부 조회 ( 학급홈페이지 일괄생성  ) -->
+    <select id="selectClasCodeUseAt" parameterType="map" resultType="int">
+	   SELECT
+		    COUNT(*) AS CLAS_U_CNT
+		FROM
+		    TAP_CL_CLAS_HMPG
+		WHERE
+		    CLAS_YEAR = #{clasYear}
+		AND
+		    CLAS_CODE = #{clasCode}
+    </select>
+
+   	<!-- 학급홈페이지 일괄등록 -->
+	<insert id="insertClasHmpgAllInfo" parameterType="map" >
+    	INSERT INTO TAP_CL_CLAS_HMPG (
+				 SYS_ID
+			 	,CLAS_HMPG_ID
+				,CLAS_CODE
+				,CLAS_OPER_AT
+				,CLAS_HMPG_TY
+				,CLAS_TMPLAT_ID
+				,CLAS_HMPG_NM
+				,CLAS_IMG_ID
+				,CLAS_YEAR
+				,CLAS_ACCES_AT
+				,CLAS_REPRSNT
+				,CLAS_INTRCN
+				,CLAS_HMPG_LINK
+				,CLAS_CREAT_USID
+				,CLAS_CREAT_USNM
+				,CLAS_CREAT_USIP
+				,CLAS_CREAT_DT
+				,CLAS_CONFM_USID
+				,CLAS_CONFM_USNM
+				,CLAS_CONFM_USIP
+				,CLAS_CONFM_DT
+				,BASE_CLAS_HMPG_ID
+
+        ) VALUES (
+	             #{sysId}
+				,SEQ_CLAS_HMPG_SN.NEXTVAL
+				,#{clasCode}
+				,#{clasOperAt}
+				,#{clasHmpgTy}
+				,#{clasTmplatId}
+				,#{clasHmpgNm}
+				,#{clasImgId}
+				,#{clasYear}
+				,#{clasAccesAt}
+				,#{clasReprsnt}
+				,#{clasIntrcn}
+				,#{clasHmpgLink}
+				,#{clasCreatUsid}
+				,#{clasCreatUsnm}
+				,#{clasCreatUsip}
+				,sysdate
+				,#{clasConfmUsid}
+				,#{clasConfmUsnm}
+				,#{clasConfmUsip}
+				,sysDate
+				,#{baseClasHmpgId}
+        )
+	</insert>
+
+<!-- //학급홈페이지관리  -->
+</mapper>
+
+

@@ -1,0 +1,70 @@
+﻿/* 메인 컨테이너 */
+#container { position:relative; z-index:2; width:100%; background: url('/images/template/T0034/main/bg.jpg') #caeff7 center bottom 4rem no-repeat;}
+#container *{ scrollbar-arrow-color: #ddd; scrollbar-Track-Color: #ddd; scrollbar-base-color: #aaa; scrollbar-Face-Color: #aaa; scrollbar-3dLight-Color: #aaa; scrollbar-DarkShadow-Color: #aaa; scrollbar-Highlight-Color: #aaa; scrollbar-Shadow-Color: #aaa;}
+#container ::-webkit-scrollbar { width: 5px; }
+#container ::-webkit-scrollbar-thumb { background-color: #aaa; border-radius:10px; }
+#container ::-webkit-scrollbar-track { background-color: #ddd; border-radius:10px; }
+
+.MC_wrap1 {padding-top: 2rem;}
+.MC_wrap2 {clear: both; padding-top: 2.5rem;}
+.MC_wrap3 {clear: both; padding-top: 4rem;}
+
+.MC_box1 {float: left; width: calc(100% - 19.5rem); height: 28rem;} /* 메인비주얼 */
+.MC_box2 {float: right; width: 17.5rem;} /* 팝업존 */
+.MC_box3 {float: right; margin-top: 1rem; width: 17.5rem;} /* 오늘의식단 */
+.MC_box4 {float: left; width: calc(50% - 10.75rem); margin-right: 2rem;} /* 게시판 */
+.MC_box5 {float: left; width: calc(50% - 10.75rem); margin-right: 2rem;} /* 캘린더 */
+.MC_box6 {float: left; width: 17.5rem;} /* 바로가기 */
+.MC_box7 {} /* 갤러리 */
+
+@media (max-width: 1240px) {
+
+    .MC_wrap1 {padding-top: 1.5rem;}
+    .MC_wrap2 {padding-top: 1.5rem;}
+    .MC_wrap3 {padding-top: 2.5rem;}
+
+    .MC_box1 {width: calc(100% - 19rem); height: 26rem;}
+    .MC_box4 {width: calc(50% - 1.125rem); margin-right: 0;}
+    .MC_box5 {float: right; width: calc(50% - 1.125rem); margin-right: 0;}
+    .MC_box6 {margin-top: 3rem; width: 100%;}
+}
+
+@media (max-width: 1024px) {
+
+    #container {padding-top: 3.3rem;}
+
+    .MC_box1 {float: none; width: 100%; height: auto;}
+    .MC_box2 {float: left; width: calc(50% - 1.125rem); margin-top: 1.5rem;}
+    .MC_box3 {float: right; width: calc(50% - 1.125rem); margin-top: 1.5rem;}
+}
+
+@media (max-width: 860px) {
+}
+
+@media (max-width: 768px) {
+
+    .MC_wrap3 {padding-top: 2rem;}
+
+    .MC_box2,
+    .MC_box3 {width: calc(50% - 0.75rem);}
+    .MC_box4,
+    .MC_box5 {float: none; margin-top: 1.5rem; width: 100%;}
+    .MC_box6 {margin-top: 2.25rem;}
+}
+
+@media (max-width: 640px) {
+
+    .MC_wrap2 {padding-top: 0;}
+
+    .MC_box2,
+    .MC_box3 {float: none; margin-top: 1.5rem; width: 100%;}
+}
+
+@media (max-width: 560px) {
+}
+
+@media (max-width: 480px) {
+}
+
+@media (max-width: 380px) {
+}

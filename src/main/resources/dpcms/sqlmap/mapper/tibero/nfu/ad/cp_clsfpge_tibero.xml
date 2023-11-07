@@ -1,0 +1,203 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+ 
+<mapper namespace="cp_clsfpge">
+
+	<!-- 분기페이지 목록 조회 Sql -->
+	<sql id="selectClsfPgeListSql">
+		SELECT
+			CLSFPGE_SN
+			,SYS_ID
+			,CLSFPGE_TTL
+			,CLSFPGE_SBTTL
+			,CLSFPGE_CN
+			,CLSFPGE_URL
+			,CLSFPGE_PSTG_BGNG_DT
+			,CLSFPGE_PSTG_END_DT
+			,CLSFPGE_PSTG_BGNG_TM
+			,CLSFPGE_PSTG_END_TM
+		FROM
+			TAP_CP_CLSFPGE_MNG
+		WHERE
+			USE_AT = 'Y'
+		<if test='@egovframework.MybatisUtils@isNotEmpty(sysId)'>
+		AND SYS_ID = #{sysId}
+		</if>
+		<if test="@egovframework.MybatisUtils@isNotEmpty(searchText)">
+		AND CLSFPGE_TTL LIKE '%'||#{searchText}||'%'
+		</if>
+		ORDER BY 
+			CLSFPGE_SN DESC
+	</sql>
+
+	<!-- 분기페이지 목록 조회 -->
+	<select id="selectClsfPgeList" parameterType="map" resultType="egovMap">
+		<include refid="selectClsfPgeListSql" />
+	</select>
+	
+    <!-- 분기페이지 목록 조회(페이징) -->
+    <select id="selectClsfPgeListPaging" parameterType="map" resultType="egovMap">
+    	SELECT
+    		PL.*
+    	FROM (
+        	SELECT 
+        		PO.*
+        		,ROWNUM AS RSN
+			FROM (
+	    		<include refid="selectClsfPgeListSql" />
+				) PO
+		) PL
+		WHERE
+		<![CDATA[
+			rsn <= #{maxSn} 
+			AND rsn > #{minSn}
+		]]>
+    </select>
+    
+    <!-- 분기페이지 목록 조회(페이징 전체 카운트) -->
+    <select id="selectClsfPgeListPagingCount" parameterType="map" resultType="int">
+    	SELECT
+	    	COUNT(*)
+	    FROM
+	    	(<include refid="selectClsfPgeListSql" />)
+	</select>
+	
+	<!-- 분기페이지 조회 -->
+	<select id="selectClsfPge" parameterType="map" resultType="egovMap">
+		SELECT
+			CP.CLSFPGE_SN
+			,SM.SYS_ID
+			,SM.SYS_NM
+			,HM.HI_HMPGINFO_TELNO
+			,HM.HI_HMPGINFO_ADRES
+			,HM.HI_HMPGINFO_EMAIL 
+			,CP.CLSFPGE_TTL
+			,CP.CLSFPGE_SBTTL
+			,CP.CLSFPGE_CN
+			,CP.CLSFPGE_URL
+			,CP.CLSFPGE_PSTG_BGNG_DT
+			,CP.CLSFPGE_PSTG_END_DT
+			,CP.CLSFPGE_PSTG_BGNG_TM
+			,CP.CLSFPGE_PSTG_END_TM
+		FROM
+			TAP_CP_CLSFPGE_MNG CP
+			,TAP_SM_SYS_MANAGE SM
+			,TAP_HI_HMPGINFO_MANAGE HM
+		WHERE
+			CP.SYS_ID = SM.SYS_ID
+		AND
+			CP.SYS_ID = HM.SYS_ID
+		AND
+			CP.USE_AT = 'Y'
+		<if test='@egovframework.MybatisUtils@isNotEmpty(sysId)'>
+		AND CP.SYS_ID = #{sysId}
+		</if>
+		<if test='@egovframework.MybatisUtils@isNotEmpty(clsfpgeSn)'>
+		AND CP.CLSFPGE_SN = #{clsfpgeSn}
+		</if>
+		<if test="@egovframework.MybatisUtils@isNotEmpty(searchViewDate) and @egovframework.MybatisUtils@isNotEmpty(searchViewTime)">
+		<![CDATA[
+		AND 
+			TO_DATE(CONCAT(CP.CLSFPGE_PSTG_BGNG_DT, CP.CLSFPGE_PSTG_BGNG_TM), 'YYYY/MM/DDHH24MISS') 
+				<= TO_DATE(CONCAT(#{searchViewDate}, #{searchViewTime}), 'YYYY/MM/DDHH24MISS')
+		AND 
+			TO_DATE(CONCAT(CP.CLSFPGE_PSTG_END_DT, CP.CLSFPGE_PSTG_END_TM), 'YYYY/MM/DDHH24MISS') 
+				>= TO_DATE(CONCAT(#{searchViewDate}, #{searchViewTime}), 'YYYY/MM/DDHH24MISS')
+		]]>
+		</if>
+		ORDER BY 
+			CLSFPGE_SN DESC
+	</select>
+	
+	<!-- 분기페이지 등록 -->
+	<insert id="insertClsfPge" parameterType="map">
+		INSERT INTO
+		TAP_CP_CLSFPGE_MNG
+		(
+			CLSFPGE_SN
+			,SYS_ID
+			,CLSFPGE_TTL
+			,CLSFPGE_SBTTL
+			,CLSFPGE_CN
+			,CLSFPGE_URL
+			,CLSFPGE_PSTG_BGNG_DT
+			,CLSFPGE_PSTG_END_DT
+			,CLSFPGE_PSTG_BGNG_TM
+			,CLSFPGE_PSTG_END_TM
+			,USE_AT
+			,INST_ID
+			,INST_DT
+			,UPDT_ID
+			,UPDT_DT
+		)
+		VALUES
+		(
+			SEQ_CLSFPGE_SN.NEXTVAL
+			,#{sysId}
+			,#{clsfpgeTtl}
+			,#{clsfpgeSbttl}
+			,#{clsfpgeCn}
+			,#{clsfpgeUrl}
+			,#{clsfpgePstgBgngDt}
+			,#{clsfpgePstgEndDt}
+			,#{clsfpgePstgBgngTm}
+			,#{clsfpgePstgEndTm}
+			,'Y'
+			,#{mberId}
+			,SYSDATE
+			,#{mberId}
+			,SYSDATE
+		)
+	</insert>
+	
+	<!-- 분기페이지 수정 -->
+	<update id="updateClsfPge" parameterType="map">
+		UPDATE
+			TAP_CP_CLSFPGE_MNG
+		SET
+			CLSFPGE_TTL = #{clsfpgeTtl}
+			,CLSFPGE_SBTTL = #{clsfpgeSbttl}
+			,CLSFPGE_CN = #{clsfpgeCn}
+			,CLSFPGE_URL = #{clsfpgeUrl}
+			,CLSFPGE_PSTG_BGNG_DT = #{clsfpgePstgBgngDt}
+			,CLSFPGE_PSTG_END_DT = #{clsfpgePstgEndDt}
+			,CLSFPGE_PSTG_BGNG_TM = #{clsfpgePstgBgngTm}
+			,CLSFPGE_PSTG_END_TM = #{clsfpgePstgEndTm}
+			,UPDT_ID = #{mberId}
+			,UPDT_DT = SYSDATE
+		WHERE
+			CLSFPGE_SN = #{clsfpgeSn}
+	</update>
+	
+	<!-- 분기페이지 삭제 -->
+	<update id="deleteClsfPge" parameterType="map">
+		UPDATE
+			TAP_CP_CLSFPGE_MNG
+		SET
+			USE_AT = 'N'
+			,UPDT_ID = #{mberId}
+			,UPDT_DT = SYSDATE
+		WHERE
+			CLSFPGE_SN = #{clsfpgeSn}
+	</update>
+	
+	<!-- 분기페이지 게시기간 검증 -->
+	<select id="validateClsfPgeDate" parameterType="map" resultType="Integer">
+		SELECT
+			COUNT(*)
+		FROM
+			TAP_CP_CLSFPGE_MNG
+		WHERE
+			USE_AT = 'Y'
+		AND
+			SYS_ID = #{sysId}
+		<![CDATA[
+		AND
+			(CLSFPGE_PSTG_BGNG_DT <= #{clsfpgePstgEndDt}
+			and CLSFPGE_PSTG_END_DT >= #{clsfpgePstgBgngDt})
+		]]>
+		<if test='@egovframework.MybatisUtils@isNotEmpty(clsfpgeSn)'> <!-- 수정시 현재 데이터는 검증에서 제외 -->
+		AND CLSFPGE_SN != #{clsfpgeSn}
+		</if>
+	</select>
+</mapper>

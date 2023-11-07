@@ -1,0 +1,308 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+ 
+<mapper namespace="ph_prmot">
+
+	<!-- 진급 리스트 sql-->
+	<sql id ="selectPrmotListSql">
+		 SELECT 
+		           A.MBER_TY_SEQ,
+		           A.MBER_ID,
+		           B.MBER_NM,
+		           A.MBER_TY,
+		           A.CLSF,
+		           A.DEPT,
+		           C.SYS_NM,
+		           D.INSTT_GRAD,
+		           CASE
+		               WHEN A.CLSF = 1 THEN '2'
+		               WHEN A.CLSF = 2 THEN '3'
+		               WHEN D.INSTT_GRAD != 'elesch' AND A.CLSF = 3 THEN ''
+		               WHEN D.INSTT_GRAD = 'elesch' AND A.CLSF = 3 THEN '4'
+		               WHEN A.CLSF = 4 THEN '5'
+		               WHEN A.CLSF = 5 THEN '6'
+		               WHEN D.INSTT_GRAD = 'elesch' AND A.CLSF = 6 THEN ''
+		               ELSE ''
+		           END AS NEXT_CLSF,
+		           CASE
+		               WHEN D.INSTT_GRAD = 'elesch' AND A.CLSF = 6 THEN '7'
+		               WHEN D.INSTT_GRAD != 'elesch' AND A.CLSF = 3 THEN '7'
+		               ELSE A.MBER_TY
+		           END AS NEXT_MBER_TY,
+		           TO_CHAR(A.CONFM_DATE, 'YYYY/MM/DD HH24:MI:SS') AS CONFM_DATE
+		      FROM 
+		           TAP_MM_MBER_TY A, 
+		           TAP_MM_MBER_MANAGE B,
+		           TAP_SM_SYS_MANAGE C,
+		           TAP_IM_INSTT_MANAGE D
+		     WHERE 1 = 1
+		       AND A.MBER_ID = B.MBER_ID 
+		       AND A.INSTT_CODE = C.INSTT_CODE
+		       AND A.INSTT_CODE = D.INSTT_CODE
+		       AND A.MBER_TY = 5
+		       AND D.INSTT_GRAD IN ('elesch','mskul','hgschl')
+		       AND A.MBER_TY_SEQ NOT IN (SELECT MBER_TY_SEQ FROM TAP_PH_PRMOT_HIST WHERE A.MBER_TY_SEQ = MBER_TY_SEQ AND TO_CHAR(HIST_DATE, 'YYYY') = TO_CHAR(SYSDATE, 'YYYY'))
+		       AND A.INSTT_CODE IN (SELECT INSTT_CODE FROM TAP_SM_SYS_MANAGE WHERE SYS_ID = #{sysId})
+			<if test="@egovframework.MybatisUtils@isNotEmpty(lmttPd)">
+	           AND TO_CHAR(A.CONFM_DATE, 'YYYYMM') <![CDATA[<]]> TO_CHAR(SYSDATE, 'YYYY') || '03'		
+			</if>	       
+			<if test="@egovframework.MybatisUtils@isNotEmpty(mberSeqArray)">
+			   AND A.MBER_TY_SEQ IN
+				<foreach collection="mberSeqArray" item="mberSeq" index="index" open="(" close=")" separator=",">
+					#{mberSeq}
+				</foreach>	       
+			</if>
+	    	<if test="@egovframework.MybatisUtils@isNotEmpty(srchSj)">
+	    	   AND B.MBER_NM LIKE '%'||#{srchSj}||'%'
+	    	</if>		
+		  ORDER BY A.CLSF, B.MBER_NM	
+	</sql>
+
+    <!-- 진급 리스트 -->
+	<select id="selectPrmotList" parameterType="map" resultType="egovMap">
+	   	 <include refid="selectPrmotListSql" />
+	</select>
+	
+	<!-- 진급 리스트(페이징) -->
+    <select id="selectPrmotListPaging" parameterType="map" resultType="egovMap">
+    	SELECT
+    		PL.*
+    	FROM (
+        	SELECT 
+        		PO.*
+        		,rownum as rsn
+			FROM (
+	    		<include refid="selectPrmotListSql" /> 
+				) PO
+		) PL
+		WHERE
+		<![CDATA[
+			rsn <= #{maxSn} 
+			AND rsn > #{minSn}
+		]]>
+    </select>
+    
+     <!-- 진급 리스트 (페이징 전체 카운트) -->
+    <select id="selectPrmotListPagingCount" parameterType="map" resultType="int">
+    	SELECT   COUNT(*)
+	      FROM 
+		        TAP_MM_MBER_TY A, 
+		        TAP_MM_MBER_MANAGE B,
+		        TAP_SM_SYS_MANAGE C,
+		        TAP_IM_INSTT_MANAGE D
+	     WHERE  1 = 1
+		   AND  A.MBER_ID = B.MBER_ID 
+		   AND  A.INSTT_CODE = C.INSTT_CODE
+		   AND  A.INSTT_CODE = D.INSTT_CODE
+		   AND  A.MBER_TY = 5
+		   AND  D.INSTT_GRAD IN ('elesch','mskul','hgschl')
+		   AND  A.MBER_TY_SEQ NOT IN (SELECT MBER_TY_SEQ FROM TAP_PH_PRMOT_HIST WHERE A.MBER_TY_SEQ = MBER_TY_SEQ AND TO_CHAR(HIST_DATE, 'YYYY') = TO_CHAR(SYSDATE, 'YYYY'))
+		   AND  A.INSTT_CODE IN (SELECT INSTT_CODE FROM TAP_SM_SYS_MANAGE WHERE SYS_ID = #{sysId})
+		   <if test="@egovframework.MybatisUtils@isNotEmpty(lmttPd)">
+	       AND TO_CHAR(A.CONFM_DATE, 'YYYYMM') <![CDATA[<]]> TO_CHAR(SYSDATE, 'YYYY') || '03'		
+			</if>	       
+		   <if test="@egovframework.MybatisUtils@isNotEmpty(mberSeqArray)">
+		    AND A.MBER_TY_SEQ IN
+				<foreach collection="mberSeqArray" item="mberSeq" index="index" open="(" close=")" separator=",">
+					#{mberSeq}
+				</foreach>	       
+			</if>
+	       <if test="@egovframework.MybatisUtils@isNotEmpty(srchSj)">
+	    	 AND B.MBER_NM LIKE '%'||#{srchSj}||'%'
+	    	</if>		
+	 ORDER BY A.CLSF, B.MBER_NM	
+    </select>
+	
+    <!-- 진급 -->
+    <update id="updatePrmotInfo" parameterType="map">
+		UPDATE TAP_MM_MBER_TY  
+		   SET CLSF = #{nextClsf},
+		<choose>
+			<when test="@egovframework.MybatisUtils@isNotEmpty(prmotIndvdlz)">
+		   	   DEPT = #{nextDept},
+			</when>
+			<otherwise>
+		   	   DEPT = '',			
+			</otherwise>
+		</choose>
+		   	   MBER_TY = #{nextMberTy}		   
+		 WHERE MBER_TY_SEQ = #{mberTySeq} 
+    </update>
+    
+    <!-- 복구 -->
+    <update id="updatePrmotRecovryInfo" parameterType="map">
+		UPDATE TAP_MM_MBER_TY  
+		   SET CLSF = #{clsf},
+		   	   DEPT = #{dept},
+		   	   MBER_TY = #{mberTy}		   
+		 WHERE MBER_TY_SEQ = #{mberTySeq} 
+    </update>    
+    
+    <!-- 삭제 -->
+    <delete id="deletePrmotHistInfo" parameterType="map">
+		DELETE FROM TAP_PH_PRMOT_HIST		   
+		 WHERE HIST_SEQ = #{histSeq} 
+    </delete>    
+    
+    <!-- 진급 회원 정보 -->
+    <select id="selectMberInfoBySeq" parameterType="map" resultType="egovMap">
+		SELECT 
+		       MBER_TY_SEQ,
+		       MBER_ID,
+		       MBER_TY,
+		       CLSF,
+		       DEPT,
+		       PRTCTOR_NM,
+		       STDNT_NO,
+		       CONFM_YN,
+		       CONFM_MBER_NM,
+		       CONFM_MBER_ID,
+		       CONFM_DATE,
+		       INSTT_TY,
+		       INSTT_NM,
+		       INSTT_CODE,
+		       SKLSTF_TY
+		  FROM 
+		       TAP_MM_MBER_TY
+		 WHERE 1 = 1
+		   AND MBER_TY_SEQ = #{mberTySeq}    
+    </select>
+    
+    <!-- 진급 이력 리스트 sql-->
+	<sql id ="selectPrmotHistListSql">
+		SELECT 
+		       A.MBER_TY_SEQ,
+		       A.MBER_ID,
+		       A.MBER_TY,
+		       A.CLSF,
+		       A.DEPT,
+		       A.HIST_SEQ,
+		       A.HIST_GROUP_SEQ,
+		       A.HIST_USER_ID,
+		       A.HIST_USER_NM,
+		       A.HIST_USER_IP,
+		       TO_CHAR(A.HIST_DATE, 'YYYY/MM/DD HH24:MI:SS') AS HIST_DATE,
+		       A.HIST_TY,
+		       C.MBER_NM,
+		       D.SYS_NM,
+       		   B.CLSF AS NOW_CLSF,
+       		   B.DEPT AS NOW_DEPT,
+       		   B.MBER_TY AS NOW_MBER_TY
+		  FROM 
+		       TAP_PH_PRMOT_HIST A,       
+		       TAP_MM_MBER_TY B,
+		       TAP_MM_MBER_MANAGE C,
+		       TAP_SM_SYS_MANAGE D
+		 WHERE 1 = 1
+		   AND B.MBER_TY_SEQ = A.MBER_TY_SEQ
+		   AND B.MBER_ID = C.MBER_ID
+		   AND B.INSTT_CODE = D.INSTT_CODE
+		   AND B.INSTT_CODE IN (SELECT INSTT_CODE FROM TAP_SM_SYS_MANAGE WHERE SYS_ID = #{sysId})
+		   AND TO_CHAR(A.HIST_DATE, 'YYYY') = TO_CHAR(SYSDATE, 'YYYY')
+    	<if test="@egovframework.MybatisUtils@isNotEmpty(srchSj)">
+    	   AND C.MBER_NM LIKE '%'||#{srchSj}||'%'
+    	</if>		   
+	  ORDER BY A.HIST_DATE DESC, C.MBER_NM
+	
+	</sql>
+    <!-- 진급 이력 목록 -->
+    <select id="selectPrmotHistList" parameterType="map" resultType="egovMap">
+		 <include refid="selectPrmotHistListSql" />
+    </select>
+    
+    <!-- 진급 이력 목록(페이징) -->
+    <select id="selectPrmotHistListPaging" parameterType="map" resultType="egovMap">
+    	SELECT
+    		PL.*
+    	FROM (
+        	SELECT 
+        		PO.*
+        		,rownum as rsn
+			FROM (
+	    		<include refid="selectPrmotHistListSql" /> 
+				) PO
+		) PL
+		WHERE
+		<![CDATA[
+			rsn <= #{maxSn} 
+			AND rsn > #{minSn}
+		]]>
+    </select>
+    
+     <!-- 진급 이력 목록 (페이징 전체 카운트) -->
+    <select id="selectPrmotHistListPagingCount" parameterType="map" resultType="int">
+    	SELECT   COUNT(*)
+	     FROM 
+		       TAP_PH_PRMOT_HIST A,       
+		       TAP_MM_MBER_TY B,
+		       TAP_MM_MBER_MANAGE C,
+		       TAP_SM_SYS_MANAGE D
+		 WHERE 1 = 1
+		   AND B.MBER_TY_SEQ = A.MBER_TY_SEQ
+		   AND B.MBER_ID = C.MBER_ID
+		   AND B.INSTT_CODE = D.INSTT_CODE
+		   AND B.INSTT_CODE IN (SELECT INSTT_CODE FROM TAP_SM_SYS_MANAGE WHERE SYS_ID = #{sysId})
+		   AND TO_CHAR(A.HIST_DATE, 'YYYY') = TO_CHAR(SYSDATE, 'YYYY')
+    	<if test="@egovframework.MybatisUtils@isNotEmpty(srchSj)">
+    	   AND C.MBER_NM LIKE '%'||#{srchSj}||'%'
+    	</if>		   
+	  ORDER BY A.HIST_DATE DESC, C.MBER_NM
+    </select>
+    
+    
+    <!-- 진급 이력 정보 -->
+    <select id="selectPrmotHistInfo" parameterType="map" resultType="egovMap">
+		SELECT 
+		       MBER_TY_SEQ,
+		       MBER_ID,
+		       MBER_TY,
+		       CLSF,
+		       DEPT,
+		       HIST_SEQ,
+		       HIST_GROUP_SEQ,
+		       HIST_USER_ID,
+		       HIST_USER_NM,
+		       HIST_USER_IP,
+		       HIST_DATE,
+		       HIST_TY
+		  FROM 
+		       TAP_PH_PRMOT_HIST
+		 WHERE 1 = 1
+		   AND HIST_SEQ = #{histSeq}    
+    </select>        
+    
+    <!-- 진급 이력 추가 -->
+    <insert id="insertPrmotHist" parameterType="map">
+		INSERT INTO TAP_PH_PRMOT_HIST
+		 (
+			 MBER_TY_SEQ
+			,MBER_ID
+			,MBER_TY
+			,CLSF
+			,DEPT
+			,HIST_SEQ
+			,HIST_GROUP_SEQ
+			,HIST_USER_ID
+			,HIST_USER_NM
+			,HIST_USER_IP
+			,HIST_DATE
+			,HIST_TY     
+		 )
+		VALUES
+		 (
+			 #{mberTySeq}
+			,#{mberId}
+			,#{mberTy}
+			,#{clsf}
+			,#{dept}
+			,SEQ_HIST_SEQ.NEXTVAL
+			,#{histGroupSeq}
+			,#{histUserId}
+			,#{histUserNm}
+			,#{histUserIp}
+			,SYSDATE
+			,#{histTy}
+		 )    	
+    </insert>   	
+         
+</mapper>

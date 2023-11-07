@@ -1,0 +1,60 @@
+@CHARSET "UTF-8";
+
+/* 개인정보처리방침관리,영상정보처리방침관리  검색  */
+.board-srch{width:50%;}
+.search_input{float: right;}
+.searchBtn{margin-left: 4px;}
+.srchSysIdDrop{width: 11.5% !important;}
+.select2-container .select2-choice .select2-arrow{right:-5px !important}
+
+/* 개인정보처리방침관리 */
+.provdDiv{margin-top:50px}
+.addProvdBtnDiv{float:right; margin-top:10px}
+.provdTbody tr {text-align:center}
+.cnsgnDiv{margin-top:50px}
+.addCnsgnBtnDiv{float:right;margin-top:10px}
+.cnsgnTbody tr {text-align:center}
+.cnsgnTbody tr td .inCnsgnBgnde{text-align:center}
+.cnsgnTbody tr td .inCnsgnEndde{text-align:center}
+.deptDiv{margin-top:50px}
+.addDeptBtnDiv{float:right;margin-top:10px}
+.deptTbody tr {text-align:center}
+.fileDiv{margin-top:50px}
+.addFileBtnDiv{float:right;margin-top:10px}
+.fileTbody tr {text-align:center}
+.editrCnDiv {margin-top:50px}
+.allDeleteBtnDiv{text-align:center;margin-top:50px;}
+
+/* 영상정보처리방침관리 */
+.instlDiv{margin-top:50px}
+.addInstlBtnDiv{float:right;margin-top:10px}
+.instlTbody tr {text-align:center}
+.inInstlCo{width:10%;text-align:center}
+.cstdyDiv{margin-top:50px}
+.addCstdyBtnDiv{float:right;margin-top:10px}
+.cstdyTbody tr {text-align:center}
+.editrCnDiv {margin-top:50px}
+.allDeleteBtnDiv{text-align:center;margin-top:50px;}
+
+/* 저작권신고접수인관리 */
+.cpyrhtSysId{margin-right:40px}
+.cpyrhtSysIdDrop{width: 165px !important;}
+.addCpyrhtBtnDiv{float:right;margin-top:10px}
+.insertCpyrhtDiv{margin-top:50px;}
+.tel{width:20%;text-align:center}
+.telTh{width:8%;text-align:center}
+.rcepterTh{width:4%;text-align:center}
+.emailTh{width:15%;text-align:center}
+.email{width:25%;text-align:center}
+.cancelTh{width:4%;text-align:center}
+.adresTh{width:10%;margin-left:10px}
+.ardes{width:70%;margin-left:10px}
+.cpySearchBtn{padding-top:8px !important;}
+.rcepterViewTh{width:4%}
+.telViewTh{width:8%}
+.adresViewTh{width:10%}
+.emailViewTh{width:15%}
+.cancelViewTh{width:7%}
+.cpyrhtTb tr td{text-align:center !important;}    
+.addCpyrhtTable tr td{text-align:center !important;}   
+/* .select2-container .select2-choice .select2-arrow{right:-5px !important}  */

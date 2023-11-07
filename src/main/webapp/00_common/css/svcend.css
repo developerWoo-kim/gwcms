@@ -1,0 +1,77 @@
+@charset "utf-8";
+/* CSS Document */
+
+
+* {margin: 0; padding: 0; list-style: none;	text-decoration: none;}
+body {font-family:'맑은 고딕', 'Malgun Gothic', '돋움', 'Dotum', '굴림', 'Gulim', AppleGothic, UnDotum, Arial, Tahoma, Verdana, sans-serif; color:#333}
+
+/* 팝업 */
+#wrap{position:relative; width:100%; height:100%; min-height:880px;}
+
+.pop_up { position:relative; width:1020px; height:100%; margin:0 auto; padding-top:80px; text-align:center; overflow:hidden}
+.pop_up h2 { font-weight:bold; font-size:40px; word-break:keep-all; color:#222; letter-spacing:-2px; margin:30px 0 20px}
+.pop_up h2 strong { color:#22b7bb}
+.pop_up p {font-size:20px; color:#2b415a; letter-spacing:-1px; word-break:keep-all; margin-top:20px}
+.pop_up p strong { font-weight:normal; color:#eb1c24}
+
+.pop_up ul { min-height:120px; border-radius:120px;  padding:25px 30px; margin-top:40px; background:#22b7bb;}
+.pop_up ul li { font-size:28px; color:#fff; line-height:60px; letter-spacing:-1px;  word-break:keep-all;  text-align:cebter;}
+
+.srchBtn { display:flex; flex-wrap:wrap; justify-content: center; align-items: center; padding:1.25rem 1rem;color:#333;}
+.srchBtn a[class*='btnTy_'],
+.srchBtn button[class*='btnTy_']{ min-width:3.5rem; padding:.5rem .75rem; border-radius:8px; }
+.srchBtn .btn_pop{background:#0081dd; border:1px solid #0081dd; color:#fff; min-width: 4.5rem; padding: 0.7rem 1.2rem; border-radius: 12px; font-size:1.2rem; font-weight: 800; color:#fff; line-height:30px; letter-spacing:-1px;  word-break:keep-all;  text-align:cebter;}
+
+.btn_point  {position:relative; display:inline-block; padding:0.75rem 2.75rem 0.75rem 1.75rem; margin:1px; line-height:22px; font-size:1rem; color:#111; vertical-align:middle; border:1px solid #111; background:#fff; overflow:hidden; -webkit-backface-visibility:hidden; -moz-backface-visibility:hidden; -webkit-transform:translate3d(0, 0, 0); -moz-transform:translate3d(0, 0, 0);}
+.btn_point:hover {color:#fff;}
+.btn_point.midd {padding:0.5rem 2.5rem 0.5rem 1.15rem; line-height:20px; font-size:0.8rem;}
+.btn_point.mini {padding:0.4rem 2rem 0.4rem 0.75rem; line-height:18px; font-size:0.75rem;}
+.btn_point span {position:absolute; right:1.4rem; top:50%; display:block; width:18px; height:18px; margin-top:-9px; background-repeat:no-repeat; background-position:left center; z-index:2;}
+.btn_point strong {position:relative; z-index:2;}
+.btn_point.midd span {right:1.2rem;}
+.btn_point.mini span {right:0.75rem;}
+.btn_point:hover span {background-position:-18px center;}
+.btn_point span.glan {background-image:url("../images/btn_glanGW.png");}
+
+
+.btn_point:before{content:''; position:absolute; bottom:-30px; right:-30px; width:30px; height:30px; border-radius:50%; background:#111; z-index:1;} /* 첫번째 색상 */
+.btn_point:after {content:''; position:absolute; bottom:-30px; left:-30px; width:30px; height:30px; border-radius:50%; background:#0043bf;  z-index:1;} /* 두번째 색상 */
+.btn_point:hover:before{transform:scale(20); transition:all 0.4s;}
+.btn_point:hover:after{transform:scale(20); transition:all 0.4s; transition-delay:0.3s;}
+
+
+.pop_img { margin:40px 0 30px}
+
+.f_txt { text-align:center} 
+.f_txt address{ font-size:13px; line-height:24px; font-style:normal}
+.f_txt p.copyright { font-size:11px; margin-top:5px;}
+.f_txt p.copyright span {color:#283a50;}
+
+
+@media screen and (max-width:1019px) {
+	.pop_up { width:100%; padding:20px 0 0;}
+	.pop_up h2 { font-size:40px;}
+
+
+}
+
+@media screen and (max-width:680px) {
+
+
+	.pop_up p {  font-size:14px;}
+	.pop_up ul { border-radius:0; background:#22b7bb;}
+  .pop_up ul li { font-size:17px;line-height:40px; }
+
+
+}
+
+@media screen and (max-width:580px) {
+	.pop_up h2 { font-size:30px;}
+	.pop_up ul { background-image:none; margin-top:30px; }
+	.pop_img { width:auto; }
+
+
+
+}
+
+

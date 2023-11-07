@@ -1,0 +1,646 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+ 
+<mapper namespace="ba_banner">
+
+<!-- 배너관리 시스템  리스트 sql-->
+	<sql id ="selectBannerSmList">
+	  SELECT   IT.INSTT_CODE
+	          ,IT.INSTT_NM
+	          ,IT.INSTT_TY
+	          ,SM.SYS_ID
+	          ,SM.SYS_NM
+	          ,SM.SYS_TY
+              ,( <include refid="selectBannerStats" />  ) AS TOTAL_CNT
+              ,( <include refid="selectBannerStats" />  AND BA.ALL_AT  = 'Y' ) AS ALL_BANNER_CNT 
+              ,( <include refid="selectBannerStats" />  AND BA.ALL_AT  = 'N' ) AS INDVDLZ_BANNER_CNT
+              ,( 
+              	 <include refid="selectBannerStats" />
+					<![CDATA[
+						AND BI.BGNDE <= SYSDATE
+					    AND BI.ENDDE >= SYSDATE
+					 ]]>            	
+        			       
+               ) AS NOW_BANNER_CNT
+              ,( 
+              	  ( <include refid="selectBannerStats" /> ) 
+              	  	- ( <include refid="selectBannerStats" />
+              	  		<![CDATA[
+						AND BI.BGNDE <= SYSDATE
+					    AND BI.ENDDE >= SYSDATE
+					 	]]>
+              	      )
+              ) AS NOT_BANNER_CNT
+	    FROM   TAP_IM_INSTT_MANAGE IT, TAP_SM_SYS_MANAGE SM
+	   WHERE   IT.INSTT_CODE = SM.INSTT_CODE
+         AND   SM.SYS_STTUS = 'O'
+	   <include refid="srchBannerSmList" /> 
+	ORDER BY   IT.INSTT_CODE, IT.INSTT_LEVEL DESC
+	</sql>
+	
+	<!--  배너관리 시스템  리스트 팝업 통계 sql-->
+	<sql id ="selectBannerStats">
+		SELECT COUNT(*)
+          FROM TAP_BA_BANNER_MANAGE BA, TAP_BA_BANNER_INSTT BI
+         WHERE BA.BANNER_SN = BI.BANNER_SN
+           AND BI.SYS_ID = SM.SYS_ID
+	</sql>
+	
+	 <!--  배너관리 시스템  리스트 검색조건 sql-->
+	<sql id ="srchBannerSmList">
+	
+		<if test='@egovframework.MybatisUtils@isEmpty(author) || author != "master"'>
+         AND SM.SYS_ID NOT IN ('apple')
+        </if>
+        
+        <if test="@egovframework.MybatisUtils@isNotEmpty(insttCode)">
+	     AND   ( IT.INSTT_CODE =  #{insttCode}
+	     
+                    OR  IT.UPPER_INSTT_CODE = #{upperInsttCode}
+                    OR  IT.BSIS_INSTT_CODE = #{bsisInsttCode}
+                    
+               	)
+         </if>
+		     
+	    <if test="@egovframework.MybatisUtils@isNotEmpty(srchSmTxt)">
+	       AND  (  		 
+	       				 SM.SYS_NM like '%'||#{srchSmTxt}||'%'
+	              	  OR SM.SYS_TY like '%'||#{srchSmTxt}||'%' 
+	              	 
+	            )
+	    </if>
+	    
+	</sql>
+	
+	<!-- 배너관리 시스템  리스트  -->
+    <select id="selectBannerSmList" parameterType="egovMap" resultType="egovMap">
+	 	<include refid="selectBannerSmList" /> 
+	 </select>
+	 	
+	<!-- 배너관리 시스템  리스트(페이징) -->
+    <select id="selectBannerSmListPaging" parameterType="map" resultType="egovMap">
+    	SELECT
+    		PL.*
+    	FROM (
+        	SELECT 
+        		PO.*
+        		,rownum as rsn
+			FROM (
+	    		<include refid="selectBannerSmList" /> 
+				) PO
+		) PL
+		WHERE
+		<![CDATA[
+			rsn <= #{maxSn} 
+			AND rsn > #{minSn}
+		]]>
+    </select>
+    
+    <!-- 배너관리 시스템  리스트 (페이징 전체 카운트) -->
+    <select id="selectBannerSmListPagingCount" parameterType="map" resultType="int">
+    	SELECT   COUNT(*)
+	      FROM   TAP_IM_INSTT_MANAGE IT, TAP_SM_SYS_MANAGE SM
+	     WHERE   IT.INSTT_CODE = SM.INSTT_CODE
+           AND   SM.SYS_STTUS = 'O'
+	   <include refid="srchBannerSmList" /> 
+	  ORDER BY   IT.INSTT_CODE, IT.INSTT_LEVEL DESC
+    </select>
+
+	<!-- 배너 시퀀스 획득 -->
+	<select id="selectBannerSnInfo" resultType="string">
+        SELECT SEQ_BANNER_SN.NEXTVAL
+        FROM DUAL
+    </select>
+    
+	<!--배너리스트 -->
+     <sql id="selectBannerList">
+          SELECT  A.BANNER_SN,     
+           		  A.BANNER_TITLE, 
+           		  A.IMAGE_ID,
+           		  A.ALL_AT,
+           		  B.SYS_ID,
+           		  B.SYS_NM,
+           		  B.BGNDE,
+           		  B.ENDDE
+           FROM   TAP_BA_BANNER_MANAGE A, TAP_BA_BANNER_INSTT B
+           WHERE  A.BANNER_SN = B.BANNER_SN
+             AND  A.ALL_AT = 'N'
+		    <!-- 21/03/02 날짜 검색오류로 인한 수정 
+		      AND (TO_CHAR(B.BGNDE,'YYYY/MM/DD') BETWEEN TO_DATE(#{bgnde},'YYYY/MM/DD') and TO_DATE(#{endde},'YYYY/MM/DD')
+		    OR TO_CHAR(B.ENDDE,'YYYY/MM/DD') BETWEEN TO_DATE(#{bgnde},'YYYY/MM/DD') and TO_DATE(#{endde},'YYYY/MM/DD')) -->
+		  <![CDATA[
+		    AND (  
+		    	   (TO_CHAR(B.BGNDE,'YYYY/MM/DD') <= TO_DATE(#{bgnde},'YYYY/MM/DD') AND TO_DATE(#{bgnde},'YYYY/MM/DD') <= TO_CHAR(B.ENDDE,'YYYY/MM/DD'))
+		    	OR (TO_CHAR(B.BGNDE,'YYYY/MM/DD') <= TO_DATE(#{endde},'YYYY/MM/DD') AND TO_DATE(#{bgnde},'YYYY/MM/DD') <= TO_CHAR(B.ENDDE,'YYYY/MM/DD'))
+		    	OR (TO_CHAR(B.BGNDE,'YYYY/MM/DD') BETWEEN TO_DATE(#{bgnde},'YYYY/MM/DD') AND TO_DATE(#{endde},'YYYY/MM/DD') ) 
+		    	OR (TO_CHAR(B.ENDDE,'YYYY/MM/DD') BETWEEN TO_DATE(#{bgnde},'YYYY/MM/DD') AND TO_DATE(#{endde},'YYYY/MM/DD') ) 
+		    	)
+	   		]]>	
+<!--             AND TO_CHAR(B.BGNDE,'YYYY/MM/DD')  >= TO_DATE(#{bgnde},'YYYY/MM/DD') -->
+<!--  			AND TO_DATE(#{endde},'YYYY/MM/DD') >= TO_CHAR(B.ENDDE,'YYYY/MM/DD') -->
+		   
+           <if test="@egovframework.MybatisUtils@isNotEmpty(sysId)">
+             AND  SYS_ID = #{sysId}
+       	   </if>
+       	   <if test="@egovframework.MybatisUtils@isNotEmpty(srchBanTxt)">
+             AND  ( A.BANNER_TITLE like '%'||#{srchBanTxt}||'%' or B.SYS_NM like '%'||#{srchBanTxt}||'%' )  		
+           </if>
+        ORDER BY  A.BANNER_SN DESC
+     </sql>
+     
+     <!--배너리스트조회 -->
+    <select id="selectBannerList" parameterType="map" resultType="egovMap">
+	    <include refid="selectBannerList" /> 
+    </select>
+    
+    <!-- 배너리스트조회 (페이징) -->
+    <select id="selectBannerListPaging" parameterType="map" resultType="egovMap">
+    	SELECT
+    		PL.*
+    	FROM (
+        	SELECT 
+        		PO.*
+        		,rownum as rsn
+			FROM (
+	    		<include refid="selectBannerList" /> 
+				) PO
+		) PL
+		WHERE
+		<![CDATA[
+			rsn <= #{maxSn} 
+			AND rsn > #{minSn}
+		]]>
+    </select>
+    
+    <!-- 배너리스트조회 (페이징 전체 카운트) -->
+    <select id="selectBannerListPagingCount" parameterType="map" resultType="int">
+    	SELECT  COUNT(*)
+	      FROM  TAP_BA_BANNER_MANAGE A, TAP_BA_BANNER_INSTT B
+	     WHERE  A.BANNER_SN = B.BANNER_SN
+	      AND   A.ALL_AT = 'N'
+		  <!-- 21/03/02 날짜 검색오류로 인한 수정 
+		  AND (TO_CHAR(B.BGNDE,'YYYY/MM/DD') BETWEEN TO_DATE(#{bgnde},'YYYY/MM/DD') and TO_DATE(#{endde},'YYYY/MM/DD')
+		    OR TO_CHAR(B.ENDDE,'YYYY/MM/DD') BETWEEN TO_DATE(#{bgnde},'YYYY/MM/DD') and TO_DATE(#{endde},'YYYY/MM/DD')) -->
+		  <![CDATA[
+		    AND (  
+		    	   (TO_CHAR(B.BGNDE,'YYYY/MM/DD') <= TO_DATE(#{bgnde},'YYYY/MM/DD') AND TO_DATE(#{bgnde},'YYYY/MM/DD') <= TO_CHAR(B.ENDDE,'YYYY/MM/DD'))
+		    	OR (TO_CHAR(B.BGNDE,'YYYY/MM/DD') <= TO_DATE(#{endde},'YYYY/MM/DD') AND TO_DATE(#{bgnde},'YYYY/MM/DD') <= TO_CHAR(B.ENDDE,'YYYY/MM/DD'))
+		    	OR (TO_CHAR(B.BGNDE,'YYYY/MM/DD') BETWEEN TO_DATE(#{bgnde},'YYYY/MM/DD') AND TO_DATE(#{endde},'YYYY/MM/DD') ) 
+		    	OR (TO_CHAR(B.ENDDE,'YYYY/MM/DD') BETWEEN TO_DATE(#{bgnde},'YYYY/MM/DD') AND TO_DATE(#{endde},'YYYY/MM/DD') ) 
+		    	)
+	   		]]>	
+<!--             AND TO_CHAR(B.BGNDE,'YYYY/MM/DD')  >= TO_DATE(#{bgnde},'YYYY/MM/DD') -->
+<!--  			AND TO_DATE(#{endde},'YYYY/MM/DD') >= TO_CHAR(B.ENDDE,'YYYY/MM/DD') -->
+	     <if test="@egovframework.MybatisUtils@isNotEmpty(srchBanTxt)">
+	       AND  ( A.BANNER_TITLE like '%'||#{srchBanTxt}||'%' or B.SYS_NM like '%'||#{srchBanTxt}||'%' )
+	     </if>
+	     <if test="@egovframework.MybatisUtils@isNotEmpty(sysId)">
+           AND  SYS_ID = #{sysId}
+       	 </if>
+    </select>
+    
+     <!--배너정보조회 -->
+     <select id="selectBannerInfo" parameterType="map" resultType="egovMap">
+     <![CDATA[
+           SELECT  B.SYS_ID, 
+           		   B.SYS_NM, 
+           		   A.BANNER_SN,
+           		   A.IMAGE_ID,
+           		   A.BANNER_TITLE, 
+           		   A.BANNER_TEMP, 
+           		   A.BCRN_TY,
+			       A.CNRS_AT,
+			       A.BANNER_CN,
+			       A.URL,
+			       A.NEW_WIN_AT,
+			       A.ALL_AT,
+			       B.USE_AT,
+                   TO_CHAR(B.BGNDE, 'YYYY/MM/DD') as BGNDE,
+                   TO_CHAR(B.ENDDE, 'YYYY/MM/DD') as ENDDE,
+                   B.BEGIN_TIME,
+                   B.END_TIME
+            FROM   TAP_BA_BANNER_MANAGE A, TAP_BA_BANNER_INSTT B
+           WHERE   A.BANNER_SN = B.BANNER_SN
+             AND   A.BANNER_SN = #{bannerSn}
+    ]]>       	   
+<!--              AND   B.SYS_ID = #{sysId} -->
+     </select>
+     
+      <!--공통 배너리스트 -->
+     <sql id="selectAllBannerList">
+         SELECT   DISTINCT
+         		  A.BANNER_SN,     
+           		  A.BANNER_TITLE, 
+           		  A.IMAGE_ID,
+           		  A.ALL_AT,
+           		  B.BGNDE,
+           		  B.ENDDE,
+           		  B.BEGIN_TIME,
+				  B.END_TIME	  
+           FROM   TAP_BA_BANNER_MANAGE A, TAP_BA_BANNER_INSTT B
+          WHERE   A.BANNER_SN = B.BANNER_SN
+            AND   A.ALL_AT = 'Y'
+            <!-- 21/03/02 날짜 검색오류로 인한 수정 
+            AND TO_CHAR(B.BGNDE,'YYYY/MM/DD')  >= TO_DATE(#{bgnde},'YYYY/MM/DD')
+ 			AND TO_DATE(#{endde},'YYYY/MM/DD') >= TO_CHAR(B.ENDDE,'YYYY/MM/DD') -->
+		  <![CDATA[
+		    AND (  
+		    	   (TO_CHAR(B.BGNDE,'YYYY/MM/DD') <= TO_DATE(#{bgnde},'YYYY/MM/DD') AND TO_DATE(#{bgnde},'YYYY/MM/DD') <= TO_CHAR(B.ENDDE,'YYYY/MM/DD'))
+		    	OR (TO_CHAR(B.BGNDE,'YYYY/MM/DD') <= TO_DATE(#{endde},'YYYY/MM/DD') AND TO_DATE(#{bgnde},'YYYY/MM/DD') <= TO_CHAR(B.ENDDE,'YYYY/MM/DD'))
+		    	OR (TO_CHAR(B.BGNDE,'YYYY/MM/DD') BETWEEN TO_DATE(#{bgnde},'YYYY/MM/DD') AND TO_DATE(#{endde},'YYYY/MM/DD') ) 
+		    	OR (TO_CHAR(B.ENDDE,'YYYY/MM/DD') BETWEEN TO_DATE(#{bgnde},'YYYY/MM/DD') AND TO_DATE(#{endde},'YYYY/MM/DD') ) 
+		    	)
+	   		]]>	
+       	  <if test="@egovframework.MybatisUtils@isNotEmpty(srchAllTxt)">
+            AND   (B.SYS_NM like '%'||#{srchAllTxt}||'%' or A.BANNER_TITLE like '%'||#{srchAllTxt}||'%' )   
+          </if>
+       ORDER BY   A.BANNER_SN DESC 
+     </sql>
+     
+    <!--공통 배너리스트 조회 -->
+    <select id="selectAllBannerList" parameterType="map" resultType="egovMap">
+	    <include refid="selectAllBannerList" /> 
+    </select>
+    
+     <!-- 공통 배너리스트조회(페이징) -->
+    <select id="selectAllBannerListPaging" parameterType="map" resultType="egovMap">
+    	SELECT
+    		PL.*
+    	FROM (
+        	SELECT 
+        		PO.*
+        		,rownum as rsn
+			FROM (
+	    		<include refid="selectAllBannerList" /> 
+				) PO
+		) PL
+		WHERE
+		<![CDATA[
+			rsn <= #{maxSn} 
+			AND rsn > #{minSn}
+		]]>
+    </select>
+    
+    <!-- 공통 배너리스트조회 (페이징 전체 카운트) -->
+    <select id="selectAllBannerListPagingCount" parameterType="map" resultType="int">
+    	SELECT   COUNT(DISTINCT A.BANNER_SN)
+	      FROM   TAP_BA_BANNER_MANAGE A, TAP_BA_BANNER_INSTT B
+	     WHERE   A.BANNER_SN = B.BANNER_SN
+	       AND   A.ALL_AT = 'Y'
+            <!-- 21/03/02 날짜 검색오류로 인한 수정 
+            AND TO_CHAR(B.BGNDE,'YYYY/MM/DD')  >= TO_DATE(#{bgnde},'YYYY/MM/DD')
+ 			AND TO_DATE(#{endde},'YYYY/MM/DD') >= TO_CHAR(B.ENDDE,'YYYY/MM/DD') -->
+		<![CDATA[
+		    AND (  
+		    	   (TO_CHAR(B.BGNDE,'YYYY/MM/DD') <= TO_DATE(#{bgnde},'YYYY/MM/DD') AND TO_DATE(#{bgnde},'YYYY/MM/DD') <= TO_CHAR(B.ENDDE,'YYYY/MM/DD'))
+		    	OR (TO_CHAR(B.BGNDE,'YYYY/MM/DD') <= TO_DATE(#{endde},'YYYY/MM/DD') AND TO_DATE(#{bgnde},'YYYY/MM/DD') <= TO_CHAR(B.ENDDE,'YYYY/MM/DD'))
+		    	OR (TO_CHAR(B.BGNDE,'YYYY/MM/DD') BETWEEN TO_DATE(#{bgnde},'YYYY/MM/DD') AND TO_DATE(#{endde},'YYYY/MM/DD') ) 
+		    	OR (TO_CHAR(B.ENDDE,'YYYY/MM/DD') BETWEEN TO_DATE(#{bgnde},'YYYY/MM/DD') AND TO_DATE(#{endde},'YYYY/MM/DD') ) 
+		    	)
+	   		]]>	
+	    <if test="@egovframework.MybatisUtils@isNotEmpty(srchAllTxt)">
+	       AND  (B.SYS_NM like '%'||#{srchAllTxt}||'%' or A.BANNER_TITLE like '%'||#{srchAllTxt}||'%')
+	    </if>
+    </select>
+    
+     <!--공통 배너 상세 조회 -->
+     <select id="selectAllBannerInfo" parameterType="map" resultType="egovMap">
+           SELECT
+	         		  A.BANNER_SN,
+					  A.BANNER_TITLE,
+					  A.FILE_PATH,
+					  A.FILE_NM,
+					  A.URL,
+					  A.NEW_WIN_AT,
+					  A.BCRN_TY,
+					  A.BANNER_TEMP,
+					  A.CNRS_AT,
+					  A.IMAGE_ID,
+					  A.BANNER_CN,
+					  A.ALL_AT,
+					  A.BCRN_IMAGE_PATH,
+	           		  TO_CHAR(B.BGNDE, 'YYYY/MM/DD') as BGNDE,
+	                  TO_CHAR(B.ENDDE, 'YYYY/MM/DD') as ENDDE,
+	           		  B.BEGIN_TIME,
+					  B.END_TIME,	  
+	           		  B.USE_AT	
+           FROM   TAP_BA_BANNER_MANAGE A, TAP_BA_BANNER_INSTT B
+          WHERE   A.BANNER_SN = B.BANNER_SN
+            AND   A.ALL_AT = 'Y'
+            AND   A.BANNER_SN = #{bannerSn}
+            AND   B.ROWID IN (SELECT MAX(ROWID) FROM TAP_BA_BANNER_INSTT WHERE BANNER_SN = #{bannerSn} GROUP BY BANNER_SN)
+     </select>
+     
+     <!--공유배너리스트 -->
+     <sql id="selectBannerCnrsList">
+         SELECT   A.BANNER_SN,     
+           		  A.BANNER_TITLE, 
+           		  A.IMAGE_ID,
+           		  A.ALL_AT,
+           		  B.SYS_ID,
+           		  B.SYS_NM,
+           		  B.BGNDE,
+           		  B.ENDDE	  
+           FROM   TAP_BA_BANNER_MANAGE A, TAP_BA_BANNER_INSTT B 
+          WHERE   A.BANNER_SN = B.BANNER_SN
+          	AND   A.CNRS_AT = 'Y'
+          	AND   A.ALL_AT = 'N'
+            <!-- 21/03/02 날짜 검색오류로 인한 수정 
+            AND TO_CHAR(B.BGNDE,'YYYY/MM/DD')  >= TO_DATE(#{bgnde},'YYYY/MM/DD')
+ 			AND TO_DATE(#{endde},'YYYY/MM/DD') >= TO_CHAR(B.ENDDE,'YYYY/MM/DD') -->
+       	    <![CDATA[
+		    AND (  
+		    	   (TO_CHAR(B.BGNDE,'YYYY/MM/DD') <= TO_DATE(#{bgnde},'YYYY/MM/DD') AND TO_DATE(#{bgnde},'YYYY/MM/DD') <= TO_CHAR(B.ENDDE,'YYYY/MM/DD'))
+		    	OR (TO_CHAR(B.BGNDE,'YYYY/MM/DD') <= TO_DATE(#{endde},'YYYY/MM/DD') AND TO_DATE(#{bgnde},'YYYY/MM/DD') <= TO_CHAR(B.ENDDE,'YYYY/MM/DD'))
+		    	OR (TO_CHAR(B.BGNDE,'YYYY/MM/DD') BETWEEN TO_DATE(#{bgnde},'YYYY/MM/DD') AND TO_DATE(#{endde},'YYYY/MM/DD') ) 
+		    	OR (TO_CHAR(B.ENDDE,'YYYY/MM/DD') BETWEEN TO_DATE(#{bgnde},'YYYY/MM/DD') AND TO_DATE(#{endde},'YYYY/MM/DD') ) 
+		    	)
+	   		]]>
+       	  <if test="@egovframework.MybatisUtils@isNotEmpty(srchCnrsTxt)">
+            AND   (B.SYS_NM like '%'||#{srchCnrsTxt}||'%' or A.BANNER_TITLE like '%'||#{srchCnrsTxt}||'%' )   
+          </if>
+       ORDER BY   A.BANNER_SN DESC 
+     </sql>
+     
+     <!--공유배너리스트조회 -->
+    <select id="selectBannerCnrsList" parameterType="map" resultType="egovMap">
+	    <include refid="selectBannerCnrsList" /> 
+    </select>
+    
+    <!-- 공유배너리스트조회(페이징) -->
+    <select id="selectBannerCnrsListPaging" parameterType="map" resultType="egovMap">
+    	SELECT
+    		PL.*
+    	FROM (
+        	SELECT 
+        		PO.*
+        		,rownum as rsn
+			FROM (
+	    		<include refid="selectBannerCnrsList" /> 
+				) PO
+		) PL
+		WHERE
+		<![CDATA[
+			rsn <= #{maxSn} 
+			AND rsn > #{minSn}
+		]]>
+    </select>
+    
+    <!-- 공유배너리스트조회 (페이징 전체 카운트) -->
+    <select id="selectBannerCnrsListPagingCount" parameterType="map" resultType="int">
+    	SELECT   COUNT(*)
+	      FROM   TAP_BA_BANNER_MANAGE A, TAP_BA_BANNER_INSTT B
+	     WHERE   A.BANNER_SN = B.BANNER_SN
+	       AND   A.CNRS_AT = 'Y'
+	       AND   A.ALL_AT = 'N'
+            <!-- 21/03/02 날짜 검색오류로 인한 수정 
+            AND TO_CHAR(B.BGNDE,'YYYY/MM/DD')  >= TO_DATE(#{bgnde},'YYYY/MM/DD')
+ 			AND TO_DATE(#{endde},'YYYY/MM/DD') >= TO_CHAR(B.ENDDE,'YYYY/MM/DD') -->
+		  <![CDATA[
+		    AND (  
+		    	   (TO_CHAR(B.BGNDE,'YYYY/MM/DD') <= TO_DATE(#{bgnde},'YYYY/MM/DD') AND TO_DATE(#{bgnde},'YYYY/MM/DD') <= TO_CHAR(B.ENDDE,'YYYY/MM/DD'))
+		    	OR (TO_CHAR(B.BGNDE,'YYYY/MM/DD') <= TO_DATE(#{endde},'YYYY/MM/DD') AND TO_DATE(#{bgnde},'YYYY/MM/DD') <= TO_CHAR(B.ENDDE,'YYYY/MM/DD'))
+		    	OR (TO_CHAR(B.BGNDE,'YYYY/MM/DD') BETWEEN TO_DATE(#{bgnde},'YYYY/MM/DD') AND TO_DATE(#{endde},'YYYY/MM/DD') ) 
+		    	OR (TO_CHAR(B.ENDDE,'YYYY/MM/DD') BETWEEN TO_DATE(#{bgnde},'YYYY/MM/DD') AND TO_DATE(#{endde},'YYYY/MM/DD') ) 
+		    	)
+	   		]]>
+	    <if test="@egovframework.MybatisUtils@isNotEmpty(srchCnrsTxt)">
+	       AND  (B.SYS_NM like '%'||#{srchCnrsTxt}||'%' or A.BANNER_TITLE like '%'||#{srchCnrsTxt}||'%')
+	    </if>
+    </select>
+    
+	<!--배너수정 -->
+    <update id="updateBannerInfo" parameterType ="map">
+		 UPDATE  TAP_BA_BANNER_MANAGE	
+			SET  BANNER_TITLE	  = #{bannerTitle},  
+				 BANNER_CN        = #{bannerCn},    				   
+				 BANNER_TEMP      = #{bannerTemp},    				   
+				 BCRN_TY          = #{bcrnTy},
+				 BCRN_IMAGE_PATH  = #{bcrnImagePath},
+				 CNRS_AT	      = #{cnrsAt},    
+				 URL		      = #{url},  
+			     NEW_WIN_AT       = #{newWinAt},
+			     IMAGE_ID         = #{imageId},
+			     ALL_AT		      = #{allAt}
+	      WHERE  BANNER_SN        = #{bannerSn} 
+	</update>
+		
+	<!--배너등록 -->
+     <insert id="insertBannerInfo" parameterType="map">
+     <![CDATA[
+          INSERT INTO TAP_BA_BANNER_MANAGE (
+            BANNER_SN  
+           ,BANNER_TITLE
+           ,BANNER_TEMP
+           ,BCRN_TY
+           ,BCRN_IMAGE_PATH
+           ,URL
+           ,BANNER_CN
+           ,NEW_WIN_AT
+           ,CNRS_AT
+           ,IMAGE_ID
+           ,All_AT
+        ) VALUES (
+            #{bannerSn}
+           ,#{bannerTitle}
+           ,#{bannerTemp}
+           ,#{bcrnTy}
+           ,#{bcrnImagePath}
+           ,#{url}
+           ,#{bannerCn}
+           ,#{newWinAt}
+           ,#{cnrsAt}
+           ,#{imageId}
+           ,#{allAt}
+           )
+     ]]>       	   
+     </insert>
+     
+    <!--배너삭제 -->
+     <delete id="deleteBannerInfo" parameterType="map" >
+           DELETE 
+             FROM  TAP_BA_BANNER_MANAGE
+            WHERE  BANNER_SN = #{bannerSn}
+     </delete>   
+     
+      <!--배너 사용여부 업데이트   -->
+     <update id="updateBannerUseAt" parameterType ="map">
+		<![CDATA[
+	     UPDATE  TAP_BA_BANNER_INSTT
+			SET  USE_AT = #{useAt}
+	      WHERE  BANNER_SN = #{bannerSn} 
+		]]>
+	 </update>	
+     
+     <!--배너기관정보등록 -->
+     <insert id="insertBannerInsttInfo" parameterType="map">
+         INSERT INTO TAP_BA_BANNER_INSTT (
+            BA_INSTT_SN  
+           ,BANNER_SN
+           ,BGNDE
+           ,ENDDE
+           ,BEGIN_TIME
+           ,END_TIME
+           ,SYS_ID
+           ,SYS_NM
+           ,USE_AT
+           
+        ) VALUES (
+            SEQ_BANNER_INSTT_SN.NEXTVAL
+           ,#{bannerSn}
+           ,TO_DATE(#{bgnde},'YYYY/MM/DD')
+           ,TO_DATE(#{endde},'YYYY/MM/DD')
+           ,#{beginTime}
+           ,#{endTime}
+           ,#{sysId}
+           ,#{sysNm}
+           ,#{useAt}
+       	)
+     </insert>
+     
+   <!--배너 이력 등록 -->
+   <insert id="insertBannerHist" parameterType="map">
+     <![CDATA[
+          INSERT INTO TAP_BA_BANNER_HIST (
+           	 HIST_SN
+			,HIST_GROUP_SN
+			,BANNER_SN
+			,HIST_MBER_ID
+			,HIST_MBER_NM
+			,HIST_MBER_IP
+			,HIST_DATE
+			,HIST_TY
+           
+        ) VALUES (
+            SEQ_BANNER_HIST_SN.NEXTVAL
+           ,SEQ_HIST_GROUP_SEQ.NEXTVAL
+           ,#{bannerSn}
+           ,#{histMberId}
+           ,#{histMberNm}
+           ,#{histMberIp}
+           ,sysdate
+           ,#{histTy}
+           )
+    ]]>       	    
+     </insert>
+     
+     <!--배너기관정보수정 -->
+     <update id="updateBannerInsttInfo" parameterType ="map">
+		<![CDATA[
+			UPDATE  TAP_BA_BANNER_INSTT	
+			   SET  BGNDE = TO_DATE(#{bgnde},'YYYY/MM/DD')
+           		   ,ENDDE = TO_DATE(#{endde},'YYYY/MM/DD')
+				   ,BEGIN_TIME = #{beginTime}
+				   ,END_TIME = #{endTime}   
+				   ,USE_AT = #{useAt} 
+			WHERE   BANNER_SN = #{bannerSn} 
+		]]>	
+	 </update>	
+	 
+	  <!--배너 순서 저장 -->
+     <update id="updateBannerOrdr" parameterType ="map">
+		<![CDATA[
+			UPDATE  TAP_BA_BANNER_INSTT	
+			   SET  BANNER_ORDR = #{bannerOrdr}
+			 WHERE  BA_INSTT_SN = #{baInsttSn} 
+		]]>	
+	 </update>	
+	 
+	 <!--배너기관정보삭제 -->
+	 <delete id="deleteBannerInsttInfo" parameterType="map" >
+           DELETE 
+             FROM  TAP_BA_BANNER_INSTT
+            WHERE  BANNER_SN = #{bannerSn}
+     </delete>
+     
+	<!-- 사이트별 배너리스트 조회 -->
+	<select id="selectBannerListBySysId" parameterType="map" resultType="egovMap">
+		SELECT 
+        	A.*,      
+           	B.SYS_ID,
+           	B.SYS_NM,
+           	B.BGNDE,
+           	B.ENDDE,
+           	B.BA_INSTT_SN,
+           	C.FILE_STRE_COURS,
+           	C.ORIGNL_FILE_NM 	   
+<!--        	FROM  -->
+<!--            	TAP_BA_BANNER_MANAGE A  -->
+<!--            	LEFT OUTER JOIN  -->
+<!--            		TSA_ATCH_FILE_DETAIL C  -->
+<!--            	ON  -->
+<!--            		A.IMAGE_ID = C.FILE_ID  -->
+<!--             ,TAP_BA_BANNER_INSTT B -->
+       FROM TAP_BA_BANNER_INSTT B
+            JOIN TAP_BA_BANNER_MANAGE A 
+                ON A.BANNER_SN = B.BANNER_SN 
+            LEFT OUTER JOIN TSA_ATCH_FILE_DETAIL C 
+                ON A.IMAGE_ID = C.FILE_ID 
+                     
+        WHERE
+<!--            	A.BANNER_SN = B.BANNER_SN AND -->
+        	B.SYS_ID = #{sysId}
+        	AND B.USE_AT = 'Y'
+	<![CDATA[
+        	AND TO_CHAR(B.BGNDE,'YYYY/MM/DD')||' '||B.BEGIN_TIME <= TO_CHAR(SYSDATE,'YYYY/MM/DD HH24:MI')
+        	AND TO_CHAR(B.ENDDE,'YYYY/MM/DD')||' '||B.END_TIME >= TO_CHAR(SYSDATE,'YYYY/MM/DD HH24:MI')
+    ]]>
+       	ORDER BY 
+           B.BANNER_ORDR, A.BANNER_SN DESC
+	</select>
+	
+	<!-- 배너옵션 등록 -->
+     <insert id="insertBannerOptn" parameterType="map">
+     	INSERT INTO TAP_BA_BANNER_OPTN(
+     		BANNER_SN
+     		,INSTT_GRAD_LIST
+     		,ADIT_INSTT_LIST
+     		,EXCL_INSTT_LIST
+     	) VALUES (
+     		#{bannerSn}
+     		,#{insttGradList}
+     		,#{aditInsttList}
+     		,#{exclInsttList}
+     	)
+     </insert>
+     
+     <!-- 배너옵션 삭제 -->
+     <delete id="deleteBannerOptn" parameterType="map">
+     	DELETE FROM TAP_BA_BANNER_OPTN
+     	WHERE BANNER_SN = #{bannerSn}
+     </delete>
+     
+     <!-- 배너옵션 수정 -->
+     <update id="updateBannerOptn" parameterType="map">
+     	UPDATE TAP_BA_BANNER_OPTN
+     	SET INSTT_GRAD_LIST = #{insttGradList}
+     		,ADIT_INSTT_LIST = #{aditInsttList}
+     		,EXCL_INSTT_LIST = #{exclInsttList}
+     	WHERE BANNER_SN = #{bannerSn}
+     </update>
+     
+     <!-- 배너옵션 조회 -->
+     <select id="selectBannerOptn" parameterType="map" resultType="egovMap">
+     	SELECT BANNER_SN
+     		,INSTT_GRAD_LIST
+     		,ADIT_INSTT_LIST
+     		,EXCL_INSTT_LIST
+     	FROM TAP_BA_BANNER_OPTN
+     	WHERE BANNER_SN = #{bannerSn}
+     </select>
+     
+     <!-- 배너 추가/제외기관 조회 -->
+     <select id="selectBannerOptnInsttList" parameterType="map" resultType="egovMap">
+     	SELECT SM.SYS_ID
+     		,SM.SYS_NM
+     		,IT.INSTT_GRAD
+     	FROM TAP_IM_INSTT_MANAGE IT, TAP_SM_SYS_MANAGE SM
+     	WHERE IT.INSTT_CODE = SM.INSTT_CODE
+     	AND SM.SYS_ID IN
+     	<foreach collection="optnInsttListArr" item="optnInsttSysId" open="(" close=")" separator=",">
+     		#{optnInsttSysId}
+     	</foreach>
+     </select>
+</mapper>
+
+

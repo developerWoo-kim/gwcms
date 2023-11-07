@@ -1,0 +1,102 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="wh_widgHist">
+
+	<!-- 위젯 백업 등록 -->
+    <insert id="insertWidgHistInsert" parameterType="map" >
+		<selectKey keyProperty="widgBakSn" resultType="java.lang.Integer" order="BEFORE">
+			SELECT SEQ_WIDG_BAK_SN_SEQ.NEXTVAL FROM DUAL
+		</selectKey>
+    	INSERT INTO TCO_WH_WIDG_HIST (
+    		SYS_ID,
+    		TMPLAT_ID,
+    		WIDG_BAK_SN,
+    		WIDG_NM,
+			WIDG_BAK_FILE_NM,
+			UPDT_DT,
+			UPDT_USID
+    	) VALUES (
+    		#{sysId},
+    		#{tmplatId},
+    		#{widgBakSn},
+    		#{widgNm},
+    		#{widgBakFileNm},
+    		TO_DATE(#{updtDt},'YYYYMMDDHH24MISS'),
+    		#{updtUsid}
+    	)
+    </insert>    
+    
+    <!-- +++++++++++++++++++++++++++++++++++++ 위젯 백업 이력 리스트 (sql)++++++++++++++++++++++++++++++++++++++++ -->
+	<sql id="selectWidgHistListSql">
+		SELECT SYS_ID,
+			   TMPLAT_ID,
+			   WIDG_BAK_SN,
+			   WIDG_NM,
+			   WIDG_BAK_FILE_NM,
+			   TO_CHAR(UPDT_DT,'YYYY/MM/DD HH24:MI:SS') AS UPDT_DT,
+			   UPDT_USID
+		  FROM TCO_WH_WIDG_HIST
+		 WHERE 1 = 1
+		   AND SYS_ID = #{sysId}
+	       AND WIDG_NM = #{widgNm}
+		<if test="@egovframework.MybatisUtils@isNotEmpty(srchTxt)">
+		   AND WIDG_BAK_FILE_NM LIKE '%'||#{srchTxt}||'%'
+	    </if>
+	    <if test="@egovframework.MybatisUtils@isNotEmpty(bgnde)">
+	    	<![CDATA[
+	       AND (TO_CHAR(UPDT_DT, 'YYYY/MM/DD') BETWEEN #{bgnde} AND #{endde})
+			]]>
+	    </if>
+	  	ORDER BY UPDT_DT DESC
+	</sql>
+    <!-- ++++++++++++++++++++++++++++++++++++  end of 위젯 백업 이력 리스트 (sql)++++++++++++++++++++++++++++++++++++++++ -->
+    
+	<!-- 위젯 백업 이력 리스트 -->
+    <select id="selectWidgHistList" parameterType="map" resultType="egovMap">
+		<include refid="selectWidgHistListSql" />  
+    </select>
+    
+	<!-- 위젯 백업 이력 리스트 (페이징) -->
+    <select id="selectWidgHistListPaging" parameterType="map" resultType="egovMap">
+		SELECT PL.*
+		  FROM ( SELECT PO.* 
+		  		 	   ,ROWNUM AS RSN
+		           FROM ( <include refid="selectWidgHistListSql" /> ) PO ) PL
+		 WHERE 1 = 1 
+		 <![CDATA[ 
+		   AND RSN <= #{maxSn}
+		   AND RSN > #{minSn} 
+		 ]]>		
+    </select>
+    
+    <!-- 위젯 백업 이력 리스트 (페이징 전체 카운트) -->
+    <select id="selectWidgHistListPagingCount" parameterType="map" resultType="int">
+		SELECT COUNT(*)
+		  FROM TCO_WH_WIDG_HIST
+		 WHERE 1 = 1
+		   AND SYS_ID = #{sysId}
+	       AND WIDG_NM = #{widgNm}
+		<if test="@egovframework.MybatisUtils@isNotEmpty(srchTxt)">
+		   AND WIDG_BAK_FILE_NM LIKE '%'||#{srchTxt}||'%'
+	    </if>
+	    <if test="@egovframework.MybatisUtils@isNotEmpty(beginDt)">
+	    	<![CDATA[
+	       AND (TO_CHAR(UPDT_DT, 'YYYY/MM/DD') BETWEEN #{beginDt} AND #{endDt})
+			]]>
+	    </if>
+    </select>
+    
+    <!-- 위젯 백업 이력 미리보기  -->
+    <select id="selectWidgBakView" parameterType="map" resultType="egovMap">
+       	SELECT WIDG_BAK_SN,
+       		   WIDG_NM,
+       		   WIDG_BAK_FILE_NM
+	   	  FROM TCO_WH_WIDG_HIST
+	  	 WHERE 1=1
+	       AND SYS_ID = #{sysId}
+	       AND WIDG_BAK_SN = #{widgBakSn}
+    </select>
+    
+    
+</mapper>

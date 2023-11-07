@@ -1,0 +1,700 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="mn_menu">
+
+	<!-- 메뉴 리스트 -->
+	<sql id="selectMenuBase">
+		SELECT SYS_ID
+			  ,SYS_NM
+			  ,UPPER_MENU_ID
+			  ,UPPER_MENU_NM
+			  ,MENU_ID
+			  ,MENU_NM
+			  ,MENU_LEVEL
+			  ,MENU_TY
+			  ,CNTNTS_ID
+			  ,MENU_LINK
+			  ,MENU_URL
+			  ,CNNC_MENU_ID
+			  ,USE_AT
+			  ,CONECT_AT
+			  ,CONECT_AUTHOR
+			  ,SORT_ORDR
+			  ,NEW_WIN_AT
+			  ,CNTNTS_AT
+			  ,RCLICK_AT
+			  ,LWPRT_RCLICK_AT
+			  ,CLSDR_AT
+			  ,TAB_AT
+			  ,UPEND_AT
+		  FROM TAP_MN_MENU_MANAGE	
+	</sql>
+	
+	<!-- 메뉴 리스트 조회 -->
+    <select id="selectMenuList" parameterType="egovMap" resultType="egovMap">
+		<include refid="selectMenuBase" />
+		 WHERE SYS_ID = #{sysId}
+	  ORDER BY SORT_ORDR
+    </select>
+    
+	<!-- 탭 메뉴 리스트 조회 -->
+    <select id="selectMenuTabList" parameterType="egovMap" resultType="egovMap">
+		SELECT
+		 	A.SYS_ID
+		   ,A.SYS_NM
+		   ,A.UPPER_MENU_ID
+		   ,A.UPPER_MENU_NM
+		   ,A.MENU_ID
+		   ,A.MENU_NM
+		   ,A.MENU_LEVEL
+		   ,A.MENU_TY
+		   ,A.CNTNTS_ID
+		   ,A.MENU_LINK
+		   ,A.MENU_URL
+		   ,A.CNNC_MENU_ID
+		   ,A.USE_AT
+		   ,A.CONECT_AT
+		   ,A.CONECT_AUTHOR
+		   ,A.SORT_ORDR
+		   ,A.NEW_WIN_AT
+		   ,A.CNTNTS_AT
+		   ,A.RCLICK_AT
+		   ,A.LWPRT_RCLICK_AT
+		   ,A.CLSDR_AT
+		   ,A.TAB_AT
+		   ,A.UPEND_AT
+		FROM TAP_MN_MENU_MANAGE A
+		WHERE A.SYS_ID = #{sysId}
+		AND A.TAB_AT = 'Y'
+		AND A.USE_AT = 'Y'
+		AND  A.MENU_ID = 
+            (
+                CASE
+                    WHEN A.MENU_LEVEL= 2 
+                         AND  ( SELECT B.USE_AT FROM TAP_MN_MENU_MANAGE B WHERE B.MENU_ID = A.UPPER_MENU_ID ) = 'Y' <!--Lv1 메뉴 사용여부 -->
+                    THEN A.MENU_ID
+                       
+                    WHEN A.MENU_LEVEL= 3 
+                         AND  ( SELECT B.USE_AT FROM TAP_MN_MENU_MANAGE B WHERE B.MENU_ID = A.UPPER_MENU_ID ) = 'Y' <!--Lv2 메뉴 사용여부 -->
+                           AND (SELECT B.USE_AT FROM TAP_MN_MENU_MANAGE B WHERE B.MENU_ID = (SELECT C.UPPER_MENU_ID FROM TAP_MN_MENU_MANAGE C WHERE C.MENU_ID = A.UPPER_MENU_ID) )= 'Y' <!--Lv1 메뉴 사용여부 -->
+                    THEN A.MENU_ID
+                    
+                    WHEN A.MENU_LEVEL= 4
+                         AND  ( SELECT B.USE_AT FROM TAP_MN_MENU_MANAGE B WHERE B.MENU_ID = A.UPPER_MENU_ID ) = 'Y' <!--Lv3 메뉴 사용여부 -->
+                           AND (SELECT B.USE_AT FROM TAP_MN_MENU_MANAGE B WHERE B.MENU_ID = (SELECT C.UPPER_MENU_ID FROM TAP_MN_MENU_MANAGE C WHERE C.MENU_ID = A.UPPER_MENU_ID) )= 'Y' <!--Lv2 메뉴 사용여부 -->
+                             AND (SELECT B.USE_AT FROM TAP_MN_MENU_MANAGE B WHERE B.MENU_ID = (SELECT C.UPPER_MENU_ID FROM TAP_MN_MENU_MANAGE C WHERE C.MENU_ID = (SELECT D.UPPER_MENU_ID FROM TAP_MN_MENU_MANAGE D WHERE D.MENU_ID = A.UPPER_MENU_ID ) ) )= 'Y' <!--Lvㅂ1메뉴 사용여부 -->
+                    THEN A.MENU_ID
+                    
+                    WHEN A.MENU_LEVEL= 5
+                         AND  ( SELECT B.USE_AT FROM TAP_MN_MENU_MANAGE B WHERE B.MENU_ID = A.UPPER_MENU_ID ) = 'Y'<!--Lv4 메뉴 사용여부 -->
+                          AND (SELECT B.USE_AT FROM TAP_MN_MENU_MANAGE B WHERE B.MENU_ID = (SELECT C.UPPER_MENU_ID FROM TAP_MN_MENU_MANAGE C WHERE C.MENU_ID = A.UPPER_MENU_ID) )= 'Y' <!--Lv3 메뉴 사용여부 -->
+                           AND (SELECT B.USE_AT FROM TAP_MN_MENU_MANAGE B WHERE B.MENU_ID = (SELECT C.UPPER_MENU_ID FROM TAP_MN_MENU_MANAGE C WHERE C.MENU_ID = (SELECT D.UPPER_MENU_ID FROM TAP_MN_MENU_MANAGE D WHERE D.MENU_ID = A.UPPER_MENU_ID ) ) )= 'Y' <!--Lv2 메뉴 사용여부 -->
+                            AND (SELECT B.USE_AT FROM TAP_MN_MENU_MANAGE B WHERE B.MENU_ID = (SELECT C.UPPER_MENU_ID FROM TAP_MN_MENU_MANAGE C WHERE C.MENU_ID = (SELECT D.UPPER_MENU_ID FROM TAP_MN_MENU_MANAGE D WHERE D.MENU_ID = (SELECT E.UPPER_MENU_ID FROM TAP_MN_MENU_MANAGE E WHERE E.MENU_ID = A.UPPER_MENU_ID ) ) ) )= 'Y' <!--Lv1 메뉴 사용여부 -->
+                    THEN A.MENU_ID
+                END 
+            )
+		ORDER BY
+			 ( SELECT SORT_ORDR FROM TAP_MN_MENU_MANAGE WHERE MENU_ID = A.UPPER_MENU_ID ) 
+			 ,SORT_ORDR
+   </select>
+    
+    <!-- 메뉴 리스트 조회 (레벨) -->
+    <select id="selectMenuLevelList" parameterType="egovMap" resultType="egovMap">
+		<include refid="selectMenuBase" />
+		 WHERE SYS_ID = #{sysId}
+		   AND MENU_LEVEL = #{menuLevel}
+	  ORDER BY SORT_ORDR
+    </select>
+    
+	<!-- 메뉴 정보 조회 -->
+    <select id="selectMenuInfo" parameterType="egovMap" resultType="egovMap">
+		<include refid="selectMenuBase" />
+		 WHERE MENU_ID = #{menuId}
+	  ORDER BY SORT_ORDR
+    </select>
+    
+	<!-- Lv4 최상위 메뉴 정보  조회 -->
+    <select id="selectFourthBaseMenuId" parameterType="egovMap" resultType="egovMap">
+		SELECT 
+		    UPPER_MENU_ID
+		    FROM TAP_MN_MENU_MANAGE
+		        WHERE MENU_ID = (
+		        
+		          SELECT A.UPPER_MENU_ID
+		             FROM TAP_MN_MENU_MANAGE A                
+		              WHERE A.MENU_ID = (
+		              
+		                SELECT B.UPPER_MENU_ID 
+		                   FROM TAP_MN_MENU_MANAGE B
+		                     WHERE B.MENU_ID = #{menuId}
+		         ) 
+		       )
+    </select>
+    
+	<!-- Lv5 최상위 메뉴 정보  조회 -->
+    <select id="selectFifithBaseMenuId" parameterType="egovMap" resultType="egovMap">
+		SELECT 
+		    UPPER_MENU_ID
+		    FROM TAP_MN_MENU_MANAGE 
+		        WHERE MENU_ID = (
+		        
+		            SELECT A.UPPER_MENU_ID
+		               FROM TAP_MN_MENU_MANAGE A               
+		                  WHERE A.MENU_ID =(
+		                  
+		                   SELECT B.UPPER_MENU_ID
+		                     FROM TAP_MN_MENU_MANAGE B                
+		                      WHERE B.MENU_ID = (
+		                      
+		                        SELECT C.UPPER_MENU_ID 
+		                           FROM TAP_MN_MENU_MANAGE C
+		                             WHERE C.MENU_ID = #{menuId}
+		            )
+		          )
+		        )
+    </select>
+    
+	<!-- 하위 메뉴 조회 (삭제) -->
+    <select id="selectDelMenuList" parameterType="egovMap" resultType="java.lang.String">
+		SELECT MENU_ID
+		  FROM TAP_MN_MENU_MANAGE
+		 WHERE UPPER_MENU_ID = #{upperMenuId}
+    </select>    
+    
+	<!-- 메뉴 순서 수정 -->
+    <update id="updateMenuSortOrdr" parameterType="egovMap">
+		UPDATE TAP_MN_MENU_MANAGE
+		   SET SORT_ORDR = #{sortOrdr}
+		      ,MENU_LEVEL = #{menuLevel}
+		      ,UPPER_MENU_ID = #{upperMenuId}
+		      ,UPPER_MENU_NM = #{upperMenuNm}
+		 WHERE MENU_ID = #{menuId}
+    </update>
+    
+    <!-- 메뉴 정보 수정 -->
+    <update id="updateMenuInfo" parameterType="egovMap">
+		UPDATE TAP_MN_MENU_MANAGE
+		   SET MENU_NM = #{menuNm}
+		   	  ,CNNC_MENU_ID = #{cnncMenuId}
+		   	  ,MENU_TY = #{menuTy}
+			  ,USE_AT = #{useAt}
+			  ,CONECT_AUTHOR = #{conectAuthor}
+			  ,NEW_WIN_AT = #{newWinAt}
+			  ,RCLICK_AT = #{rclickAt}
+			  ,CNTNTS_ID = #{cntntsId}
+			  ,MENU_LINK = #{menuLink}
+			  ,MENU_URL = #{menuUrl}
+			  ,CLSDR_AT = #{clsdrAt}
+			  <if test="@egovframework.MybatisUtils@isEmpty(updtRecovry)"> 
+			  ,TAB_AT = #{tabAt}
+			  </if>
+			  ,UPEND_AT = #{upendAt}
+		 WHERE MENU_ID = #{menuId}
+    </update>
+    
+	<!-- 메뉴 정보 삭제 -->
+    <delete id="deleteMenuInfo" parameterType="egovMap">
+    	DELETE FROM TAP_MN_MENU_MANAGE
+    	 WHERE MENU_ID = #{menuId} 
+    </delete>
+    
+    <!-- 메뉴 정보 삭제(상위메뉴) -->
+    <delete id="deleteMenuSubInfo" parameterType="egovMap">
+    	DELETE FROM TAP_MN_MENU_MANAGE
+    	 WHERE UPPER_MENU_ID = #{upperMenuId} 
+    </delete>
+    
+    <!-- 메뉴 추가 -->
+<!--     <insert id="insertMenuInfo" parameterType="egovMap">
+		INSERT INTO TAP_MN_MENU_MANAGE
+		 (
+			 SYS_ID          
+			,SYS_NM          
+			,UPPER_MENU_ID   
+			,UPPER_MENU_NM   
+			,MENU_ID         
+			,MENU_NM         
+			,MENU_LEVEL      
+			,MENU_TY         
+			,CNTNTS_ID       
+			,MENU_LINK       
+			,MENU_URL        
+			,CNNC_MENU_ID    
+			,USE_AT          
+			,CONECT_AT       
+			,CONECT_AUTHOR   
+			,SORT_ORDR       
+			,NEW_WIN_AT      
+			,CNTNTS_AT       
+			,RCLICK_AT       
+			,LWPRT_RCLICK_AT 
+		 )
+		VALUES
+		 (
+			 #{sysId}
+			,#{sysNm}
+			,#{upperMenuId}
+			,#{upperMenuNm}
+			,#{menuId}
+			,#{menuNm}
+			,#{menuLevel}
+			,#{menuTy}
+			,#{cntntsId}
+			,#{menuLink}
+			,#{menuUrl}
+			,#{cnncMenuId}
+			,'Y'
+			,'Y'
+			,#{conectAuthor}
+			,(SELECT MAX(SORT_ORDR) + 1 FROM TAP_MN_MENU_MANAGE WHERE SYS_ID = #{sysId})
+			,'N'
+			,#{cntntsAt}
+			,'Y'
+			,'Y'
+		 )    	
+    </insert> -->
+    <insert id="insertMenuInfo" parameterType="egovMap">
+		INSERT INTO TAP_MN_MENU_MANAGE
+		 (
+			 SYS_ID          
+			,SYS_NM          
+			,UPPER_MENU_ID   
+			,UPPER_MENU_NM   
+			,MENU_ID         
+			,MENU_NM         
+			,MENU_LEVEL      
+			,MENU_TY         
+			,CNTNTS_ID       
+			,MENU_LINK       
+			,MENU_URL        
+			,CNNC_MENU_ID    
+			,USE_AT          
+			,CONECT_AT       
+			,CONECT_AUTHOR   
+			,SORT_ORDR       
+			,NEW_WIN_AT      
+			,CNTNTS_AT       
+			,RCLICK_AT       
+			,LWPRT_RCLICK_AT
+			,CLSDR_AT 
+			,TAB_AT 
+			,UPEND_AT
+		 )
+		VALUES
+		 (
+			 #{sysId}
+			,#{sysNm}
+			,#{upperMenuId}
+			,#{upperMenuNm}
+			,#{menuId}
+			,#{menuNm}
+			,#{menuLevel}
+			,#{menuTy}
+			,#{cntntsId}
+			,#{menuLink}
+			,#{menuUrl}
+			,#{cnncMenuId}
+		<if test="@egovframework.MybatisUtils@isEmpty(useAt)">
+			,'Y'
+		</if>
+		<if test="@egovframework.MybatisUtils@isNotEmpty(useAt)">
+			,#{useAt}
+		</if>
+			,'Y'
+			,#{conectAuthor}
+			,#{sortOrdr}
+			,#{newWinAt}
+			,#{cntntsAt}
+			,'Y'
+			,'Y'
+			,#{clsdrAt}
+			,#{tabAt}
+			,#{upendAt}
+		 )    	
+    </insert>    
+    
+    <!-- 메뉴 아이디 -->
+    <select id="selectMenuId" resultType="java.lang.String">
+    	SELECT SEQ_MENU_ID.NEXTVAL FROM DUAL
+    </select>
+    
+    <!-- 연결 메뉴 리스트 -->
+    <select id="selectCnncMenuList" parameterType="egovMap" resultType="egovMap">
+	    SELECT 
+                CASE 
+                
+		           WHEN UPPER_MENU_NM IS NOT NULL AND MENU_LEVEL ='2' 
+		            THEN UPPER_MENU_NM ||' > '|| MENU_NM  || DECODE ( TAB_AT, 'Y', '(TAB)', '') 
+                    
+		           WHEN UPPER_MENU_NM IS NOT NULL AND MENU_LEVEL ='3' 
+		            THEN (SELECT UPPER_MENU_NM FROM TAP_MN_MENU_MANAGE WHERE MENU_ID = MN.UPPER_MENU_ID ) ||' > '|| 
+                            (SELECT MENU_NM || DECODE ( TAB_AT, 'Y', '(TAB)', '')  FROM TAP_MN_MENU_MANAGE WHERE MENU_ID = MN.UPPER_MENU_ID) ||' > '|| 
+                                MENU_NM || DECODE ( MN.TAB_AT, 'Y', '(TAB)', '')
+                    
+                   WHEN UPPER_MENU_NM IS NOT NULL AND MENU_LEVEL ='4' 
+                    THEN 
+                      (SELECT UPPER_MENU_NM FROM TAP_MN_MENU_MANAGE WHERE MENU_ID = (SELECT UPPER_MENU_ID FROM TAP_MN_MENU_MANAGE WHERE MENU_ID = MN.UPPER_MENU_ID ) ) ||' > '|| 
+                       (SELECT MENU_NM || DECODE ( TAB_AT, 'Y', '(TAB)', '') FROM TAP_MN_MENU_MANAGE WHERE MENU_ID = (SELECT UPPER_MENU_ID FROM TAP_MN_MENU_MANAGE WHERE MENU_ID = MN.UPPER_MENU_ID) )  ||' > '|| 
+                        (SELECT MENU_NM || DECODE ( TAB_AT, 'Y', '(TAB)', '') FROM TAP_MN_MENU_MANAGE WHERE MENU_ID = MN.UPPER_MENU_ID) ||' > '||
+                          MENU_NM || '(TAB)'
+                          
+                   WHEN UPPER_MENU_NM IS NOT NULL AND MENU_LEVEL ='5' 
+                       THEN 
+                      (SELECT UPPER_MENU_NM FROM TAP_MN_MENU_MANAGE WHERE MENU_ID = ( SELECT UPPER_MENU_ID FROM TAP_MN_MENU_MANAGE WHERE MENU_ID = (SELECT UPPER_MENU_ID FROM TAP_MN_MENU_MANAGE WHERE MENU_ID = MN.UPPER_MENU_ID ) ) ) ||' > '|| 
+                          (SELECT MENU_NM || DECODE ( TAB_AT, 'Y', '(TAB)', '')  FROM TAP_MN_MENU_MANAGE WHERE MENU_ID = (SELECT UPPER_MENU_ID FROM TAP_MN_MENU_MANAGE WHERE MENU_ID = (SELECT UPPER_MENU_ID FROM TAP_MN_MENU_MANAGE WHERE MENU_ID = MN.UPPER_MENU_ID ) ) ) ||' > '|| 
+                             (SELECT MENU_NM || DECODE ( TAB_AT, 'Y', '(TAB)', '') FROM TAP_MN_MENU_MANAGE WHERE MENU_ID = (SELECT UPPER_MENU_ID FROM TAP_MN_MENU_MANAGE WHERE MENU_ID = MN.UPPER_MENU_ID) )  ||' > '|| 
+                                (SELECT MENU_NM || DECODE ( TAB_AT, 'Y', '(TAB)', '') FROM TAP_MN_MENU_MANAGE WHERE MENU_ID = MN.UPPER_MENU_ID) ||' > '||
+                                    MENU_NM || '(TAB)'
+                   
+		           ELSE MENU_NM
+                   
+		       END AS MENU_NAVI
+              ,MENU_NM	    
+    		  ,MENU_ID
+    		  ,SORT_ORDR
+    		  ,MENU_LEVEL
+  		  FROM TAP_MN_MENU_MANAGE MN
+ 	 	 WHERE 1 = 1
+ 	 	   AND SYS_ID = #{sysId}
+ 	 	   AND USE_AT = 'Y'
+ 	  ORDER BY SORT_ORDR
+    </select>   
+    
+    <!-- 게시판 리스트 -->
+    <select id="selectBbsList" parameterType="egovMap" resultType="egovMap">
+	   SELECT BBS_SJ
+	    	,BBS_TY
+	    	,BBS_ID
+         FROM TAP_BM_BBS_MANAGE
+        WHERE BBS_USE_AT = 'Y'
+          AND BBS_PRPOS = 'HOMEPAGE'
+          AND SYS_ID = #{sysId}
+        ORDER BY BBS_ID DESC
+    </select>  
+    
+    <!-- 컨텐츠 리스트 -->
+    <select id="selectCntntsList" parameterType="egovMap" resultType="egovMap">
+	    SELECT CNTNTS_ID
+		      ,CNTNTS_NM
+		      ,SYS_ID
+		FROM TAP_CM_CNTNTS_MANAGE
+		WHERE SYS_ID = #{sysId}
+		  AND USE_AT = 'Y'
+	  	ORDER BY CNTNTS_ID DESC		  
+    </select> 
+
+	<!-- 상위 메뉴 리스트 -->
+	<select id="selectUpperMenuList" parameterType="map" resultType="egovMap">
+	     SELECT 
+		       MENU_ID
+		      ,MENU_NM
+		      ,MENU_LEVEL
+              ,NVL( (SELECT TAB_AT FROM TAP_MN_MENU_MANAGE WHERE MENU_ID  = MN.UPPER_MENU_ID), 'N' ) AS BASE_TAB_AT
+              ,TAB_AT
+              ,CASE 
+		           WHEN UPPER_MENU_NM IS NOT NULL AND MENU_LEVEL ='2' 
+		           THEN UPPER_MENU_NM ||' > '|| MENU_NM  || DECODE ( TAB_AT, 'Y', '(TAB)', '') 
+                    
+		           WHEN UPPER_MENU_NM IS NOT NULL AND MENU_LEVEL ='3' 
+		           THEN (SELECT UPPER_MENU_NM FROM TAP_MN_MENU_MANAGE WHERE MENU_ID = MN.UPPER_MENU_ID ) ||' > '|| 
+                         (SELECT MENU_NM || DECODE ( TAB_AT, 'Y', '(TAB)', '')  FROM TAP_MN_MENU_MANAGE WHERE MENU_ID = MN.UPPER_MENU_ID) ||' > '|| 
+                           MENU_NM || DECODE ( MN.TAB_AT, 'Y', '(TAB)', '')
+                    
+                   WHEN UPPER_MENU_NM IS NOT NULL AND MENU_LEVEL ='4' 
+                   THEN (SELECT UPPER_MENU_NM FROM TAP_MN_MENU_MANAGE WHERE MENU_ID = (SELECT UPPER_MENU_ID FROM TAP_MN_MENU_MANAGE WHERE MENU_ID = MN.UPPER_MENU_ID ) ) ||' > '||
+                         (SELECT MENU_NM || DECODE ( TAB_AT, 'Y', '(TAB)', '') FROM TAP_MN_MENU_MANAGE WHERE MENU_ID = (SELECT UPPER_MENU_ID FROM TAP_MN_MENU_MANAGE WHERE MENU_ID = MN.UPPER_MENU_ID) )  ||' > '|| 
+                          (SELECT MENU_NM || DECODE ( TAB_AT, 'Y', '(TAB)', '') FROM TAP_MN_MENU_MANAGE WHERE MENU_ID = MN.UPPER_MENU_ID) ||' > '||
+                            MENU_NM || '(TAB)'
+		           ELSE MENU_NM
+		       END AS MENU_NAVI
+		  FROM 
+		  	   TAP_MN_MENU_MANAGE MN
+		 WHERE 1 = 1
+		   AND SYS_ID = #{sysId}
+		   AND MENU_LEVEL != 5 
+           
+		   AND USE_AT = 'Y'
+      ORDER BY SORT_ORDR
+	</select>
+	
+	<!-- 메뉴 정렬 다음 값(새메뉴) -->
+	<select id="selectMaxSortOrdr" parameterType="map" resultType="int">
+		SELECT NVL(MAX(SORT_ORDR), 0) + 1
+		  FROM TAP_MN_MENU_MANAGE
+		 WHERE 1 = 1
+		   AND SYS_ID = #{sysId}
+		   AND USE_AT = 'Y' 
+	</select>
+	
+	<!-- 메뉴 정렬 다음 값(하위메뉴) -->
+	<select id="selectSortOrdrNextValue" parameterType="map" resultType="egovMap">
+		<include refid="selectMenuBase" />
+		 WHERE 1 = 1
+		   AND SYS_ID = #{sysId}
+		   AND UPPER_MENU_ID = #{upperMenuId}
+		   AND SORT_ORDR IN ( SELECT MAX(SORT_ORDR)
+		                        FROM TAP_MN_MENU_MANAGE
+		                       WHERE UPPER_MENU_ID = #{upperMenuId}
+		                         AND USE_AT = 'Y' )	  
+	</select>
+	
+    <!-- 게시물 이동 리스트 -->
+    <select id="selectMoveBbsList" parameterType="map" resultType="egovMap">
+        SELECT 
+               CASE 
+                   WHEN UPPER_MENU_NM IS NOT NULL AND MENU_LEVEL ='2' 
+                   THEN UPPER_MENU_NM ||' > '|| MENU_NM
+                   WHEN UPPER_MENU_NM IS NOT NULL AND MENU_LEVEL ='3' 
+                   THEN (SELECT UPPER_MENU_NM FROM TAP_MN_MENU_MANAGE WHERE MENU_ID = MN.UPPER_MENU_ID) ||' > '|| UPPER_MENU_NM ||' > '|| MENU_NM
+                   ELSE MENU_NM
+               END AS MENU_NAVI,
+               CNTNTS_ID
+          FROM 
+               TAP_MN_MENU_MANAGE MN
+         WHERE 1 = 1        
+           AND SYS_ID = #{sysId}
+           AND USE_AT = 'Y'
+           AND MENU_TY = 'BBS'
+      ORDER BY SORT_ORDR   
+    </select>
+    
+    <!-- 게시판 경로 리스트 -->
+    <select id="selectBbsCoursList" parameterType="egovMap" resultType="egovMap">
+		SELECT 
+		       CASE 
+		           WHEN UPPER_MENU_NM IS NOT NULL AND MENU_LEVEL ='2' 
+		           THEN UPPER_MENU_NM ||' > '|| MENU_NM
+		           WHEN UPPER_MENU_NM IS NOT NULL AND MENU_LEVEL ='3' 
+		           THEN (SELECT UPPER_MENU_NM FROM TAP_MN_MENU_MANAGE WHERE MENU_ID = MN.UPPER_MENU_ID) ||' > '|| UPPER_MENU_NM ||' > '|| MENU_NM
+		           ELSE MENU_NM
+		       END AS MENU_NAVI,
+		       MENU_ID
+		  FROM TAP_MN_MENU_MANAGE MN
+		 WHERE 1 = 1
+		   AND SYS_ID = #{sysId}
+		   AND MENU_TY = 'BBS' 
+		   AND USE_AT = 'Y' 
+	    <if test="@egovframework.MybatisUtils@isNotEmpty(bbsId)">
+		   AND CNTNTS_ID = #{bbsId}
+	    </if>		  
+	  ORDER BY SORT_ORDR
+    </select>
+    
+    <!-- 게시판 이동 경로 리스트 -->
+    <select id="selectMoveBbsCoursList" parameterType="egovMap" resultType="egovMap">
+		SELECT 
+		       CASE 
+		           WHEN MN.UPPER_MENU_NM IS NOT NULL AND MN.MENU_LEVEL ='2' 
+		           THEN MN.UPPER_MENU_NM ||' > '|| MN.MENU_NM
+		           WHEN MN.UPPER_MENU_NM IS NOT NULL AND MN.MENU_LEVEL ='3' 
+		           THEN (SELECT UPPER_MENU_NM FROM TAP_MN_MENU_MANAGE WHERE MENU_ID = MN.UPPER_MENU_ID) ||' > '|| MN.UPPER_MENU_NM ||' > '|| MN.MENU_NM
+		           ELSE MN.MENU_NM
+		       END AS MENU_NAVI,
+		       MN.MENU_ID,
+               MN.CNTNTS_ID
+		  FROM 
+               TAP_MN_MENU_MANAGE MN,
+               TAP_BM_BBS_MANAGE BM
+		 WHERE 1 = 1
+		   AND MN.SYS_ID = #{sysId}
+		   AND MN.MENU_TY = 'BBS' 
+		   AND MN.USE_AT = 'Y' 
+           AND MN.CNTNTS_ID = BM.BBS_ID
+           AND BM.CVPL_AT = 'N'
+	  ORDER BY MN.SORT_ORDR
+    </select>
+    
+    <!-- 메뉴 권한/그룹 추가 -->
+    <insert id="insertMenuAuthor" parameterType="egovMap">
+		INSERT INTO TAP_MN_MENU_AUTHOR
+		(
+			MENU_ID,          
+			AUTHOR_NO,          
+			AUTHOR_TY,
+		    MENU_TY,
+		    CNTNTS_ID			
+		)
+		VALUES
+		(
+			#{menuId},
+			#{authorNo},
+			#{authorTy},
+		    #{menuTy},
+		    #{cntntsId}			
+		)
+    </insert>
+    
+    <!-- 메뉴 권한/그룹 삭제 -->
+    <delete id="deleteMenuAuthor" parameterType="egovMap">
+    	DELETE FROM TAP_MN_MENU_AUTHOR WHERE MENU_ID = #{menuId} AND AUTHOR_TY = #{authorTy}
+    </delete>
+    
+	<!-- 메뉴 권한 리스트 조회 -->
+    <select id="selectMenuAuthorList" parameterType="map" resultType="egovMap">
+		SELECT 
+		       A.MENU_ID,
+		       A.AUTHOR_NO,
+		       A.AUTHOR_TY,
+		       A.MENU_TY,
+		       A.CNTNTS_ID,
+               B.AUTHOR_SEQ,
+		       <choose>
+		       	<when test="@egovframework.MybatisUtils@isNotEmpty(sysId) and sysId=='apple'">C.SYS_NM || ' ' || B.AUTHOR_NM AS AUTHOR_NM</when>
+		       	<otherwise>B.AUTHOR_NM</otherwise>
+		       </choose> 
+		  FROM 
+		       TAP_MN_MENU_AUTHOR A, TAP_AU_AUTHOR_MANAGE B, TAP_SM_SYS_MANAGE C
+		 WHERE 1 = 1
+           AND A.AUTHOR_NO = B.AUTHOR_SEQ
+           AND B.SYS_ID = C.SYS_ID
+		   AND A.AUTHOR_TY = 'A'
+		   AND A.MENU_Id = #{menuId}
+    </select>
+    
+	<!-- 메뉴 그룹 리스트 조회 -->
+    <select id="selectMenuGroupList" parameterType="map" resultType="egovMap">
+		SELECT 
+			   A.MENU_ID,
+			   A.AUTHOR_NO,
+			   A.AUTHOR_TY,
+		       A.MENU_TY,
+		       A.CNTNTS_ID,			   
+		       B.GROUP_SEQ,
+		       B.GROUP_CODE,
+		       <choose>
+					<when test="@egovframework.MybatisUtils@isNotEmpty(sysId) and sysId=='apple'">C.SYS_NM||' '||B.GROUP_NM AS GROUP_NM</when>
+					<otherwise>B.GROUP_NM</otherwise>
+				</choose>
+		  FROM 
+		       TAP_MN_MENU_AUTHOR A, TAP_GR_GROUP_MANAGE B, TAP_SM_SYS_MANAGE C 
+		 WHERE 1 = 1
+		   AND A.AUTHOR_NO = B.GROUP_CODE
+		   AND B.SYS_ID = C.SYS_ID 
+		   AND A.AUTHOR_TY = 'G'
+		   AND A.MENU_Id = #{menuId}
+    </select>
+    
+    <!-- 메뉴 권한/그룹 리스트 조회 -->
+    <select id="selectMenuAuthGroupList" parameterType="map" resultType="egovMap">
+		SELECT 
+		       A.AUTHOR_NO,
+		       A.AUTHOR_TY,
+		       B.MENU_ID
+		  FROM 
+		       TAP_MN_MENU_AUTHOR A
+		       ,TAP_MN_MENU_MANAGE B
+		 WHERE A.MENU_ID = B.MENU_ID
+		 	AND SYS_ID = #{sysId}
+    </select> 
+
+    <!-- 메뉴 권한/그룹 리스트 조회 (현재메뉴) -->
+    <select id="selectMenuIdAuthGroupList" parameterType="map" resultType="egovMap">
+		SELECT 
+		       A.AUTHOR_NO,
+		       A.AUTHOR_TY,
+		       B.MENU_ID
+		  FROM 
+		       TAP_MN_MENU_AUTHOR A
+		       ,TAP_MN_MENU_MANAGE B
+		 WHERE A.MENU_ID = B.MENU_ID
+		 	AND B.SYS_ID = #{sysId}
+		 	AND B.MENU_ID = #{menuId}
+    </select> 
+
+	<!-- 메뉴 등록시 일정관리 체크 -->        
+	<select id="selectMenuTySchdulCnt" parameterType="map" resultType="egovMap">
+		SELECT COUNT(*) AS CNT
+		  FROM 
+		       TAP_MN_MENU_MANAGE 
+		 WHERE 1 = 1
+		   AND USE_AT = 'Y'
+		   AND MENU_TY = 'SCHDUL'
+		   AND SYS_ID = #{sysId} 
+	</select>
+	
+    <!-- 메뉴 정보 조회 (MENU_ID X) -->        
+	<select id="selectMenuInfoByOtherInfo" parameterType="map" resultType="egovMap">
+		SELECT 
+			   SYS_ID,
+			   SYS_NM,
+			   UPPER_MENU_ID,
+			   UPPER_MENU_NM,
+			   MENU_ID,
+			   MENU_NM,
+			   MENU_LEVEL,
+			   MENU_TY,
+			   CNTNTS_ID,
+			   MENU_LINK,
+			   MENU_URL,
+			   CNNC_MENU_ID,
+			   USE_AT,
+			   CONECT_AT,
+			   CONECT_AUTHOR,
+			   SORT_ORDR,
+			   NEW_WIN_AT,
+			   CNTNTS_AT,
+			   RCLICK_AT,
+			   LWPRT_RCLICK_AT,
+			   CLSDR_AT,
+			   TAB_AT,
+			   UPEND_AT
+		  FROM 
+		       TAP_MN_MENU_MANAGE 
+		 WHERE 1 = 1
+		   AND SYS_ID = #{sysId} 
+		   AND MENU_TY = #{menuTy}
+		<if test="@egovframework.MybatisUtils@isNotEmpty(cntntsId)">		    
+		   AND CNTNTS_ID = #{cntntsId}
+		</if>
+	</select>
+	
+	<!-- 사용중인 메뉴 정보 조회 scMenuInfo -->        
+	<select id="selectMenuInfoY" parameterType="map" resultType="egovMap">
+		SELECT 
+			   SYS_ID,
+			   SYS_NM,
+			   UPPER_MENU_ID,
+			   UPPER_MENU_NM,
+			   MENU_ID,
+			   MENU_NM,
+			   MENU_LEVEL,
+			   MENU_TY,
+			   CNTNTS_ID,
+			   MENU_LINK,
+			   MENU_URL,
+			   CNNC_MENU_ID,
+			   USE_AT,
+			   CONECT_AT,
+			   CONECT_AUTHOR,
+			   SORT_ORDR,
+			   NEW_WIN_AT,
+			   CNTNTS_AT,
+			   RCLICK_AT,
+			   LWPRT_RCLICK_AT,
+			   CLSDR_AT,
+			   TAB_AT,
+			   UPEND_AT
+		  FROM 
+		       TAP_MN_MENU_MANAGE 
+		 WHERE 1 = 1
+		   AND USE_AT = 'Y'
+		   AND SYS_ID = #{sysId} 
+		   AND MENU_TY = #{menuTy}
+	</select>
+
+	<!-- 위젯 사용중인 일정메뉴 조회 scMenuInfo -->        
+	<select id="selectSchdulWidgMenu" parameterType="map" resultType="egovMap">
+		SELECT A.WIDG_SN,
+			   A.WIDG_DATA_ID AS MENU_ID,
+			   A.WIDG_DATA_SJ,
+			   A.WIDG_DATA_URL_TRGT
+		  FROM TAP_WM_WIDGET_DATA A
+		 WHERE A.WIDG_SN IN (
+	 						 SELECT B.WIDG_SN 
+	 						   FROM TAP_WM_WIDGET_MANAGE B
+	 						  WHERE B.SYS_ID = #{sysId} 
+	 						    AND B.WIDG_TY = #{menuTy}
+							)
+	</select>
+</mapper>

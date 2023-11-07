@@ -1,0 +1,201 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="de_deploy">
+
+	<!-- 배포 시퀀스 획득 -->
+	<select id="selectDeploySn" resultType="string">
+        SELECT SEQ_DEPLOY_SN.NEXTVAL
+        FROM DUAL
+    </select>
+    
+    <!-- 배포 리스트 sql -->
+	<sql id="selectDeployList" >
+    	SELECT
+	    	 DEPLOY_SN
+	        ,DEPLOY_VER
+	        ,CREAT_ID
+	        ,CREAT_NM
+	        ,TO_CHAR(CREAT_DT, 'yyyy/mm/dd') AS CREAT_DT 
+	    FROM
+	    	TAD_DE_DEPLOY_MANAGE
+	    ORDER BY
+	    	DEPLOY_VER DESC
+	</sql>
+	
+	<!-- 배포 리스트 조회 -->
+    <select id="selectDeployList" parameterType="map" resultType="egovMap">
+	    <include refid="selectDeployList" />
+    </select>
+    
+	<!-- 배포 리스트 조회(페이징) -->
+    <select id="selectDeployListPaging" parameterType="map" resultType="egovMap">
+    	SELECT
+    		PL.*
+    	FROM (
+        	SELECT 
+        		PO.*
+        		,rownum as rsn
+			FROM (
+	    		<include refid="selectDeployList" /> 
+				) PO
+		) PL
+		WHERE
+		<![CDATA[
+			rsn <= #{maxSn} 
+			AND rsn > #{minSn}
+		]]>
+    </select>
+    
+    <!-- 배포 리스트 조회(페이징 전체 카운트) -->
+    <select id="selectDeployListPagingCount" parameterType="map" resultType="int">
+    	SELECT
+	    	COUNT(*)
+	    FROM
+	    	(  <include refid="selectDeployList" /> ) A
+    </select>
+    
+     <!-- 배포 파일 리스트  -->
+	<select id="selectDeployFileList" parameterType="map" resultType="egovMap">
+    	SELECT
+	         FILE_SN
+	        ,FLPTH
+			,FILE_TY
+			,FILE_NM
+	    FROM
+	    	TAD_DE_DEPLOY_FILE
+	    WHERE
+			DEPLOY_SN = #{deploySn}	    	
+	    ORDER BY
+	    	FILE_SN
+	</select>
+	
+     <!-- 배포 파일 조회  -->
+	<select id="selectDeployFileInfo" parameterType="map" resultType="egovMap">
+    	SELECT
+	         FILE_SN
+	        ,FLPTH
+			,FILE_TY
+			,FILE_NM
+	    FROM
+	    	TAD_DE_DEPLOY_FILE
+	    WHERE
+			FILE_SN = #{fileSn}	    	
+	    ORDER BY
+	    	FILE_SN
+	</select>
+    
+    <!-- 배포 관리 조회  -->
+	<select id="selectDeployInfo" parameterType="map" resultType="egovMap">
+    	SELECT
+	    	 DEPLOY_SN
+	        ,DEPLOY_VER
+	        ,CREAT_ID
+	        ,CREAT_NM
+	        ,CREAT_DT 
+	    FROM
+	    	TAD_DE_DEPLOY_MANAGE 
+	    WHERE
+		   DEPLOY_SN = #{deploySn}
+	    ORDER BY
+	       DEPLOY_VER DESC
+	</select>
+	
+    
+    <!-- 배포 관리 등록 -->
+     <insert id="insertDeployInfo" parameterType="map">
+          INSERT INTO TAD_DE_DEPLOY_MANAGE (
+          	 DEPLOY_SN
+			,DEPLOY_VER
+			,CREAT_ID
+			,CREAT_NM
+			,CREAT_IP
+			,CREAT_DT 
+           
+        ) VALUES (
+        	 #{deploySn}
+			,#{deployVer}
+			,#{creatId}
+			,#{creatNm}
+			,#{creatIp}
+			,sysdate 
+        )
+     </insert>
+     
+    <!-- 배포 이력 관리 등록 -->
+     <insert id="insertDeployHist" parameterType="map">
+          INSERT INTO TAD_DE_DEPLOY_HIST (
+          	 DEPLOY_SN
+          	,DEPLOY_VER
+			,HIST_SN
+			,HIST_USER_ID
+			,HIST_USER_NM
+			,HIST_USER_IP
+			,HIST_DATE
+			,HIST_TY
+           
+        ) VALUES (
+        	 #{deploySn}
+			,#{deployVer}
+			,SEQ_HIST_SEQ.NEXTVAL
+			,#{histUserId}
+			,#{histUserNm}
+			,#{histUserIp}
+			,sysdate
+			,#{histTy}
+        )
+     </insert>
+     
+     <!-- 배포 파일 관리 등록 -->
+     <insert id="insertDeployFile" parameterType="map">
+          INSERT INTO TAD_DE_DEPLOY_FILE (
+          	  DEPLOY_SN 
+			 ,FILE_SN
+			 ,FILE_TY
+			 ,FILE_NM
+			 ,FILE_SIZE
+			 ,FLPTH
+			 ,CREAT_ID
+			 ,CREAT_NM
+			 ,CREAT_IP
+			 ,CREAT_DT
+            
+        ) VALUES (
+        	 #{deploySn}
+			 ,SEQ_DEPLOY_FILE_SN.NEXTVAL
+			 ,#{fileTy}
+			 ,#{fileNm}
+			 ,#{fileSize}
+			 ,#{flpth}
+			 ,#{creatId}
+			 ,#{creatNm}
+			 ,#{creatIp}
+			 ,sysdate 
+        )
+     </insert>
+     
+	<!--배포 버전 수정 -->
+     <update id="updateDeployVer" parameterType ="map">
+		UPDATE TAD_DE_DEPLOY_MANAGE
+		   SET DEPLOY_VER = #{deployVer}
+		 WHERE DEPLOY_SN = #{deploySn} 
+	</update>	
+	
+	<!--배포 관리 삭제 -->
+	<delete id="deleteDeployInfo" parameterType ="map">
+		DELETE FROM TAD_DE_DEPLOY_MANAGE 
+		WHERE DEPLOY_SN = #{deploySn} 
+	</delete>
+	
+	<!--배포 파일 삭제 -->
+	<delete id="deleteDeployFile" parameterType ="map">
+		DELETE FROM TAD_DE_DEPLOY_FILE  
+		 <if test='@egovframework.MybatisUtils@isNotEmpty(fileDel)'> 
+			WHERE FILE_SN = #{fileSn}
+		 </if>
+		 <if test='@egovframework.MybatisUtils@isNotEmpty(deployDel)'>
+		 	WHERE DEPLOY_SN = #{deploySn}
+		 </if> 
+	</delete>
+    
+</mapper>

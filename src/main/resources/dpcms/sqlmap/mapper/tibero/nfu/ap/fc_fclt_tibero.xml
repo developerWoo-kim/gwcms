@@ -1,0 +1,2198 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+ 
+<mapper namespace="fc_fclt">
+
+	<resultMap id="clobMap" type="egovMap">
+        <result property="FCLT_ETC_MTTR1" column="FCLT_ETC_MTTR1" jdbcType="CLOB" javaType="java.lang.String"/>
+        <result property="FCLT_ETC_MTTR2" column="FCLT_ETC_MTTR2" jdbcType="CLOB" javaType="java.lang.String"/>
+        <result property="FCLT_ETC_MTTR3" column="FCLT_ETC_MTTR3" jdbcType="CLOB" javaType="java.lang.String"/>
+        <result property="USE_PRPS" column="USE_PRPS" jdbcType="CLOB" javaType="java.lang.String"/>
+    </resultMap>
+    
+   	<!-- 예약 순번 시퀀스 호출-->
+	<select id="selectFcltRsvtSn" resultType="Integer">
+        SELECT SEQ_FCLT_RSVT_SN.NEXTVAL
+        FROM DUAL
+    </select>
+    
+    <!-- 학교 목록 조회 Sql -->
+    <sql id="selectSchlListSql">
+	    SELECT
+			SM.SYS_ID 
+			,SM.SYS_NM
+			,HM.HI_HMPGINFO_ADRES 
+			,HM.HI_HMPGINFO_TELNO 
+			,'https://'||SD.SYS_DOMN AS URL
+			,FCLT.SJ_ADMDST_CD
+			,FCLT.FCLT_NM_LIST
+			,FCLT.FCLT_TY_LIST
+			,FCLT.FILE_STRE_COURS
+		FROM
+			TAP_HI_HMPGINFO_MANAGE HM
+			,TAP_SM_SYS_MANAGE SM
+			,TAP_SM_SYS_DOMN SD
+			,(
+				<!-- 개방된 시설정보 조회 -->
+				SELECT
+					FM.SYS_ID
+					,LISTAGG(FM.FCLT_TY, ';') WITHIN GROUP(ORDER BY FM.FCLT_NM) AS FCLT_TY_LIST
+					,LISTAGG(FM.FCLT_NM, ', ') WITHIN GROUP(ORDER BY FM.FCLT_NM) AS FCLT_NM_LIST
+					,FD.FILE_STRE_COURS
+					,FB.SJ_ADMDST_CD
+				FROM 
+					TAP_FC_FCLT_MNG FM
+					,TAP_FC_FCLT_BSC FB
+					,TSA_ATCH_FILE_DETAIL FD
+				WHERE
+					FM.SYS_ID = FB.SYS_ID(+)
+				AND 
+					FB.SCHL_FILE_ID = FD.FILE_ID(+)
+				AND
+					FM.USE_AT = 'Y'
+				GROUP BY
+					FM.SYS_ID, FD.FILE_STRE_COURS, FB.SJ_ADMDST_CD
+			) FCLT
+		WHERE
+			HM.SYS_ID = SM.SYS_ID
+		AND 
+			HM.SYS_ID = SD.SYS_ID
+		AND
+			HM.SYS_ID = FCLT.SYS_ID(+)
+		AND 
+			SD.USE_AT = 'F'
+		<if test="@egovframework.MybatisUtils@isNotEmpty(searchTab)">
+			AND SM.SYS_ID LIKE '%'||#{searchTab}||'%'
+		</if>
+		<if test="@egovframework.MybatisUtils@isNotEmpty(searchText)">
+			AND SM.SYS_NM LIKE '%'||#{searchText}||'%'
+		</if>
+		ORDER BY
+			SM.SYS_NM
+    </sql>
+    
+    <!-- 학교 목록 조회 -->
+    <select id="selectSchlList">
+    	<include refid="selectSchlListSql"/>
+    </select>
+    
+    <!-- 학교 목록 조회(페이징) -->
+    <select id="selectSchlListPaging" parameterType="map" resultType="egovMap">
+    	SELECT
+    		PL.*
+    	FROM (
+        	SELECT 
+        		PO.*
+        		,ROWNUM AS RSN
+			FROM (
+	    		<include refid="selectSchlListSql" />
+				) PO
+		) PL
+		WHERE
+		<![CDATA[
+			rsn <= #{maxSn} 
+			AND rsn > #{minSn}
+		]]>
+    </select>
+    
+    <!-- 학교 목록 조회(페이징 전체 카운트) -->
+    <select id="selectSchlListPagingCount" parameterType="map" resultType="int">
+    	SELECT
+	    	COUNT(*)
+	    FROM
+	    	(<include refid="selectSchlListSql" />)
+	</select>
+    
+    <!-- 학교시설 목록 조회 Sql -->
+    <sql id="selectSchlFcltListSql">
+	    SELECT 
+			SM.SYS_ID 
+			,SM.SYS_NM
+			,HM.HI_HMPGINFO_ADRES 
+			,HM.HI_HMPGINFO_TELNO 
+			,FCLT.SJ_ADMDST_CD
+			,FCLT.FCLT_NM_LIST
+			,FCLT.FCLT_TY_LIST
+		FROM
+			TAP_SM_SYS_MANAGE SM
+			,TAP_HI_HMPGINFO_MANAGE HM
+			,TAP_SM_SYS_DOMN SD 
+			,(
+				<!-- 개방된 시설정보 조회 -->
+				SELECT
+					SUB.SYS_ID
+					,LISTAGG(SUB.FCLT_TY, ';') WITHIN GROUP(ORDER BY SUB.FCLT_NM) AS FCLT_TY_LIST
+					,LISTAGG(SUB.FCLT_NM, ', ') WITHIN GROUP(ORDER BY SUB.FCLT_NM) AS FCLT_NM_LIST
+					,FB.SJ_ADMDST_CD
+				FROM (
+						SELECT DISTINCT
+							FM.SYS_ID
+							,FM.FCLT_TY
+							,FM.FCLT_NM
+						FROM
+							TAP_FC_FCLT_MNG FM
+							,TAP_FC_FCLT_OPNDT FO
+						WHERE
+							FM.FCLT_SN = FO.FCLT_SN 
+						AND 
+							FM.USE_AT = 'Y'
+						AND
+							FM.FCLT_OPN_YN = 'Y'
+						AND
+							FO.USE_AT = 'Y'
+						<if test="@egovframework.MybatisUtils@isNotEmpty(searchFclt)">
+							AND FM.FCLT_TY  = #{searchFclt}
+						</if>
+						<if test="@egovframework.MybatisUtils@isNotEmpty(searchFromDt) and @egovframework.MybatisUtils@isNotEmpty(searchToDt)">
+							<![CDATA[
+							AND FO.FCLT_OPN_BGNG_DT <= #{searchToDt}
+							AND FO.FCLT_OPN_END_DT >= #{searchFromDt}
+							]]>
+						</if>
+						<if test="@egovframework.MybatisUtils@isNotEmpty(searchFromTm) and @egovframework.MybatisUtils@isNotEmpty(searchToTm)">
+							<![CDATA[
+							AND FO.FCLT_OPN_BGNG_TM < #{searchToTm}
+							AND FO.FCLT_OPN_END_TM > #{searchFromTm}
+							]]>
+						</if>
+					) SUB
+					,TAP_FC_FCLT_BSC FB
+				WHERE
+					SUB.SYS_ID = FB.SYS_ID(+)
+				<if test="@egovframework.MybatisUtils@isNotEmpty(searchAdmdst)">
+					AND FB.SJ_ADMDST_CD = #{searchAdmdst}
+				</if>
+				GROUP BY 
+					SUB.SYS_ID, FB.SJ_ADMDST_CD
+			) FCLT
+		WHERE
+			SM.SYS_ID = HM.SYS_ID
+		AND
+			SM.SYS_ID = SD.SYS_ID 
+		AND 
+			SM.SYS_ID = FCLT.SYS_ID
+		AND
+			SD.USE_AT = 'F'
+		<if test="@egovframework.MybatisUtils@isNotEmpty(searchText)">
+			AND SM.SYS_NM LIKE '%'||#{searchText}||'%'
+		</if>
+		ORDER BY
+			SM.SYS_NM
+    </sql>
+    
+    <!-- 학교시설 목록 조회 -->
+    <select id="selectSchlFcltList">
+    	<include refid="selectSchlFcltListSql"/>
+    </select>
+    
+    <!-- 학교시설 목록 조회(페이징) -->
+    <select id="selectSchlFcltListPaging" parameterType="map" resultType="egovMap">
+    	SELECT
+    		PL.*
+    	FROM (
+        	SELECT 
+        		PO.*
+        		,ROWNUM AS RSN
+			FROM (
+	    		<include refid="selectSchlFcltListSql" />
+				) PO
+		) PL
+		WHERE
+		<![CDATA[
+			rsn <= #{maxSn} 
+			AND rsn > #{minSn}
+		]]>
+    </select>
+    
+    <!-- 학교시설 목록 조회(페이징 전체 카운트) -->
+    <select id="selectSchlFcltListPagingCount" parameterType="map" resultType="int">
+    	SELECT
+	    	COUNT(*)
+	    FROM
+	    	(<include refid="selectSchlFcltListSql" />)
+	</select>
+    
+   	<!-- 시설 시스템 목록 조회 Sql -->
+	<sql id="selectFcltSmListSql">
+		SELECT  
+			SUB.FCLT_CNT
+			,IT.INSTT_CODE
+			,IT.INSTT_NM
+			,IT.INSTT_TY
+			,IT.INSTT_GRAD
+			,IT.INSTT_LEVEL
+			,IT.UPPER_INSTT_CODE
+			,IT.UPPER_INSTT_NM
+			,IT.BSIS_INSTT_CODE
+			,IT.BSIS_INSTT_NM
+			,SUB.SYS_ID
+			,SUB.SYS_NM
+			,SUB.SYS_TY
+			,SUB.SYS_STTUS
+			,SUB.TMPLAT_ID
+			,SUB.TMPLAT_TY
+			,SUB.INTRO_AT
+			,SUB.SYS_PRPOS
+			,SUB.REG_ID
+			,SUB.REG_NM
+			,SUB.REG_IP
+			,SUB.REG_DT
+			,SUB.ESTBLDE
+			,TO_CHAR(SUB.UPDT_DE,'YYYY-MM-DD') AS UPDT_DE
+		FROM 
+			TAP_IM_INSTT_MANAGE IT
+		JOIN 
+		(
+			<!-- 시설 수 조회 -->
+				SELECT 
+					NVL(FM.FCLT_CNT, 0) AS FCLT_CNT
+					,SM.*
+				FROM 
+					TAP_SM_SYS_MANAGE SM
+				LEFT OUTER JOIN 
+				(
+						SELECT
+							SYS_ID
+							,COUNT(*) AS FCLT_CNT
+						FROM 
+							TAP_FC_FCLT_MNG
+						WHERE
+							USE_AT = 'Y'
+						GROUP BY 
+							SYS_ID
+				) FM
+				ON 
+					SM.SYS_ID = FM.SYS_ID 
+		) SUB
+		ON
+			IT.INSTT_CODE = SUB.INSTT_CODE
+		WHERE 1=1
+		<if test='@egovframework.MybatisUtils@isEmpty(authTy) || authTy != "master"'>
+			AND SUB.INSTT_CODE = #{insttCode}
+		</if>
+		<if test="@egovframework.MybatisUtils@isNotEmpty(searchText)">
+			AND SUB.SYS_NM LIKE '%'||#{searchText}||'%'
+		</if>
+		ORDER BY
+			IT.INSTT_CODE
+	</sql>
+	
+	<!-- 시설 시스템 목록 조회 -->
+	<select id="selectFcltSmList" parameterType="map" resultType="egovMap">
+		<include refid="selectFcltSmListSql" />
+	</select>
+	
+    <!-- 시설 시스템 목록 조회(페이징) -->
+    <select id="selectFcltSmListPaging" parameterType="map" resultType="egovMap">
+    	SELECT
+    		PL.*
+    	FROM (
+        	SELECT 
+        		PO.*
+        		,ROWNUM AS RSN
+			FROM (
+	    		<include refid="selectFcltSmListSql" />
+				) PO
+		) PL
+		WHERE
+		<![CDATA[
+			rsn <= #{maxSn} 
+			AND rsn > #{minSn}
+		]]>
+    </select>
+    
+    <!-- 시설 시스템 목록 조회(페이징 전체 카운트) -->
+    <select id="selectFcltSmListPagingCount" parameterType="map" resultType="int">
+    	SELECT
+	    	COUNT(*)
+	    FROM
+	    	(<include refid="selectFcltSmListSql" />)
+	</select>
+    
+    <!-- 시설 목록 조회 sql -->
+    <sql id="selectFcltListSql">
+		SELECT
+			FM.FCLT_SN
+			,FM.SYS_ID
+			,FM.FCLT_TY
+			,FM.FCLT_NM
+			,FM.FCLT_PSTN
+			,FM.FCLT_USE_PSBLTY_NOPE
+			,FM.FCLT_FCAR
+			,FM.FCLT_OPN_YN
+			,FM.FCLT_FILE_ID
+			,FM.FCLT_ETC_MTTR1
+			,FM.FCLT_ETC_MTTR2
+			,FM.FCLT_ETC_MTTR3
+			,FM.FCLT_INST_DT
+			,FD.FILE_SN
+		FROM
+			TAP_FC_FCLT_MNG FM
+			,TSA_ATCH_FILE_DETAIL FD
+		WHERE
+			FM.FCLT_FILE_ID = FD.FILE_ID(+)
+		AND
+			FM.USE_AT = 'Y'
+		<if test="@egovframework.MybatisUtils@isNotEmpty(sysId)">
+			AND FM.SYS_ID = #{sysId}  
+		</if>
+		<if test="@egovframework.MybatisUtils@isNotEmpty(ctx)">
+		
+			<if test='ctx != "apple"'>
+				AND FM.FCLT_OPN_YN = 'Y'
+				
+				<![CDATA[
+				AND (
+						SELECT 
+							COUNT(*)
+						FROM 
+							TAP_FC_FCLT_OPNDT
+						WHERE
+							FCLT_SN = FM.FCLT_SN 
+						AND 
+							USE_AT = 'Y'
+				) > 0
+				]]>
+			</if>
+			
+		</if>
+		<if test="@egovframework.MybatisUtils@isNotEmpty(searchText)">
+			AND FM.FCLT_NM LIKE '%'||#{searchText}||'%'
+		</if>
+		<if test="@egovframework.MybatisUtils@isNotEmpty(searchFclt)">
+			AND FM.FCLT_TY = #{searchFclt}
+		</if>
+		ORDER BY 
+			FM.FCLT_SN DESC
+    </sql>
+    
+	<!-- 시설 목록 조회 -->
+	<select id="selectFcltList" parameterType="map" resultMap="clobMap">
+		<include refid="selectFcltListSql" />
+	</select>
+	
+    <!-- 시설 목록 조회(페이징) -->
+    <select id="selectFcltListPaging" parameterType="map" resultMap="clobMap">
+    	SELECT
+    		PL.*
+    	FROM (
+        	SELECT 
+        		PO.*
+        		,ROWNUM AS RSN
+			FROM (
+	    		<include refid="selectFcltListSql" />
+				) PO
+		) PL
+		WHERE
+		<![CDATA[
+			rsn <= #{maxSn} 
+			AND rsn > #{minSn}
+		]]>
+    </select>
+    
+    <!-- 시설 목록 조회(페이징 전체 카운트) -->
+    <select id="selectFcltListPagingCount" parameterType="map" resultType="int">
+    	SELECT
+	    	COUNT(*)
+	    FROM
+	    	(<include refid="selectFcltListSql" />)
+	</select>
+	
+	<!-- 시설 정보 조회 -->
+	<select id="selectFcltInfo" parameterType="map" resultMap="clobMap">
+		SELECT
+			FM.FCLT_SN
+			,FM.SYS_ID
+			,FM.FCLT_TY
+			,FB.SJ_ADMDST_CD
+			,FM.FCLT_NM
+			,FM.FCLT_PSTN
+			,FM.FCLT_USE_PSBLTY_NOPE
+			,FM.FCLT_FCAR
+			,FM.FCLT_OPN_YN
+			,FM.FCLT_FILE_ID
+			,FM.FCLT_ETC_MTTR1
+			,FM.FCLT_ETC_MTTR2
+			,FM.FCLT_ETC_MTTR3
+			,FM.FCLT_INST_DT
+			,FB.FCLT_PIC_TELNO
+			,FB.SMS_RCPTN_NO
+			,FB.SMS_RCPTN_YN
+			,FD.FILE_SN
+			,FD.ORIGNL_FILE_NM
+			,FD.FILE_STRE_COURS
+		FROM 
+			TAP_FC_FCLT_MNG FM
+			,TAP_FC_FCLT_BSC FB
+			,TSA_ATCH_FILE_DETAIL FD
+		WHERE
+			FM.SYS_ID = FB.SYS_ID(+)
+		AND
+			FM.FCLT_FILE_ID = FD.FILE_ID(+)
+		AND
+			FM.USE_AT = 'Y'
+		AND
+			FM.FCLT_SN = #{fcltSn}
+	</select>
+	
+	<!-- 시설 정보 등록 -->
+	<insert id="insertFcltInfo" parameterType="map">
+		INSERT INTO
+		TAP_FC_FCLT_MNG
+		(
+			FCLT_SN
+			,SYS_ID
+			,FCLT_TY
+			,FCLT_NM
+			,FCLT_PSTN
+			,FCLT_USE_PSBLTY_NOPE
+			,FCLT_FCAR
+			,FCLT_OPN_YN
+			,FCLT_FILE_ID
+			,FCLT_ETC_MTTR1
+			,FCLT_ETC_MTTR2
+			,FCLT_ETC_MTTR3
+			,USE_AT
+			,FCLT_INST_DT
+		)
+		VALUES
+		(
+			SEQ_FCLT_SN.NEXTVAL
+			,#{sysId}
+			,#{fcltTy}
+			,#{fcltNm}
+			,#{fcltPstn}
+			,#{fcltUsePsbltyNope}
+			,#{fcltFcar}
+			,#{fcltOpnYn}
+			,#{fileGrpKey}
+			,#{fcltEtcMttr1}
+			,#{fcltEtcMttr2}
+			,#{fcltEtcMttr3}
+			,'Y'
+			,SYSDATE
+		)
+	</insert>
+	
+	<!-- 시설 정보 수정 -->
+	<update id="updateFcltInfoBySeq" parameterType="map">
+		UPDATE
+			TAP_FC_FCLT_MNG
+		SET
+			FCLT_TY = #{fcltTy}
+			,FCLT_NM = #{fcltNm}
+			,FCLT_PSTN = #{fcltPstn}
+			,FCLT_USE_PSBLTY_NOPE = #{fcltUsePsbltyNope}
+			,FCLT_FCAR = #{fcltFcar}
+			,FCLT_OPN_YN = #{fcltOpnYn}
+			,FCLT_FILE_ID = #{fileGrpKey}
+			,FCLT_ETC_MTTR1 = #{fcltEtcMttr1}
+			,FCLT_ETC_MTTR2 = #{fcltEtcMttr2}
+			,FCLT_ETC_MTTR3 = #{fcltEtcMttr3}
+		WHERE
+			FCLT_SN = #{fcltSn}
+	</update>
+	
+	<!-- 시설 정보 삭제 -->
+	<update id="deleteFcltInfoBySeq" parameterType="map">
+		UPDATE
+			TAP_FC_FCLT_MNG
+		SET
+			USE_AT = 'N'
+		WHERE 
+			FCLT_SN = #{fcltSn}
+	</update>
+	
+	<!-- 시설 휴관일 목록 조회 Sql -->
+	<sql id="selectFcltHldyListSql">
+		SELECT
+			FCLT_HLDY_SN
+			,FCLT_HLDY_TTL
+			,TO_CHAR(FCLT_HLDY_BGNG_DT, 'YYYY-MM-DD') AS FCLT_HLDY_BGNG_DT
+			,TO_CHAR(FCLT_HLDY_END_DT, 'YYYY-MM-DD') AS FCLT_HLDY_END_DT
+		FROM
+			TAP_FC_FCLT_HLDY
+		WHERE
+			USE_AT = 'Y'
+		AND
+			FCLT_SN = #{fcltSn}
+		<if test="searchFromDt != null and searchToDt != null">
+			<![CDATA[
+			AND FCLT_HLDY_BGNG_DT <= #{searchToDt} AND FCLT_HLDY_END_DT >= #{searchFromDt}
+			]]>
+		</if>
+	</sql>
+	
+	<!-- 시설 휴관일 목록 조회 -->
+	<select id="selectFcltHldyList" parameterType="map" resultType="egovMap">
+		<include refid="selectFcltHldyListSql" />
+	</select>
+	
+    <!-- 시설 휴관일 목록 조회(페이징) -->
+    <select id="selectFcltHldyListPaging" parameterType="map" resultMap="clobMap">
+    	SELECT
+    		PL.*
+    	FROM (
+        	SELECT 
+        		PO.*
+        		,ROWNUM AS RSN
+			FROM (
+	    		<include refid="selectFcltHldyListSql" />
+				) PO
+		) PL
+		WHERE
+		<![CDATA[
+			rsn <= #{maxSn} 
+			AND rsn > #{minSn}
+		]]>
+    </select>
+    
+    <!-- 시설 휴관일 조회(페이징 전체 카운트) -->
+    <select id="selectFcltHldyListPagingCount" parameterType="map" resultType="int">
+    	SELECT
+	    	COUNT(*)
+	    FROM
+	    	(<include refid="selectFcltHldyListSql" />)
+	</select>
+	
+	<!-- 시설 휴관일 정보 조회 -->
+	<select id="selectFcltHldyInfo" parameterType="map" resultType="egovMap">
+		SELECT
+			FCLT_HLDY_SN
+			,FCLT_SN
+			,FCLT_HLDY_TTL
+			,TO_CHAR(FCLT_HLDY_BGNG_DT, 'YYYY-MM-DD') AS FCLT_HLDY_BGNG_DT
+			,TO_CHAR(FCLT_HLDY_END_DT, 'YYYY-MM-DD') AS FCLT_HLDY_END_DT
+		FROM
+			TAP_FC_FCLT_HLDY
+		WHERE
+			USE_AT = 'Y'
+		<if test="@egovframework.MybatisUtils@isNotEmpty(fcltSn)">
+			AND FCLT_SN = #{fcltSn}
+		</if>
+		<if test="@egovframework.MybatisUtils@isNotEmpty(fcltHldySn)">
+			AND FCLT_HLDY_SN = #{fcltHldySn}
+		</if>
+		<if test="@egovframework.MybatisUtils@isNotEmpty(searchDate)">
+			AND 
+				#{searchDate} between FCLT_HLDY_BGNG_DT and FCLT_HLDY_END_DT
+			<![CDATA[
+	 		AND
+	 			#{searchDate} >= TO_CHAR(SYSDATE, 'YYYYMMDD')
+	 		]]>
+		</if>
+	</select>
+	
+	<!-- 시설 휴관일 등록 -->
+	<insert id="insertFcltHldyInfo" parameterType="map">
+		INSERT INTO
+		TAP_FC_FCLT_HLDY
+		(
+			FCLT_HLDY_SN
+			,FCLT_SN
+			,FCLT_HLDY_TTL
+			,FCLT_HLDY_BGNG_DT
+			,FCLT_HLDY_END_DT
+			,USE_AT
+		)
+		VALUES
+		(
+			SEQ_FCLT_HLDY_SN.NEXTVAL
+			,#{fcltSn}
+			,#{fcltHldyTtl}
+			,#{fcltHldyBgngDt}
+			,#{fcltHldyEndDt}
+			,'Y'
+		)
+	</insert>
+	
+	<!-- 시설 휴관일 수정 -->
+	<update id="updateFcltHldyInfoBySeq" parameterType="map">
+		UPDATE
+			TAP_FC_FCLT_HLDY
+		SET
+			FCLT_HLDY_TTL = #{fcltHldyTtl}
+			,FCLT_HLDY_BGNG_DT = #{fcltHldyBgngDt}
+			,FCLT_HLDY_END_DT = #{fcltHldyEndDt}
+		WHERE
+			FCLT_HLDY_SN = #{fcltHldySn}
+	</update>
+	
+	<!-- 시설 휴관일 삭제 -->
+	<update id="deleteFcltHldyInfoBySeq" parameterType="map">
+		UPDATE
+			TAP_FC_FCLT_HLDY
+		SET
+			USE_AT = 'N'
+		WHERE
+			FCLT_HLDY_SN = #{fcltHldySn}
+	</update>
+	
+	<!-- 시설 예약현황 시스템 조회 Sql -->
+	<sql id="selectFcltRsvtSmListSql">
+		SELECT
+			MAIN.*
+			,NVL(SUB.WA_CNT, 0) AS WA_CNT
+			,NVL(SUB.DC_CNT, 0) AS DC_CNT
+			,NVL(SUB.AP_CNT, 0) AS AP_CNT
+			,NVL(SUB.RE_CNT, 0) AS RE_CNT
+			,NVL(SUB.CA_CNT, 0) AS CA_CNT
+		FROM (
+				SELECT
+					IM.INSTT_CODE
+					,IM.INSTT_NM
+					,IM.INSTT_TY
+					,IM.INSTT_GRAD
+					,IM.INSTT_LEVEL
+					,IM.UPPER_INSTT_CODE
+					,IM.UPPER_INSTT_NM
+					,IM.BSIS_INSTT_CODE
+					,IM.BSIS_INSTT_NM
+					,SM.SYS_ID
+					,SM.SYS_NM
+					,SM.SYS_TY
+					,SM.SYS_STTUS
+					,SM.TMPLAT_ID
+					,SM.TMPLAT_TY
+					,SM.INTRO_AT
+					,SM.SYS_PRPOS
+					,SM.REG_ID
+					,SM.REG_NM
+					,SM.REG_IP
+					,SM.REG_DT
+					,SM.ESTBLDE
+					,TO_CHAR(SM.UPDT_DE,'YYYY-MM-DD') AS UPDT_DE
+				FROM
+					TAP_IM_INSTT_MANAGE IM
+					,TAP_SM_SYS_MANAGE SM
+				WHERE
+					IM.INSTT_CODE = SM.INSTT_CODE(+)
+		) MAIN
+		,(
+				SELECT
+					FM.SYS_ID
+					,COUNT(CASE WHEN RSVT_APRV_STTS_CD = 'WA' THEN RSVT_APRV_STTS_CD END) AS WA_CNT
+					,COUNT(CASE WHEN RSVT_APRV_STTS_CD = 'DC' THEN RSVT_APRV_STTS_CD END) AS DC_CNT
+					,COUNT(CASE WHEN RSVT_APRV_STTS_CD = 'AP' THEN RSVT_APRV_STTS_CD END) AS AP_CNT
+					,COUNT(CASE WHEN RSVT_APRV_STTS_CD = 'RE' THEN RSVT_APRV_STTS_CD END) AS RE_CNT
+					,COUNT(CASE WHEN RSVT_APRV_STTS_CD = 'CA' THEN RSVT_APRV_STTS_CD END) AS CA_CNT
+				FROM 
+					TAP_FC_RSVT_MNG RM
+					,TAP_FC_FCLT_MNG FM
+				WHERE 
+					RM.FCLT_SN = FM.FCLT_SN(+)
+				AND
+					RM.USE_AT = 'Y'
+				GROUP BY
+					FM.SYS_ID
+		) SUB
+		, TAP_FC_FCLT_BSC FB
+		WHERE
+			MAIN.SYS_ID = SUB.SYS_ID(+)
+		AND
+			MAIN.SYS_ID = FB.SYS_ID(+)
+		AND
+			MAIN.SYS_ID IS NOT NULL
+		<if test="@egovframework.MybatisUtils@isNotEmpty(searchText)">
+			AND MAIN.SYS_NM LIKE '%'||#{searchText}||'%'
+		</if>
+		<if test="@egovframework.MybatisUtils@isNotEmpty(searchSchlTy)">
+			AND MAIN.SYS_ID LIKE '%'||#{searchSchlTy}||'%'
+		</if>
+		<if test="@egovframework.MybatisUtils@isNotEmpty(searchArea)">
+			AND FB.SJ_ADMDST_CD = #{searchArea}
+		</if>
+<!-- 		AND -->
+<!-- 			REPLACE(MAIN.INSTT_CODE, 'Z', '') >= '100000011' -->
+		ORDER BY 
+			MAIN.INSTT_CODE
+	</sql>
+	
+	<!-- 시설 예약현황 시스템 조회 -->
+	<select id="selectFcltRsvtSmList" parameterType="map" resultType="egovMap">
+		<include refid="selectFcltRsvtSmListSql" />
+	</select>
+	
+    <!-- 시설 예약현황 시스템 조회(페이징) -->
+    <select id="selectFcltRsvtSmListPaging" parameterType="map" resultType="egovMap">
+    	SELECT
+    		PL.*
+    	FROM (
+        	SELECT 
+        		PO.*
+        		,ROWNUM AS RSN
+			FROM (
+	    		<include refid="selectFcltRsvtSmListSql" />
+				) PO
+		) PL
+		WHERE
+		<![CDATA[
+			rsn <= #{maxSn} 
+			AND rsn > #{minSn}
+		]]>
+    </select>
+    
+    <!-- 시설 예약현황 시스템 조회(페이징 전체 카운트) -->
+    <select id="selectFcltRsvtSmListPagingCount" parameterType="map" resultType="int">
+    	SELECT
+	    	COUNT(*)
+	    FROM (<include refid="selectFcltRsvtSmListSql" />)
+	</select>
+	
+	<!-- 시설 예약현황 조회(장기예약자 한행으로 통합) sql -->
+    <sql id="selectFcltRsvtListOneRowSql">
+   		SELECT
+			RM.FCLT_RSVT_SN
+			,RM.FCLT_SN
+			,RT.RSVT_TM_SN_LIST
+			,SM.SYS_ID
+			,SM.SYS_NM
+			,FM.FCLT_NM
+			,RM.MBER_ID
+			,RM.RSVT_USER_NM
+			,RM.RSVT_USER_MBL_TELNO
+			,RM.RSVT_TY
+			,RM.PG_TY
+			,RM.RSVT_GRP_NM
+			,RM.LS_TY
+			,RM.USE_NOPE
+			,RM.USE_CNT
+			,TO_CHAR(RM.RSVT_BGNG_DT, 'YYYY-MM-DD') AS RSVT_BGNG_DT
+			,TO_CHAR(RM.RSVT_END_DT, 'YYYY-MM-DD') AS RSVT_END_DT
+			,RT.RSVT_BGNG_TM_LIST
+			,RT.RSVT_END_TM_LIST
+			,RT.RSVT_USE_DAY_LIST
+			,RM.USE_AMT
+			,RM.USE_PRPS
+			,RM.RSVT_APRV_STTS_CD
+		FROM
+			TAP_FC_RSVT_MNG RM
+			,TAP_FC_FCLT_MNG FM
+			,TAP_SM_SYS_MANAGE SM
+			,(
+					<!-- 장기 신청한 목록 통합 -->
+					SELECT
+						FCLT_RSVT_SN
+						,LISTAGG(RSVT_TM_SN, ';') WITHIN GROUP(ORDER BY FCLT_RSVT_SN DESC) AS RSVT_TM_SN_LIST
+						,LISTAGG(RSVT_BGNG_TM, ';') WITHIN GROUP(ORDER BY FCLT_RSVT_SN DESC) AS RSVT_BGNG_TM_LIST
+						,LISTAGG(RSVT_END_TM, ';') WITHIN GROUP(ORDER BY FCLT_RSVT_SN DESC) AS RSVT_END_TM_LIST
+						,LISTAGG(RSVT_USE_DAY, ';') WITHIN GROUP(ORDER BY FCLT_RSVT_SN DESC) AS RSVT_USE_DAY_LIST
+					FROM 
+						TAP_FC_RSVT_TM 
+					GROUP BY 
+						FCLT_RSVT_SN
+			) RT
+		WHERE
+			RM.USE_AT = 'Y'
+		AND
+			RM.FCLT_RSVT_SN = RT.FCLT_RSVT_SN(+)
+		AND
+			RM.FCLT_SN = FM.FCLT_SN(+)
+		AND
+			FM.SYS_ID = SM.SYS_ID(+)
+		<if test="@egovframework.MybatisUtils@isNotEmpty(sysId)">
+			AND FM.SYS_ID = #{sysId}
+		</if>
+		<if test="@egovframework.MybatisUtils@isNotEmpty(fcltSn)">
+			AND RM.FCLT_SN = #{fcltSn}
+		</if>
+		<if test="@egovframework.MybatisUtils@isNotEmpty(mberId)">
+			AND RM.MBER_ID = #{mberId}
+		</if>
+		<if test="@egovframework.MybatisUtils@isNotEmpty(searchText)">
+			AND (
+				FM.FCLT_NM LIKE '%'||#{searchText}||'%'
+				or RM.RSVT_USER_NM LIKE '%'||#{searchText}||'%'
+			)
+		</if>
+		<if test="@egovframework.MybatisUtils@isNotEmpty(searchSttsCd)">
+			AND RM.RSVT_APRV_STTS_CD = #{searchSttsCd}
+		</if>
+		<if test="@egovframework.MybatisUtils@isNotEmpty(searchFclt)">
+			AND FM.FCLT_TY = #{searchFclt}
+		</if>
+		<if test="@egovframework.MybatisUtils@isNotEmpty(searchFromDt) and @egovframework.MybatisUtils@isNotEmpty(searchToDt)">
+			AND
+				(RM.RSVT_BGNG_DT between #{searchFromDt} and #{searchToDt}
+					or RM.RSVT_END_DT between #{searchFromDt} and #{searchToDt})
+		</if>
+		<if test="@egovframework.MybatisUtils@isNotEmpty(searchDate)">
+			AND 
+				#{searchDate} between RM.RSVT_BGNG_DT and RM.RSVT_END_DT
+			AND
+				INSTR(RT.RSVT_USE_DAY_LIST, TO_CHAR(TO_DATE(#{searchDate}),'DY', 'NLS_DATE_LANGUAGE=AMERICAN'))) > 0
+		</if>
+		ORDER BY
+			RM.FCLT_RSVT_SN DESC
+    </sql>
+    
+	<!-- 시설 예약현황 조회(장기예약자 한행으로 통합) -->
+	<select id="selectFcltRsvtListOneRow" parameterType="map" resultMap="clobMap">
+		<include refid="selectFcltRsvtListOneRowSql" />
+	</select>
+	
+    <!-- 시설 예약현황 조회(장기예약자 한행으로 통합)(페이징) -->
+    <select id="selectFcltRsvtListOneRowPaging" parameterType="map" resultMap="clobMap">
+    	SELECT
+    		PL.*
+    	FROM (
+        	SELECT 
+        		PO.*
+        		,ROWNUM AS RSN
+			FROM (
+	    		<include refid="selectFcltRsvtListOneRowSql" />
+				) PO
+		) PL
+		WHERE
+		<![CDATA[
+			rsn <= #{maxSn} 
+			AND rsn > #{minSn}
+		]]>
+    </select>
+    
+    <!-- 시설 예약현황 조회(장기예약자 한행으로 통합)(페이징 전체 카운트) -->
+    <select id="selectFcltRsvtListOneRowPagingCount" parameterType="map" resultType="int">
+    	SELECT
+	    	COUNT(*)
+	    FROM (<include refid="selectFcltRsvtListOneRowSql" />)
+	</select>
+	
+	<!-- 시설 예약현황 상세정보 조회 -->
+	<select id="selectFcltRsvtInfo" parameterType="map" resultMap="clobMap">
+  		SELECT
+  			SM.SYS_ID
+			,SM.SYS_NM
+			,FM.FCLT_NM
+			,RM.FCLT_RSVT_SN
+			,RM.FCLT_SN
+			,RM.MBER_ID
+			,RM.RSVT_TY
+			,RM.USE_CNT
+			,RM.RSVT_USER_NM
+			,RM.RSVT_USER_MBL_TELNO
+			,RM.PG_TY
+			,RM.RSVT_GRP_NM
+			,RM.USE_NOPE
+			,TO_CHAR(RM.RSVT_BGNG_DT, 'YYYY-MM-DD') AS RSVT_BGNG_DT
+			,TO_CHAR(RM.RSVT_END_DT, 'YYYY-MM-DD') AS RSVT_END_DT
+			,RM.LS_TY
+			,RM.USE_AMT
+			,RM.USE_PRPS
+			,RM.RSVT_APRV_STTS_CD
+			,RM.USE_AT
+			,RM.INST_ID
+			,RM.INST_DT
+			,RM.UPDT_ID
+			,RM.UPDT_DT
+			,RT.RSVT_TM_SN_LIST
+			,RT.RSVT_BGNG_TM_LIST
+			,RT.RSVT_END_TM_LIST
+			,RT.RSVT_USE_DAY_LIST
+		FROM
+			TAP_FC_RSVT_MNG RM
+			,TAP_FC_FCLT_MNG FM
+			,TAP_SM_SYS_MANAGE SM
+			,(
+					<!-- 장기 신청한 목록 통합 -->	
+					SELECT
+						FCLT_RSVT_SN
+						,LISTAGG(RSVT_TM_SN, ';') WITHIN GROUP(ORDER BY FCLT_RSVT_SN DESC) AS RSVT_TM_SN_LIST
+						,LISTAGG(RSVT_BGNG_TM, ';') WITHIN GROUP(ORDER BY FCLT_RSVT_SN DESC) AS RSVT_BGNG_TM_LIST
+						,LISTAGG(RSVT_END_TM, ';') WITHIN GROUP(ORDER BY FCLT_RSVT_SN DESC) AS RSVT_END_TM_LIST
+						,LISTAGG(RSVT_USE_DAY, ';') WITHIN GROUP(ORDER BY FCLT_RSVT_SN DESC) AS RSVT_USE_DAY_LIST
+					FROM 
+						TAP_FC_RSVT_TM 
+					GROUP BY 
+						FCLT_RSVT_SN
+			) RT
+		WHERE
+			RM.USE_AT = 'Y'
+		AND
+			RM.FCLT_RSVT_SN = RT.FCLT_RSVT_SN(+)
+		AND
+			RM.FCLT_SN = FM.FCLT_SN(+)
+		AND
+			FM.SYS_ID = SM.SYS_ID(+)
+		AND
+			RM.FCLT_RSVT_SN = #{fcltRsvtSn}
+		ORDER BY
+			RM.INST_DT, RM.RSVT_BGNG_DT DESC
+	</select>
+	
+	<!-- 시설 예약현황 조회 sql -->
+    <sql id="selectFcltRsvtListSql">
+		SELECT
+			RM.FCLT_RSVT_SN
+			,RM.FCLT_SN
+			,RT.RSVT_TM_SN
+			,FM.SYS_ID
+			,FM.FCLT_NM
+			,RM.MBER_ID
+			,RM.RSVT_USER_NM
+			,RM.RSVT_USER_MBL_TELNO
+			,RM.RSVT_TY
+			,RM.PG_TY
+			,RM.RSVT_GRP_NM
+			,RM.USE_NOPE
+			,RM.USE_CNT
+			,TO_CHAR(RM.RSVT_BGNG_DT, 'YYYY-MM-DD') AS RSVT_BGNG_DT
+			,TO_CHAR(RM.RSVT_END_DT, 'YYYY-MM-DD') AS RSVT_END_DT
+			,RT.RSVT_BGNG_TM
+			,RT.RSVT_END_TM
+			,RT.RSVT_USE_DAY
+			,RM.USE_AMT
+			,RM.USE_PRPS
+			,RM.RSVT_APRV_STTS_CD
+		FROM
+			TAP_FC_RSVT_MNG RM
+			,TAP_FC_RSVT_TM RT
+			,TAP_FC_FCLT_MNG FM
+		WHERE
+			RM.USE_AT = 'Y'
+		AND
+			RM.FCLT_RSVT_SN = RT.FCLT_RSVT_SN(+)
+		AND
+			RM.FCLT_SN = FM.FCLT_SN(+)
+		<if test="@egovframework.MybatisUtils@isNotEmpty(sysId)">
+			AND FM.SYS_ID = #{sysId}
+
+			<if test='sysId != "apple"'>
+				AND RM.RSVT_APRV_STTS_CD NOT IN ('WA', 'CA')
+			</if>
+			
+		</if>
+		<if test="@egovframework.MybatisUtils@isNotEmpty(fcltSn)">
+			AND RM.FCLT_SN = #{fcltSn}
+		</if>
+		<if test="@egovframework.MybatisUtils@isNotEmpty(searchDate)">
+			AND 
+				#{searchDate} between RM.RSVT_BGNG_DT and RM.RSVT_END_DT
+			AND
+				RT.RSVT_USE_DAY = SUBSTR(UPPER(TO_CHAR(TO_DATE(#{searchDate}),'Day', 'NLS_DATE_LANGUAGE=AMERICAN')), 0, 3)
+		</if>
+		<if test="@egovframework.MybatisUtils@isNotEmpty(rsvtUseDay)">
+			<![CDATA[
+			AND INSTR(RT.RSVT_USE_DAY, #{rsvtUseDay}) > 0
+			]]>
+		</if>
+		ORDER BY
+			RM.INST_DT, RM.RSVT_BGNG_DT DESC
+    </sql>
+    
+	<!-- 시설 예약현황 조회(시간표) -->
+	<select id="selectFcltRsvtList" parameterType="map" resultMap="clobMap">
+		<include refid="selectFcltRsvtListSql" />
+	</select>
+	
+    <!-- 시설 예약현황 조회(시간표)(페이징) -->
+    <select id="selectFcltRsvtListPaging" parameterType="map" resultMap="clobMap">
+    	SELECT
+    		PL.*
+    	FROM (
+        	SELECT 
+        		PO.*
+        		,ROWNUM AS RSN
+			FROM (
+	    		<include refid="selectFcltRsvtListSql" />
+				) PO
+		) PL
+		WHERE
+		<![CDATA[
+			rsn <= #{maxSn} 
+			AND rsn > #{minSn}
+		]]>
+    </select>
+    
+    <!-- 시설 예약현황 조회(시간표)(페이징 전체 카운트) -->
+    <select id="selectFcltRsvtListPagingCount" parameterType="map" resultType="int">
+    	SELECT
+	    	COUNT(*)
+	    FROM (<include refid="selectFcltRsvtListSql" />)
+	</select>
+	
+	<!-- 시설 예약 통계 조회 Sql -->
+	<sql id="selectFcltRsvtStatsListSql">
+		SELECT
+			SM.SYS_NM 
+			,FM.FCLT_TY 
+			,FM.FCLT_OPN_YN
+			,RM.LS_TY
+			,RM.PG_TY
+			,RM.RSVT_GRP_NM
+			,TO_CHAR(RM.RSVT_BGNG_DT, 'YYYY-MM-DD') RSVT_BGNG_DT
+			,TO_CHAR(RM.RSVT_END_DT, 'YYYY-MM-DD') RSVT_END_DT
+			,RM.USE_AMT
+		FROM
+			TAP_FC_RSVT_MNG RM
+			,TAP_FC_FCLT_MNG FM
+			,TAP_SM_SYS_MANAGE SM
+		WHERE
+			RM.FCLT_SN = FM.FCLT_SN(+)
+		AND
+			FM.SYS_ID = SM.SYS_ID(+)
+		AND
+			RM.RSVT_APRV_STTS_CD = 'AP'
+		<if test="@egovframework.MybatisUtils@isNotEmpty(searchText)">
+			AND (
+				SM.SYS_NM LIKE '%'||#{searchText}||'%'
+				or RM.RSVT_GRP_NM LIKE '%'||#{searchText}||'%'
+				or RM.RSVT_USER_NM LIKE '%'||#{searchText}||'%'				
+			)
+		</if>
+		<if test="@egovframework.MybatisUtils@isNotEmpty(searchFromDt) || @egovframework.MybatisUtils@isNotEmpty(searchToDt)">
+			AND (
+				RM.RSVT_BGNG_DT between #{searchFromDt} and #{searchToDt}
+				or RM.RSVT_END_DT between #{searchFromDt} and #{searchToDt}
+			)
+		</if>
+	</sql>
+	
+    <!-- 시설 예약 통계 조회(페이징) -->
+    <select id="selectFcltRsvtStatsListPaging" parameterType="map" resultMap="clobMap">
+    	SELECT
+    		PL.*
+    	FROM (
+        	SELECT 
+        		PO.*
+        		,ROWNUM AS RSN
+			FROM (
+	    		<include refid="selectFcltRsvtStatsListSql" />
+				) PO
+		) PL
+		WHERE
+		<![CDATA[
+			rsn <= #{maxSn} 
+			AND rsn > #{minSn}
+		]]>
+    </select>
+    
+    <!-- 시설 예약 통계 조회(페이징 전체 카운트) -->
+    <select id="selectFcltRsvtStatsListPagingCount" parameterType="map" resultType="int">
+    	SELECT
+	    	COUNT(*)
+	    FROM (<include refid="selectFcltRsvtStatsListSql" />)
+	</select>
+	
+	<!-- 시설 예약 상태코드 변경 -->
+	<update id="updateFcltRsvtAprvSttsCd" parameterType="map">
+		UPDATE
+			TAP_FC_RSVT_MNG
+		SET
+			RSVT_APRV_STTS_CD = #{rsvtAprvSttsCd}
+		WHERE
+			FCLT_RSVT_SN = #{fcltRsvtSn}
+	</update>
+	
+	<!-- 시설 기본정보 시스템 목록 조회 Sql -->
+	<sql id="selectFcltBscSmListSql">
+		SELECT  
+			SUB.FCLT_BSC_SN
+			,IT.INSTT_CODE
+			,IT.INSTT_NM
+			,IT.INSTT_TY
+			,IT.INSTT_GRAD
+			,IT.INSTT_LEVEL
+			,IT.UPPER_INSTT_CODE
+			,IT.UPPER_INSTT_NM
+			,IT.BSIS_INSTT_CODE
+			,IT.BSIS_INSTT_NM
+			,SUB.SYS_ID
+			,SUB.SYS_NM
+			,SUB.SYS_TY
+			,SUB.SYS_STTUS
+			,SUB.TMPLAT_ID
+			,SUB.TMPLAT_TY
+			,SUB.INTRO_AT
+			,SUB.SYS_PRPOS
+			,SUB.REG_ID
+			,SUB.REG_NM
+			,SUB.REG_IP
+			,SUB.REG_DT
+			,SUB.ESTBLDE
+			,TO_CHAR(SUB.UPDT_DE,'YYYY-MM-DD') AS UPDT_DE
+		FROM 
+			TAP_IM_INSTT_MANAGE IT
+		JOIN 
+		( 
+				SELECT 
+					FB.FCLT_BSC_SN
+					,SM.*
+				FROM 
+					TAP_SM_SYS_MANAGE SM
+				LEFT OUTER JOIN 
+					TAP_FC_FCLT_BSC FB
+				ON 
+					SM.SYS_ID = FB.SYS_ID
+				AND
+					FB.USE_AT = 'Y'
+		) SUB
+		ON
+			IT.INSTT_CODE = SUB.INSTT_CODE
+		WHERE 1=1
+		<if test='@egovframework.MybatisUtils@isEmpty(authTy) || authTy != "master"'>
+			AND SUB.INSTT_CODE = #{insttCode}
+		</if>
+		<if test="@egovframework.MybatisUtils@isNotEmpty(searchText)">
+			AND SUB.SYS_NM LIKE '%'||#{searchText}||'%'
+		</if>
+		ORDER BY
+			IT.INSTT_CODE
+	</sql>
+	
+	<!-- 시설 기본정보 시스템 목록 조회 -->
+	<select id="selectFcltBscSmList" parameterType="map" resultType="egovMap">
+		<include refid="selectFcltBscSmListSql" />
+	</select>
+	
+    <!-- 시설 기본정보 시스템 목록 조회(페이징) -->
+    <select id="selectFcltBscSmListPaging" parameterType="map" resultType="egovMap">
+    	SELECT
+    		PL.*
+    	FROM (
+        	SELECT 
+        		PO.*
+        		,ROWNUM AS RSN
+			FROM (
+	    		<include refid="selectFcltBscSmListSql" />
+				) PO
+		) PL
+		WHERE
+		<![CDATA[
+			rsn <= #{maxSn} 
+			AND rsn > #{minSn}
+		]]>
+    </select>
+    
+    <!-- 시설 기본정보 시스템 목록 조회(페이징 전체 카운트) -->
+    <select id="selectFcltBscSmListPagingCount" parameterType="map" resultType="int">
+    	SELECT
+	    	COUNT(*)
+	    FROM
+	    	(<include refid="selectFcltBscSmListSql" />)
+	</select>
+	
+	<!-- 시설 기본정보 조회 -->
+	<select id="selectFcltBscInfoBySysId" parameterType="map" resultType="egovMap">
+		SELECT
+			FCLT_BSC_SN
+			,SYS_ID
+			,SJ_ADMDST_CD
+			,FCLT_PIC_NM
+			,FCLT_PIC_TELNO
+			,FCLT_PIC_EML_ADDR
+			,BANK_NM
+			,ACTNO
+			,DPSTR_NM
+			,SMS_RCPTN_YN
+			,SMS_RCPTN_NO
+			,SCHL_FILE_ID
+		FROM
+			TAP_FC_FCLT_BSC
+		WHERE
+			SYS_ID = #{sysId}
+	</select>
+	
+	<!-- 시설 기본정보 등록 -->
+	<update id="mergeFcltBscInfo" parameterType="map">
+		MERGE INTO TAP_FC_FCLT_BSC
+		USING DUAL
+		ON ( SYS_ID = #{sysId} )
+		WHEN MATCHED THEN
+			UPDATE SET
+				SJ_ADMDST_CD = #{sjAdmdstCd}
+				,FCLT_PIC_NM = #{fcltPicNm}
+				,FCLT_PIC_TELNO = #{fcltPicTelno}
+				,FCLT_PIC_EML_ADDR = #{fcltPicEmlAddr}
+				,BANK_NM = #{bankNm}
+				,ACTNO = #{actno}
+				,DPSTR_NM = #{dpstrNm}
+				,SMS_RCPTN_YN = #{smsRcptnYn}
+				,SMS_RCPTN_NO = #{smsRcptnNo}
+				,SCHL_FILE_ID = #{fileGrpKey}
+				
+		WHEN NOT MATCHED THEN
+			INSERT
+			(
+				FCLT_BSC_SN
+				,SYS_ID
+				,SJ_ADMDST_CD
+				,FCLT_PIC_NM
+				,FCLT_PIC_TELNO
+				,FCLT_PIC_EML_ADDR
+				,BANK_NM
+				,ACTNO
+				,DPSTR_NM
+				,SMS_RCPTN_YN
+				,SMS_RCPTN_NO
+				,SCHL_FILE_ID
+				,USE_AT
+			)
+			VALUES
+			(
+				SEQ_FCLT_BSC_SN.NEXTVAL
+				,#{sysId}
+				,#{sjAdmdstCd}
+				,#{fcltPicNm}
+				,#{fcltPicTelno}
+				,#{fcltPicEmlAddr}
+				,#{bankNm}
+				,#{actno}
+				,#{dpstrNm}
+				,#{smsRcptnYn}
+				,#{smsRcptnNo}
+				,#{fileGrpKey}
+				,'Y'
+			)
+	</update>
+	
+	<!-- 시설 개방기간 목록 조회 Sql -->
+	<sql id="selectFcltOpnDtListSql">
+		SELECT
+			FCLT_OPN_DT_SN
+			,FCLT_SN
+			,TO_CHAR(FCLT_OPN_BGNG_DT, 'YYYY-MM-DD') AS FCLT_OPN_BGNG_DT
+			,TO_CHAR(FCLT_OPN_END_DT, 'YYYY-MM-DD') AS FCLT_OPN_END_DT
+			,FCLT_OPN_BGNG_TM
+			,FCLT_OPN_END_TM
+			,FCLT_USE_PSBLTY_DAY
+			,USE_AT
+		FROM
+			TAP_FC_FCLT_OPNDT
+		WHERE
+			USE_AT = 'Y'
+		AND
+			FCLT_SN = #{fcltSn}
+		<if test="searchFromDt != null and searchToDt != null">
+			<![CDATA[
+			AND FCLT_OPN_BGNG_DT <= #{searchToDt} AND FCLT_OPN_END_DT >= #{searchFromDt}
+			]]>
+		</if>
+		ORDER BY
+			FCLT_OPN_BGNG_DT
+	</sql>
+	
+	<!-- 시설 개방기간 목록 조회 -->
+	<select id="selectFcltOpnDtList" parameterType="map" resultType="egovMap">
+		<include refid="selectFcltOpnDtListSql" />
+	</select>
+	
+    <!-- 시설 개방기간 목록 조회(페이징) -->
+    <select id="selectFcltOpnDtListPaging" parameterType="map" resultType="egovMap">
+    	SELECT
+    		PL.*
+    	FROM (
+        	SELECT 
+        		PO.*
+        		,ROWNUM AS RSN
+			FROM (
+	    		<include refid="selectFcltOpnDtListSql" />
+				) PO
+		) PL
+		WHERE
+		<![CDATA[
+			rsn <= #{maxSn} 
+			AND rsn > #{minSn}
+		]]>
+    </select>
+    
+    <!-- 시설 개방기간 조회(페이징 전체 카운트) -->
+    <select id="selectFcltOpnDtListPagingCount" parameterType="map" resultType="int">
+    	SELECT
+	    	COUNT(*)
+	    FROM
+	    	(<include refid="selectFcltOpnDtListSql" />)
+	</select>
+	
+	<!-- 시설 개방기간 정보 조회 -->
+	<select id="selectFcltOpnDtInfo" parameterType="map" resultType="egovMap">
+		SELECT
+			FCLT_OPN_DT_SN
+			,FCLT_SN
+			,TO_CHAR(FCLT_OPN_BGNG_DT, 'YYYY-MM-DD') AS FCLT_OPN_BGNG_DT
+			,TO_CHAR(FCLT_OPN_END_DT, 'YYYY-MM-DD') AS FCLT_OPN_END_DT
+			,FCLT_OPN_BGNG_TM
+			,FCLT_OPN_END_TM
+			,FCLT_USE_PSBLTY_DAY
+			,USE_AT
+		FROM
+			TAP_FC_FCLT_OPNDT
+		WHERE
+			USE_AT = 'Y'
+		<if test="@egovframework.MybatisUtils@isNotEmpty(fcltOpnDtSn)">
+			AND FCLT_OPN_DT_SN = #{fcltOpnDtSn}
+		</if>
+		<if test="@egovframework.MybatisUtils@isNotEmpty(fcltSn)">
+			AND FCLT_SN = #{fcltSn}
+		</if>
+		<if test="@egovframework.MybatisUtils@isNotEmpty(searchDate)">
+			AND 
+				#{searchDate} between FCLT_OPN_BGNG_DT and FCLT_OPN_END_DT
+			<![CDATA[
+	 		AND
+	 			#{searchDate} >= TO_CHAR(SYSDATE, 'YYYYMMDD')
+	 		]]>
+		</if>
+	</select>
+	
+	<!-- 시설 개방기간 등록 -->
+	<insert id="insertFcltOpnDtInfo" parameterType="map">
+		INSERT INTO
+		TAP_FC_FCLT_OPNDT
+		(
+			FCLT_OPN_DT_SN
+			,FCLT_SN
+			,FCLT_OPN_BGNG_DT
+			,FCLT_OPN_END_DT
+			,FCLT_OPN_BGNG_TM
+			,FCLT_OPN_END_TM
+			,FCLT_USE_PSBLTY_DAY
+			,USE_AT
+		)
+		VALUES
+		(
+			SEQ_FCLT_OPN_DT_SN.NEXTVAL
+			,#{fcltSn}
+			,#{fcltOpnBgngDt}
+			,#{fcltOpnEndDt}
+			,#{fcltOpnBgngTm}
+			,#{fcltOpnEndTm}
+			,#{fcltUsePsbltyDay}
+			,'Y'
+		)	
+	</insert>
+	
+	<!-- 시설 개방기간 수정 -->
+	<update id="updateFcltOpnDtInfoBySeq" parameterType="map">
+		UPDATE
+			TAP_FC_FCLT_OPNDT
+		SET
+			FCLT_OPN_BGNG_DT = #{fcltOpnBgngDt}
+			,FCLT_OPN_END_DT = #{fcltOpnEndDt}
+			,FCLT_OPN_BGNG_TM = #{fcltOpnBgngTm}
+			,FCLT_OPN_END_TM = #{fcltOpnEndTm}
+			,FCLT_USE_PSBLTY_DAY = #{fcltUsePsbltyDay}
+		WHERE
+			FCLT_OPN_DT_SN = #{fcltOpnDtSn}
+	</update>
+	
+	<!-- 시설 개방기간 삭제 -->
+	<update id="deleteFcltOpnDtInfoBySeq" parameterType="map">
+		UPDATE
+			TAP_FC_FCLT_OPNDT
+		SET
+			USE_AT = 'N'
+		WHERE
+			FCLT_OPN_DT_SN = #{fcltOpnDtSn}
+	</update>
+	
+	<!-- 시설 개방기간 등록 유효성 검사 -->
+	<select id="checkValidOpnDt" parameterType="map" resultType="Integer">
+		SELECT 
+			COUNT(*)
+		FROM
+			TAP_FC_fCLT_OPNDT
+		WHERE
+			USE_AT = 'Y'
+		AND
+			FCLT_SN = #{fcltSn}
+		<![CDATA[
+		AND
+			FCLT_OPN_BGNG_DT <= TO_DATE(REPLACE(#{fcltOpnEndDt}, '/', ''))
+		AND
+			FCLT_OPN_END_DT >= TO_DATE(REPLACE(#{fcltOpnBgngDt}, '/', ''))
+		]]>
+	</select>
+	
+	<!-- 시설 공통요금 목록 조회 -->
+	<select id="selectFcltCmmnFeeList" parameterType="map" resultType="egovMap">
+		SELECT 
+			FEE_CMMN_SN
+			,FCLT_TY
+			,RSVT_TY
+			,TM_BLCK2
+			,TM_BLCK4
+			,TM_BLCK_EX
+			,LONG_TM_BLCK1
+		FROM
+			TAP_FC_FEE_CMMN
+		WHERE
+			FCLT_TY = #{fcltTy}
+	</select>
+	
+	<!-- 시설 공통요금 조회 -->
+	<select id="selectFcltCmmnFee" parameterType="map" resultType="egovMap">
+		SELECT 
+			NVL(SUM(A_TY_BLCK2_CR),0) AS A_TY_BLCK2_CR
+			,NVL(SUM(A_TY_BLCK4_CR),0) AS A_TY_BLCK4_CR
+			,NVL(SUM(A_TY_BLCK_EX_CR),0) AS A_TY_BLCK_EX_CR
+			,NVL(SUM(A_TY_BLCK2_SR),0) AS A_TY_BLCK2_SR
+			,NVL(SUM(A_TY_BLCK4_SR),0) AS A_TY_BLCK4_SR
+			,NVL(SUM(A_TY_BLCK_EX_SR),0) AS A_TY_BLCK_EX_SR
+			,NVL(SUM(A_TY_LONG_TM_BLCK1_SR),0) AS A_TY_LONG_TM_BLCK1_SR
+			,NVL(SUM(A_TY_BLCK2_GR),0) AS A_TY_BLCK2_GR
+			,NVL(SUM(A_TY_BLCK4_GR),0) AS A_TY_BLCK4_GR
+			,NVL(SUM(A_TY_BLCK_EX_GR),0) AS A_TY_BLCK_EX_GR
+			,NVL(SUM(A_TY_LONG_TM_BLCK1_GR),0) AS A_TY_LONG_TM_BLCK1_GR
+			,NVL(SUM(B_TY_BLCK4_CR),0) AS B_TY_BLCK4_CR
+			,NVL(SUM(B_TY_BLCK_EX_CR),0) AS B_TY_BLCK_EX_CR
+			,NVL(SUM(B_TY_BLCK2_SR),0) AS B_TY_BLCK2_SR
+			,NVL(SUM(B_TY_BLCK4_SR),0) AS B_TY_BLCK4_SR
+			,NVL(SUM(B_TY_BLCK_EX_SR),0) AS B_TY_BLCK_EX_SR
+			,NVL(SUM(B_TY_LONG_TM_BLCK1_SR),0) AS B_TY_LONG_TM_BLCK1_SR
+			,NVL(SUM(B_TY_BLCK2_GR),0) AS B_TY_BLCK2_GR
+			,NVL(SUM(B_TY_BLCK4_GR),0) AS B_TY_BLCK4_GR
+			,NVL(SUM(B_TY_BLCK_EX_GR),0) AS B_TY_BLCK_EX_GR
+			,NVL(SUM(B_TY_LONG_TM_BLCK1_GR),0) AS B_TY_LONG_TM_BLCK1_GR
+		FROM (
+			SELECT
+				CASE WHEN FCLT_TY = 'CLASSROOM' AND RSVT_TY = 'A' THEN TM_BLCK2 ELSE 0 END AS A_TY_BLCK2_CR
+				,CASE WHEN FCLT_TY = 'CLASSROOM' AND RSVT_TY = 'A' THEN TM_BLCK4 ELSE 0 END AS A_TY_BLCK4_CR
+				,CASE WHEN FCLT_TY = 'CLASSROOM' AND RSVT_TY = 'A' THEN TM_BLCK_EX ELSE 0 END AS A_TY_BLCK_EX_CR
+				,CASE WHEN FCLT_TY = 'SPECIALROOM' AND RSVT_TY = 'A' THEN TM_BLCK2 ELSE 0 END AS A_TY_BLCK2_SR
+				,CASE WHEN FCLT_TY = 'SPECIALROOM' AND RSVT_TY = 'A' THEN TM_BLCK4 ELSE 0 END AS A_TY_BLCK4_SR
+				,CASE WHEN FCLT_TY = 'SPECIALROOM' AND RSVT_TY = 'A' THEN TM_BLCK_EX ELSE 0 END AS A_TY_BLCK_EX_SR
+				,CASE WHEN FCLT_TY = 'SPECIALROOM' AND RSVT_TY = 'A' THEN LONG_TM_BLCK1 ELSE 0 END AS A_TY_LONG_TM_BLCK1_SR
+				,CASE WHEN FCLT_TY = 'GROUND' AND RSVT_TY = 'A' THEN TM_BLCK2 ELSE 0 END AS A_TY_BLCK2_GR
+				,CASE WHEN FCLT_TY = 'GROUND' AND RSVT_TY = 'A' THEN TM_BLCK4 ELSE 0 END AS A_TY_BLCK4_GR
+				,CASE WHEN FCLT_TY = 'GROUND' AND RSVT_TY = 'A' THEN TM_BLCK_EX ELSE 0 END AS A_TY_BLCK_EX_GR
+				,CASE WHEN FCLT_TY = 'GROUND' AND RSVT_TY = 'A' THEN LONG_TM_BLCK1 ELSE 0 END AS A_TY_LONG_TM_BLCK1_GR
+				,CASE WHEN FCLT_TY = 'CLASSROOM' AND RSVT_TY = 'B' THEN TM_BLCK4 ELSE 0 END AS B_TY_BLCK4_CR
+				,CASE WHEN FCLT_TY = 'CLASSROOM' AND RSVT_TY = 'B' THEN TM_BLCK_EX ELSE 0 END AS B_TY_BLCK_EX_CR
+				,CASE WHEN FCLT_TY = 'SPECIALROOM' AND RSVT_TY = 'B' THEN TM_BLCK2 ELSE 0 END AS B_TY_BLCK2_SR
+				,CASE WHEN FCLT_TY = 'SPECIALROOM' AND RSVT_TY = 'B' THEN TM_BLCK4 ELSE 0 END AS B_TY_BLCK4_SR
+				,CASE WHEN FCLT_TY = 'SPECIALROOM' AND RSVT_TY = 'B' THEN TM_BLCK_EX ELSE 0 END AS B_TY_BLCK_EX_SR
+				,CASE WHEN FCLT_TY = 'SPECIALROOM' AND RSVT_TY = 'B' THEN LONG_TM_BLCK1 ELSE 0 END AS B_TY_LONG_TM_BLCK1_SR
+				,CASE WHEN FCLT_TY = 'GROUND' AND RSVT_TY = 'B' THEN TM_BLCK2 ELSE 0 END AS B_TY_BLCK2_GR
+				,CASE WHEN FCLT_TY = 'GROUND' AND RSVT_TY = 'B' THEN TM_BLCK4 ELSE 0 END AS B_TY_BLCK4_GR
+				,CASE WHEN FCLT_TY = 'GROUND' AND RSVT_TY = 'B' THEN TM_BLCK_EX ELSE 0 END AS B_TY_BLCK_EX_GR
+				,CASE WHEN FCLT_TY = 'GROUND' AND RSVT_TY = 'B' THEN LONG_TM_BLCK1 ELSE 0 END AS B_TY_LONG_TM_BLCK1_GR
+			FROM
+				TAP_FC_FEE_CMMN
+		)
+	</select>
+	
+	<!-- 공통요금 등록여부 체크 -->
+	<select id="selectFcltCmmnFeeCnt" parameterType="map" resultType="Integer">
+		SELECT 
+			COUNT(*)
+		FROM
+			TAP_FC_FEE_CMMN
+		WHERE
+			FCLT_TY = #{fcltTy}
+		AND
+			RSVT_TY = #{rsvtTy}
+	</select>
+	
+	<!-- 시설 공통요금 등록 -->
+	<insert id="insertFcltCmmnFee" parameterType="map">
+		INSERT INTO
+		TAP_FC_FEE_CMMN
+		(
+			FEE_CMMN_SN
+			,FCLT_TY
+			,RSVT_TY
+			,TM_BLCK2
+			,TM_BLCK4
+			,TM_BLCK_EX
+			,LONG_TM_BLCK1
+			,INST_ID
+			,INST_DT
+			,UPDT_ID
+			,UPDT_DT
+		)
+		VALUES
+		(
+			SEQ_FEE_CMMN_SN.NEXTVAL
+			,#{fcltTy}
+			,#{rsvtTy}
+			,NVL(#{tmBlck2}, 0)
+			,NVL(#{tmBlck4}, 0)
+			,NVL(#{tmBlckEx}, 0)
+			,NVL(#{longTmBlck1}, 0)
+			,#{mberId}
+			,SYSDATE
+			,#{mberId}
+			,SYSDATE
+		)
+	</insert>
+	
+	<!-- 시설 공통요금 수정 -->
+	<update id="updateFcltCmmnFee" parameterType="map">
+		UPDATE
+			TAP_FC_FEE_CMMN
+		SET
+			TM_BLCK2 = NVL(#{tmBlck2}, TM_BLCK2)
+			,TM_BLCK4 = NVL(#{tmBlck4}, TM_BLCK4)
+			,TM_BLCK_EX = NVL(#{tmBlckEx}, TM_BLCK_EX)
+			,LONG_TM_BLCK1 = NVL(#{longTmBlck1}, LONG_TM_BLCK1)
+			,UPDT_ID = #{mberId}
+			,UPDT_DT = SYSDATE
+		WHERE
+			FCLT_TY = #{fcltTy}
+		AND
+			RSVT_TY = #{rsvtTy}
+	</update>
+	
+	<!-- 개별요금 목록 조회 -->
+	<select id="selectFcltIndvFeeList" parameterType="map" resultType="egovMap">
+		SELECT
+			FI.FEE_INDV_SN
+			,FI.FCLT_SN
+			,FI.FCLT_TY
+			,FI.RSVT_TY
+			,FI.TM_BLCK2
+			,FI.TM_BLCK4
+			,FI.TM_BLCK_EX
+			,FI.LONG_TM_BLCK1
+		FROM
+			TAP_FC_FEE_INDV FI
+			,TAP_FC_FCLT_MNG FM
+		WHERE
+			FI.FCLT_SN = FM.FCLT_SN(+)
+		AND
+			FM.SYS_ID = #{sysId}
+		<if test="@egovframework.MybatisUtils@isNotEmpty(fcltSn)">
+			AND FI.FCLT_SN = #{fcltSn}
+		</if>
+	</select> 
+	
+	<!-- 개별요금 등록여부 체크 -->
+	<select id="selectFcltIndvFeeCnt" parameterType="map" resultType="Integer">
+		SELECT 
+			COUNT(*)
+		FROM
+			TAP_FC_FEE_INDV
+		WHERE
+			FCLT_SN = #{fcltSn}
+		AND
+			RSVT_TY = #{rsvtTy}
+	</select>
+	
+	<!-- 시설 개별요금 등록 -->
+	<insert id="insertFcltIndvFee" parameterType="map">
+		INSERT INTO
+		TAP_FC_FEE_INDV
+		(
+			FEE_INDV_SN
+			,FCLT_SN
+			,FCLT_TY
+			,RSVT_TY
+			,TM_BLCK2
+			,TM_BLCK4
+			,TM_BLCK_EX
+			,LONG_TM_BLCK1
+			,INST_ID
+			,INST_DT
+			,UPDT_ID
+			,UPDT_DT
+		)
+		VALUES
+		(
+			SEQ_FEE_INDV_SN.NEXTVAL
+			,#{fcltSn}
+			,#{fcltTy}
+			,#{rsvtTy}
+			,NVL(#{tmBlck2}, 0)
+			,NVL(#{tmBlck4}, 0)
+			,NVL(#{tmBlckEx}, 0)
+			,NVL(#{longTmBlck1}, 0)
+			,#{mberId}
+			,SYSDATE
+			,#{mberId}
+			,SYSDATE
+		)
+	</insert>
+	
+	<!-- 시설 개별요금 수정 -->
+	<update id="updateFcltIndvFee" parameterType="map">
+		UPDATE
+			TAP_FC_FEE_INDV
+		SET
+			TM_BLCK2 = NVL(#{tmBlck2}, TM_BLCK2)
+			,TM_BLCK4 = NVL(#{tmBlck4}, TM_BLCK4)
+			,TM_BLCK_EX = NVL(#{tmBlckEx}, TM_BLCK_EX)
+			,LONG_TM_BLCK1 = NVL(#{longTmBlck1}, LONG_TM_BLCK1)
+			,UPDT_ID = #{mberId}
+			,UPDT_DT = SYSDATE
+		WHERE
+			FCLT_SN = #{fcltSn}
+		AND
+			RSVT_TY = #{rsvtTy}
+	</update>
+	
+	<!-- 시설예약 홈페이지 - 학교목록 조회 Sql -->
+	<sql id="selctHmpgFcltListSql">
+		SELECT 
+			SM.SYS_ID
+			,SM.SYS_NM
+			,FBM.SJ_ADMDST_CD
+			,FBM.FCLT_PIC_TELNO
+			,FBM.FCLT_TY_LIST
+		FROM
+			TAP_SM_SYS_MANAGE SM
+		LEFT OUTER JOIN 
+		(
+				SELECT
+					FB.*
+					,FM.FCLT_TY_LIST
+				FROM
+					TAP_FC_FCLT_BSC FB
+				LEFT OUTER JOIN 
+				(
+						SELECT 
+							SYS_ID
+							,WM_CONCAT(FCLT_TY) AS FCLT_TY_LIST
+						FROM
+							TAP_FC_FCLT_MNG
+						GROUP BY 
+							SYS_ID
+				) FM
+				ON 
+					FB.SYS_ID = FM.SYS_ID
+		) FBM
+		ON 
+			SM.SYS_ID = FBM.SYS_ID
+		ORDER BY 
+			SYS_NM
+	</sql>
+	
+    <!-- 시설예약 홈페이지 - 학교목록 조회(페이징) -->
+    <select id="selctHmpgFcltListPaging" parameterType="map" resultType="egovMap">
+    	SELECT
+    		PL.*
+    	FROM (
+        	SELECT 
+        		PO.*
+        		,ROWNUM AS RSN
+			FROM (
+	    		<include refid="selctHmpgFcltListSql" />
+				) PO
+		) PL
+		WHERE
+		<![CDATA[
+			rsn <= #{maxSn} 
+			AND rsn > #{minSn}
+		]]>
+    </select>
+    
+    <!-- 시설예약 홈페이지 - 학교목록 조회(페이징 전체 카운트) -->
+    <select id="selctHmpgFcltListPagingCount" parameterType="map" resultType="int">
+    	SELECT
+	    	COUNT(*)
+	    FROM (<include refid="selctHmpgFcltListSql" />)
+	</select>
+	
+	<!-- 시설예약 홈페이지 - 예약진행 -->
+	<insert id="insertFcltRsvtInfo" parameterType="map">
+		INSERT INTO
+		TAP_FC_RSVT_MNG
+		(
+			FCLT_RSVT_SN
+			,FCLT_SN
+			,MBER_ID
+			,RSVT_USER_NM
+			,RSVT_USER_MBL_TELNO
+			,RSVT_TY
+			,USE_CNT
+			,PG_TY
+			,RSVT_GRP_NM
+			,USE_NOPE
+			,RSVT_BGNG_DT
+			,RSVT_END_DT
+			,LS_TY
+			,USE_AMT
+			,USE_PRPS
+			,RSVT_APRV_STTS_CD
+			,USE_AT
+			,INST_ID
+			,INST_DT
+			,UPDT_ID
+			,UPDT_DT
+		)
+		VALUES
+		(
+			#{fcltRsvtSn}
+			,#{fcltSn}
+			,#{mberId}
+			,#{rsvtUserNm}
+			,#{rsvtUserMblTelno}
+			,#{rsvtTy}
+			,#{useCnt}
+			,#{pgTy}
+			,#{rsvtGrpNm}
+			,#{useNope}
+			,#{rsvtBgngDt}
+			,#{rsvtEndDt}
+			,#{lsTy}
+			,#{useAmt}
+			,#{usePrps}
+			,#{aprvSttsCd}
+			,'Y'
+			,#{mberId}
+			,SYSDATE
+			,#{mberId}
+			,SYSDATE
+		)
+	</insert>
+	
+	<!-- 시설예약 시간 등록 -->
+	<insert id="insertFcltRsvtTime" parameterType="map">
+		INSERT INTO
+		TAP_FC_RSVT_TM
+		(
+			RSVT_TM_SN
+			,FCLT_RSVT_SN
+			,RSVT_USE_DAY
+			,RSVT_BGNG_TM
+			,RSVT_END_TM
+			,INST_ID
+			,INST_DT
+			,UPDT_ID
+			,UPDT_DT
+		)
+		VALUES
+		(
+			SEQ_RSVT_TM_SN.NEXTVAL
+			,#{fcltRsvtSn}
+			,#{rsvtUseDay}
+			,#{rsvtBgngTm}
+			,#{rsvtEndTm}
+			,#{mberId}
+			,SYSDATE
+			,#{mberId}
+			,SYSDATE
+		)
+	</insert>
+	
+	<!-- 시설예약 동의여부 등록 -->
+	<insert id="insertFcltRsvtAgreYn" parameterType="map">
+		INSERT INTO
+		TAP_FC_RSVT_AGRE
+		(
+			RSVT_AGRE_SN
+			,FCLT_RSVT_SN
+			,MBER_ID
+			,PRVC_CLCT_AGRE_YN
+			,FCLT_USER_AGRE_YN
+			,AGRE_DT
+		)
+		VALUES
+		(
+			SEQ_RSVT_AGRE_SN.NEXTVAL
+			,#{fcltRsvtSn}
+			,#{mberId}
+			,#{prvcClctAgreYn}
+			,#{fcltUserAgreYn}
+			,SYSDATE
+		)
+	</insert>
+	
+	<!-- 시설예약 옵션 조회 -->
+	<select id="selectFcltRsvtOptnInfo" parameterType="map" resultType="egovMap">
+		SELECT
+			CASE WHEN OPTN_USE_YN1 = 'Y' THEN '냉난방 사용' ELSE '' END AS OPTN_USE1
+			,CASE WHEN OPTN_USE_YN2 = 'Y' THEN '' ELSE '' END AS OPTN_USE2
+			,CASE WHEN OPTN_USE_YN3 = 'Y' THEN '' ELSE '' END AS OPTN_USE3
+			,CASE WHEN OPTN_USE_YN4 = 'Y' THEN '' ELSE '' END AS OPTN_USE4
+			,CASE WHEN OPTN_USE_YN5 = 'Y' THEN '' ELSE '' END AS OPTN_USE5
+		FROM
+			TAP_FC_RSVT_OPTN
+		WHERE
+			FCLT_RSVT_SN = #{fcltRsvtSn}
+	</select>
+	
+	<!-- 시설예약 옵션 등록 -->
+	<insert id="insertFcltRsvtOptnInfo" parameterType="map">
+		INSERT INTO
+		TAP_FC_RSVT_OPTN
+		(
+			RSVT_OPTN_SN
+			,FCLT_RSVT_SN
+			,OPTN_USE_YN1
+			,OPTN_USE_YN2
+			,OPTN_USE_YN3
+			,OPTN_USE_YN4
+			,OPTN_USE_YN5
+		)
+		VALUES
+		(
+			SEQ_RSVT_OPTN_SN.NEXTVAL
+			,#{fcltRsvtSn}
+			,#{optnUseYn1}
+			,#{optnUseYn2}
+			,#{optnUseYn3}
+			,#{optnUseYn4}
+			,#{optnUseYn5}
+		)
+	</insert>
+	
+	<!-- 시설예약 홈페이지 - 신청자정보 수정 -->
+	<update id="updateFcltRsvtInfo" parameterType="map">
+		UPDATE
+			TAP_FC_RSVT_MNG
+		SET
+			RSVT_GRP_NM = #{rsvtGrpNm}
+			,RSVT_USER_NM = #{rsvtUserNm}
+			,RSVT_USER_MBL_TELNO = #{rsvtUserMblTelno}
+			,USE_NOPE = #{useNope}
+			,UPDT_ID = #{mberId}
+			,UPDT_DT = SYSDATE
+		WHERE
+			FCLT_RSVT_SN = #{fcltRsvtSn}
+	</update>
+	
+	<!-- 시설예약 홈페이지 - 예약삭제 -->
+	<update id="deleteFcltRsvtInfoBySeq" parameterType="map">
+		UPDATE
+			TAP_FC_RSVT_MNG
+		SET
+			USE_AT = 'N'
+		WHERE
+			FCLT_RSVT_SN = #{fcltRsvtSn}
+	</update>
+	
+	<!-- 중복예약 검증 -->
+	<select id="validationReserveTime" parameterType="map" resultType="Integer">
+		SELECT
+			COUNT(*)
+		FROM 
+			TAP_FC_RSVT_MNG RM
+			,TAP_FC_RSVT_TM RT
+		WHERE
+			RM.FCLT_RSVT_SN = RT.FCLT_RSVT_SN(+)
+		AND
+			RM.USE_AT = 'Y'
+		AND
+			RM.FCLT_SN = #{fcltSn}
+		<!-- 관리자 예약 승인시 승인 대상은 검증에서 제외 -->
+		<if test="@egovframework.MybatisUtils@isNotEmpty(fcltRsvtSn)">
+		AND RM.FCLT_RSVT_SN != #{fcltRsvtSn}
+		</if>
+		AND
+			RM.RSVT_APRV_STTS_CD NOT IN('WA', 'CA')
+		<![CDATA[
+		AND (
+			RM.RSVT_BGNG_DT <= #{rsvtEndDt} AND RM.RSVT_END_DT >= #{rsvtBgngDt}
+		)
+		AND (
+			INSTR(#{rsvtUseDay}, RT.RSVT_USE_DAY) > 0
+		)
+		AND (
+			RT.RSVT_BGNG_TM < #{rsvtEndTm} AND RT.RSVT_END_TM > #{rsvtBgngTm}
+		)
+		]]>
+	</select>
+	
+	<!-- 개방기간의 시간 검증 -->
+	<select id="validationOpnDtTime" parameterType="map" resultType="Integer">
+		SELECT
+			COUNT(*)
+		FROM 
+			TAP_FC_FCLT_OPNDT
+		WHERE
+			FCLT_SN = #{fcltSn}		
+		<![CDATA[
+		AND
+			FCLT_OPN_BGNG_DT <= #{rsvtEndDt} AND FCLT_OPN_END_DT >= #{rsvtBgngDt}
+		AND 
+			INSTR(FCLT_USE_PSBLTY_DAY, #{rsvtUseDay}) > 0
+		]]>
+		AND
+			(#{rsvtBgngTm} BETWEEN FCLT_OPN_BGNG_TM AND FCLT_OPN_END_TM)
+		AND
+			(#{rsvtEndTm} BETWEEN FCLT_OPN_BGNG_TM AND FCLT_OPN_END_TM)
+	</select>
+	
+	<!-- 최대 예약 가능횟수 검증 -->
+	<select id="validationRsvtLmtCnt" parameterType="map" resultType="Integer">
+		SELECT 
+			COUNT(*)
+		FROM
+			TAP_FC_FCLT_LMT
+		WHERE
+			FCLT_SN = #{fcltSn}
+		<![CDATA[
+			AND
+				RSVT_LMT_CNT < 
+									(
+										SELECT 
+											(COUNT(*) + #{rsvtCnt}) AS RSVT_CNT
+										FROM
+											TAP_FC_RSVT_MNG
+										WHERE
+											USE_AT = 'Y'
+										AND
+											RSVT_APRV_STTS_CD != 'CA'
+										AND
+											LS_TY = 'S'
+										AND
+											FCLT_SN = #{fcltSn}
+										AND
+											MBER_ID = #{mberId}
+										AND
+											RSVT_END_DT > SYSDATE
+									)
+		]]>
+	</select>
+	
+	<!-- 최대 예약 가능기간 검증 -->
+	<select id="validationRsvtLmtMonth" parameterType="map" resultType="Integer">
+		SELECT
+			COUNT(*)
+		FROM
+			TAP_FC_FCLT_LMT
+		WHERE
+			FCLT_SN = #{fcltSn}
+		<![CDATA[
+			AND
+				RSVT_LMT_MONTH < 
+										(
+											SELECT
+												MONTHS_BETWEEN(#{rsvtEndDt}, #{rsvtBgngDt}) AS MONTH_DIFF
+											FROM
+												DUAL
+										)
+		]]>
+	</select>
+	
+	<!-- 시설 예약제한 적용 정보 조회 -->
+	<select id="selectFcltRsvtLmtInfo" parameterType="map" resultType="egovMap">
+		SELECT
+			RSVT_LMT_MONTH
+			,RSVT_LMT_CNT
+		FROM
+			TAP_FC_FCLT_LMT
+		WHERE
+			FCLT_SN = #{fcltSn}
+	</select>
+	
+	<!-- 시설 예약제한 적용 -->
+	<update id="mergeFcltRsvtLmtInfo" parameterType="map">
+		MERGE INTO TAP_FC_FCLT_LMT
+		USING DUAL
+		ON ( FCLT_SN = #{fcltSn} )
+		WHEN MATCHED THEN
+			UPDATE SET
+				RSVT_LMT_MONTH = #{rsvtLmtMonth}
+				,RSVT_LMT_CNT = #{rsvtLmtCnt}
+				,UPDT_ID = #{mberId}
+				,UPDT_DT = SYSDATE
+				
+		WHEN NOT MATCHED THEN
+			INSERT
+			(
+				FCLT_LMT_SN
+				,FCLT_SN
+				,RSVT_LMT_MONTH
+				,RSVT_LMT_CNT
+				,INST_ID
+				,INST_DT
+				,UPDT_ID
+				,UPDT_DT
+			)
+			VALUES
+			(
+				SEQ_FCLT_LMT_SN.NEXTVAL
+				,#{fcltSn}
+				,#{rsvtLmtMonth}
+				,#{rsvtLmtCnt}
+				,#{mberId}
+				,SYSDATE
+				,#{mberId}
+				,SYSDATE
+			)
+	</update>
+	
+	<!-- 시설예약 처리내역 이력 조회 -->
+	<sql id="selectFcltRsvtHistListSql">
+		SELECT
+			SM.SYS_ID
+			,SM.SYS_NM
+			,RH.RSVT_HIST_SN
+			,RH.FCLT_RSVT_SN
+			,RH.FCLT_SN
+			,RH.MBER_ID
+			,RH.RSVT_USER_NM
+			,RH.RSVT_USER_MBL_TELNO
+			,RH.RSVT_TY
+			,RH.USE_CNT
+			,RH.PG_TY
+			,RH.RSVT_GRP_NM
+			,RH.USE_NOPE
+			,RH.RSVT_BGNG_DT
+			,RH.RSVT_END_DT
+			,RH.LS_TY
+			,RH.USE_AMT
+			,RH.USE_PRPS
+			,RH.RSVT_APRV_STTS_CD
+			,RH.USE_AT
+			,RH.UPDT_STTS_CD
+			,RH.INST_ID
+			,RH.INST_DT
+			,RH.UPDT_ID
+			,RH.UPDT_DT
+			,FM.FCLT_NM
+		FROM
+			TAP_FC_RSVT_HIST RH
+			,TAP_FC_FCLT_MNG FM
+			,TAP_SM_SYS_MANAGE SM
+		WHERE
+			RH.FCLT_SN = FM.FCLT_SN(+)
+		AND
+			FM.SYS_ID = SM.SYS_ID(+)
+		<if test="@egovframework.MybatisUtils@isNotEmpty(searchSttsCd)">
+			AND RH.UPDT_STTS_CD = #{searchSttsCd}
+		</if>
+		<if test="@egovframework.MybatisUtils@isNotEmpty(searchFclt)">
+			AND FM.FCLT_TY = #{searchFclt}
+		</if>
+		<if test="@egovframework.MybatisUtils@isNotEmpty(searchText)">
+			AND ( SM.SYS_NM LIKE '%'||#{searchText}||'%'
+				or RH.RSVT_USER_NM LIKE '%'||#{searchText}||'%' )
+		</if>
+		ORDER BY
+			RH.RSVT_HIST_SN DESC
+	</sql>
+	
+	<!-- 시설예약 처리내역 이력 조회(페이징) -->
+    <select id="selectFcltRsvtHistListPaging" parameterType="map" resultType="egovMap">
+    	SELECT
+    		PL.*
+    	FROM (
+        	SELECT 
+        		PO.*
+        		,ROWNUM AS RSN
+			FROM (
+	    		<include refid="selectFcltRsvtHistListSql" />
+				) PO
+		) PL
+		WHERE
+		<![CDATA[
+			rsn <= #{maxSn} 
+			AND rsn > #{minSn}
+		]]>
+    </select>
+    
+    <!-- 시설예약 처리내역 이력 조회(페이징 전체 카운트) -->
+    <select id="selectFcltRsvtHistListPagingCount" parameterType="map" resultType="int">
+    	SELECT
+	    	COUNT(*)
+	    FROM (<include refid="selectFcltRsvtHistListSql" />)
+	</select>
+	
+	<!-- 시설예약 변경이력 저장 -->
+	<insert id="insertFcltRsvtHist">
+		INSERT INTO
+		TAP_FC_RSVT_HIST
+		(
+			RSVT_HIST_SN
+			,FCLT_RSVT_SN
+			,FCLT_SN
+			,MBER_ID
+			,RSVT_USER_NM
+			,RSVT_USER_MBL_TELNO
+			,RSVT_TY
+			,USE_CNT
+			,PG_TY
+			,RSVT_GRP_NM
+			,USE_NOPE
+			,RSVT_BGNG_DT
+			,RSVT_END_DT
+			,LS_TY
+			,USE_AMT
+			,USE_PRPS
+			,RSVT_APRV_STTS_CD
+			,USE_AT
+			,UPDT_STTS_CD
+			,INST_ID
+			,INST_DT
+			,UPDT_ID
+			,UPDT_DT
+		)
+		VALUES
+		(
+			SEQ_RSVT_HIST_SN.NEXTVAL
+			,#{fcltRsvtSn}
+			,#{fcltSn}
+			,#{mberId}
+			,#{rsvtUserNm}
+			,#{rsvtUserMblTelno}
+			,#{rsvtTy}
+			,#{useCnt}
+			,#{pgTy}
+			,#{rsvtGrpNm}
+			,#{useNope}
+			,#{rsvtBgngDt}
+			,#{rsvtEndDt}
+			,#{lsTy}
+			,#{useAmt}
+			,#{usePrps}
+			,#{rsvtAprvSttsCd}
+			,'Y'
+			,#{updtSttsCd}
+			,#{mberId}
+			,#{instDt}
+			,#{updtId}
+			,SYSDATE
+		)
+	</insert>
+	
+	<!-- 시설등록현황 -->
+	<sql id="selectFcltInsStatsListSql">
+		SELECT
+			SM.SYS_ID
+			,SM.SYS_NM 
+			,FM.FCLT_SN
+			,FM.FCLT_NM
+			,FM.FCLT_TY
+			,FM.FCLT_OPN_YN 
+			,FM.FCLT_ETC_MTTR3
+			,FM.FCLT_INST_DT
+		FROM 
+			TAP_FC_FCLT_MNG FM
+			,TAP_SM_SYS_MANAGE SM
+			,TAP_SM_SYS_DOMN SD
+		WHERE
+			FM.SYS_ID = SM.SYS_ID
+		AND
+			FM.SYS_ID = SD.SYS_ID 
+		AND
+			FM.USE_AT = 'Y'
+		AND 
+			SD.USE_AT = 'F'
+		<if test="@egovframework.MybatisUtils@isNotEmpty(searchOpnYn)">
+			AND FM.FCLT_OPN_YN = #{searchOpnYn}
+		</if>
+		<if test="@egovframework.MybatisUtils@isNotEmpty(searchText)">
+			AND SM.SYS_NM LIKE '%'||#{searchText}||'%'
+		</if>
+		ORDER BY 
+			SM.SYS_NM
+	</sql>
+	
+	<!-- 시설등록현황 조회(페이징) -->
+    <select id="selectFcltInsStatsListPaging" parameterType="map" resultMap="clobMap">
+    	SELECT
+    		PL.*
+    	FROM (
+        	SELECT 
+        		PO.*
+        		,ROWNUM AS RSN
+			FROM (
+	    		<include refid="selectFcltInsStatsListSql" />
+				) PO
+		) PL
+		WHERE
+		<![CDATA[
+			rsn <= #{maxSn} 
+			AND rsn > #{minSn}
+		]]>
+    </select>
+    
+    <!-- 시설등록현황 조회(페이징 전체 카운트) -->
+    <select id="selectFcltInsStatsListPagingCount" parameterType="map" resultType="int">
+    	SELECT
+	    	COUNT(*)
+	    FROM (<include refid="selectFcltInsStatsListSql" />)
+	</select>
+</mapper>

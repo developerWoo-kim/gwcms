@@ -1,0 +1,55 @@
+@charset "utf-8"; 
+
+.main_content { position:relative; width:100%; }
+
+.A01_conBox01 { position:relative; overflow:hidden; width:100%; height:365px; background:#f1f2f3 url('../images/A_01_main/notice_pttrn.png') repeat; }
+.A01_conBox02 { position:relative; overflow:hidden; width:100%; max-width:1400px; height:auto; padding:0 60px; margin:-110px auto 20px; background:#fff; }
+
+.A01_1 { position:relative; width:100%; max-width:1400px; height:auto; margin:40px auto; }/* 바로가기 */
+.A01_2 { position:relative; width:100%; max-width:1400px; height:190px; margin:40px auto 0;}/* 공지사항 */
+.A01_3 { position:relative; width:100%; max-width:1400px; height:125px; margin:45px auto;}/* 학사일정 */
+.A01_4 { position:relative; width:690px; height:315px; float:left;}/* 갤러리 */
+.A01_5 { position:absolute; left:60px; bottom:0; width:690px; height:85px; margin:10px 0 0;}/* 바로가기 */
+.A01_6 { position:relative; width:550px; height:420px; float:right;}/* 홍보동영상 */
+
+
+@media screen and (max-width:1420px){ 
+
+    .A01_conBox02{width:96%; padding:0 10px;}
+
+    .A01_1{width:96%; margin:20px auto;} 
+    .A01_2{width:96%;} 
+    .A01_4 { width:45%; }/* 갤러리 */
+    .A01_5 { width:45%; left:0px; }/* 바로가기 */
+    .A01_6 { width:50%; }/* 홍보동영상 */
+	
+
+} 
+
+@media screen and (max-width:980px){ 
+    
+    .A01_4 { width:100%; }/* 갤러리 */
+    .A01_5 { position:relative; left:auto; bottom:auto; width:100%; height:auto; float:left; margin:30px 0 20px;}/* 바로가기 */
+    .A01_6 { width:100%; height:320px;}/* 홍보동영상 */	
+
+} 
+
+@media screen and (max-width:760px){ 
+
+    .A01_conBox01{height:510px;}
+
+    .A01_2{height:450px;}/* 공지사항 */   
+} 
+
+@media screen and (max-width:680px){ 
+
+    .A01_2{height:350px; margin:25px auto 0;}/* 공지사항 */   
+	.A01_3{height:auto; margin:25px 0;}/* 학사일정 */
+} 
+
+@media screen and (max-width:480px){ 
+
+    .A01_conBox01{height:590px;}
+
+    .A01_2{height:430px;}/* 공지사항 */ 
+} 

@@ -1,0 +1,60 @@
+﻿/* 메인 컨테이너 */
+#container { position:relative; z-index:2; width:100%; }
+#container *{ scrollbar-arrow-color: #ddd; scrollbar-Track-Color: #ddd; scrollbar-base-color: #aaa; scrollbar-Face-Color: #aaa; scrollbar-3dLight-Color: #aaa; scrollbar-DarkShadow-Color: #aaa; scrollbar-Highlight-Color: #aaa; scrollbar-Shadow-Color: #aaa;}
+#container ::-webkit-scrollbar { width: 5px; }
+#container ::-webkit-scrollbar-thumb { background-color: #aaa; border-radius:10px; }
+#container ::-webkit-scrollbar-track { background-color: #ddd; border-radius:10px; }
+
+.MC_wrap1 { position:relative; }
+.MC_wrap2 { position:relative; }
+.MC_wrap2 .container { padding:2.5rem 0; }
+.MC_wrap2 .container:before{content:""; position:absolute; left: -2.75rem; bottom:0; width:300%; height:14.7em; background:#eff3f5; border-radius: 3rem 0 0 0; }
+
+.con_wrap { float:right; width:52%; margin-left:5%; margin-top: 2rem; }
+.con_wrap2 { float:left; width:42%; margin-right:5%; }
+
+.MC_box1 { position:relative; width:100%; height:22.45rem; } /* 메인비주얼 */
+.MC_box2 { position:relative; width:42%; height:21.6rem; float:left;} /* 캘린더 */
+.MC_box3 { position:relative; width:100%; height:7.2rem; } /* 바로가기1 */
+.MC_box4 { position:relative; width:100%; height:10.35rem; margin-top:2rem; } /* 식단 */
+.MC_box5 { position:relative; width:100%; height:12.75rem; } /* 게시판 */
+.MC_box6 { position:relative; width:100%; height:11.25rem; margin-top:2rem; } /* 팝업존 */
+.MC_box7 { position:relative; float:right; width:52%; height:auto; } /* 갤러리 */
+
+@media (max-width: 1240px) {
+    .MC_wrap2 .container { padding: 1.5rem 1rem; }
+
+	.con_wrap { width:54%; margin-left:4%; }
+	.con_wrap2 { width:42%; margin-right:4%; }
+
+    .MC_box1 { height:auto; } /* 메인비주얼 */
+	.MC_box2 { width:42%; } /* 캘린더 */
+	.MC_box7 { width:54%; } /* 갤러리 */
+}
+
+@media (max-width: 1024px) {
+ 
+
+    .MC_box6 { height:13.75rem; } /* 팝업존 */
+}
+
+@media (max-width: 860px) {
+
+    .MC_wrap1:before{display:none;}
+    .MC_wrap2:before{height:8rem;}
+
+    .con_wrap { float:none; width:100%; margin-left:0%; }
+    .con_wrap2 { float:none; width:100%; margin-right:0%; }
+
+    .MC_box2 { width:100%; height:auto; float:none; } /* 캘린더 */
+    .MC_box3 { height:auto; } /* 바로가기1 */
+    .MC_box4 { height:auto; } /* 식단 */
+    .MC_box6 { height:auto; margin-bottom:2rem; } /* 팝업존 */
+    .MC_box7 { width:100%; float:none; } /* 갤러리 */
+    
+}
+
+@media (max-width: 480px) {
+
+    .MC_box5 { height:auto; } /* 게시판 */
+}

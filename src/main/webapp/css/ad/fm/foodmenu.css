@@ -1,0 +1,263 @@
+@charset "UTF-8";
+
+/*식단 버튼 타입*/
+/* 버튼 :기본 */
+.btn_style1{display:inline-block; padding:.5rem 1rem; background:#22499d; color:#fff; font-size:.8rem; font-weight:500; }
+.btn_style1:hover,
+.btn_style1:focus{background:#0c3386; }
+.btn_style2{display:inline-block; padding:.5rem 1rem; background:#00a0a8; color:#fff; font-size:.8rem; font-weight:500; }
+.btn_style2:hover,
+.btn_style2:focus{background:#00878e; }
+.btn_style3{display:inline-block; padding:.5rem 1rem; background:#525c6e; color:#fff; font-size:.8rem; font-weight:500; }
+.btn_style3:hover,
+.btn_style3:focus{background:#222831; }
+.btn_style4{display:inline-block; padding:.5rem 1rem; background:#e33d65; color:#fff; font-size:.8rem; font-weight:500; }
+.btn_style4:hover,
+.btn_style4:focus{background:#c3002f; }
+
+
+.btn_line_style1{display:inline-block; padding:.5rem 1rem; border-width:1px; border-style:solid; border-color:#22499d; color:#22499d; font-size:.8rem; font-weight:500; }
+.btn_line_style1:hover,
+.btn_line_style1:focus{border-color:#0c3386; color:#0c3386; }
+.btn_line_style2{display:inline-block; padding:.5rem 1rem; border-width:1px; border-style:solid; border-color:#00a0a8; color:#00a0a8; font-size:.8rem; font-weight:500; }
+.btn_line_style2:hover,
+.btn_line_style2:focus{border-color:#00878e; color:#00878e; }
+.btn_line_style3{display:inline-block; padding:.5rem 1rem; border-width:1px; border-style:solid; border-color:#525c6e; color:#525c6e; font-size:.8rem; font-weight:500; }
+.btn_line_style3:hover,
+.btn_line_style3:focus{border-color:#222831; color:#222831; }
+
+/* 식당 박스 :박스 기본 타입 */
+[class^="foodbox_st"]{position:relative; padding:1.75rem 2rem; margin-top:1rem; }
+.foodbox_st1{border:1px solid #e0e0e0; background:#fff; }
+.foodbox_st1_img{overflow:hidden; }
+.foodbox_st1_img img{float:left; max-width:84px; }
+.foodbox_st1_img .txt_wrap{float:left; padding-left:30px; width:calc(100% - 84px); }
+.foodbox_st1_1{background:#e7e7e7; }
+.foodbox_st1_1:before{position:absolute; top:0; left:0; width:100%; height:40%; background:-moz-linear-gradient(0deg, rgba(40,89,166,1) 0%, rgba(40,89,166,1) 1%, rgba(16,172,177,1) 99%, rgba(16,172,177,1) 100%); /* ff3.6+ */
+background:-webkit-gradient(linear, left top, right top, color-stop(0%, rgba(40,89,166,1)), color-stop(1%, rgba(40,89,166,1)), color-stop(99%, rgba(16,172,177,1)), color-stop(100%, rgba(16,172,177,1))); /* safari4+,chrome */
+background:-webkit-linear-gradient(0deg, rgba(40,89,166,1) 0%, rgba(40,89,166,1) 1%, rgba(16,172,177,1) 99%, rgba(16,172,177,1) 100%); /* safari5.1+,chrome10+ */
+background:-o-linear-gradient(0deg, rgba(40,89,166,1) 0%, rgba(40,89,166,1) 1%, rgba(16,172,177,1) 99%, rgba(16,172,177,1) 100%); /* opera 11.10+ */
+background:-ms-linear-gradient(0deg, rgba(40,89,166,1) 0%, rgba(40,89,166,1) 1%, rgba(16,172,177,1) 99%, rgba(16,172,177,1) 100%); /* ie10+ */
+background:linear-gradient(90deg, rgba(40,89,166,1) 0%, rgba(40,89,166,1) 1%, rgba(16,172,177,1) 99%, rgba(16,172,177,1) 100%); /* w3c */
+filter:progid:DXImageTransform.Microsoft.gradient( startColorstr='#2859a6', endColorstr='#10acb1',GradientType=1 ); /* ie6-9 */ content:''; }
+.foodbox_st1_1:after{position:absolute; top:50%; left:50%; -webkit-transform:translate(-50%, -50%); transform:translate(-50%, -50%); width:calc(100% - 10px); height:calc(100% - 10px); background:#fff; content:''; }
+.foodbox_st1_1 > *{position:relative; z-index:1; }
+.foodbox_st1_1_img{overflow:hidden; }
+.foodbox_st1_1_img img{float:left; max-width:100px; }
+.foodbox_st1_1_img .txt_wrap{float:left; padding-left:45px; width:calc(100% - 100px); }
+.foodbox_st2{padding:1rem 2rem; background:#f6f6f6; }
+.foodbox_st3{border:2px dotted #e7e7e7; background:#fff; }
+.foodbox_st3_1{border:3px solid #d9dce3; background:#fff; }
+
+
+/* 식당 선텍 탭 */
+.foodLst_wrap .foodmenuLst { overflow:hidden; margin:-.25rem; }
+.foodLst_wrap .foodmenuLst > li { float:left; width:20%; padding:.25rem; }
+.foodLst_wrap .foodmenuLst > li > a { position:relative; display:block; padding-left:1.25rem; letter-spacing:-.5px; font-size:.85rem; font-family:"NotoSans"; color:#555; }
+.foodLst_wrap .foodmenuLst > li > a:before { position:absolute; top:50%; left:0; -webkit-transform:translateY(-50%); transform:translateY(-50%); font-family:"xeicon"; font-size:1rem; content:"\e92c"; }
+.foodLst_wrap .foodmenuLst > li.on  > a { color:#2856a4; font-weight:700; }
+.foodLst_wrap .foodmenuLst > li.on > a:before { content:"\e92b"; }
+
+/* 알림 박스 */
+.foodLst_wrap .foodbox_st1_1 .titT1 { margin-bottom:.75rem; } 
+.foodLst_wrap .foodbox_st1_1 .img_txt_wrap { overflow:hidden; }
+.foodLst_wrap .foodbox_st2 .titT2 i { margin-right:.25rem; font-size:1.1rem; }
+.foodLst_wrap .foodbox_st2 .box { margin-top:.5rem; padding:1rem; background:#fff; }
+.foodLst_wrap .foodbox_st2 .box .list_st1 {overflow:hidden;}
+.foodLst_wrap .foodbox_st2 .box .list_st1 > li { float:left; padding:0 1rem 0 .75rem; }
+.foodLst_wrap .foodbox_st2 .txt_p { margin-top:1rem; }
+
+/* 식단 테이블 컨트롤 */
+.foodLst_wrap .calr_top { position:relative; margin-top:2rem; text-align:center; }
+.foodLst_wrap .calr_top .side span { display:inline-block; vertical-align:middle; color:#333; font-size:.8rem; font-family:"NotoSans"; font-weight:700; }
+.foodLst_wrap .calr_top .side i { display:inline-block; vertical-align:middle; width:34px; height:34px; margin-right:.5rem; background:#00a0a8; border-radius:50%; font-size:1.1rem; text-align:center; line-height:34px; color:#fff; -webkit-transition:background .3s; transition:background .3s; }
+.foodLst_wrap .calr_top .side_l { float:left; }
+.foodLst_wrap .calr_top .side_r { position:relative; float:right; }
+.foodLst_wrap .calr_top .side_r a:hover i,
+.foodLst_wrap .calr_top .side_r a:focus i { background:#2856a4; }
+.foodLst_wrap .calr_top .calr_tit_ctrl_wrap { position:relative; margin-top:.5rem; }
+.foodLst_wrap .calr_top .calr_tit_ctrl_wrap:after { display:block; clear:both; content:""; }
+.foodLst_wrap .calr_tit { display:inline-block; }
+.foodLst_wrap .calr_tit_ctrl { position:absolute; top:50%; left:50%; -webkit-transform:translate(-50%, -50%); transform:translate(-50%, -50%); }
+.foodLst_wrap .calr_tit_ctrl a { display:inline-block; vertical-align:middle; }
+.foodLst_wrap .calr_tit_ctrl .date { margin:0 .5rem; }
+.foodLst_wrap .calr_tit_ctrl .date .txt_p { display:inline-block; vertical-align:middle; margin:0; color:#333; font-size:.9rem; font-family:"NotoSans"; font-weight:700;}
+.foodLst_wrap .calr_tit_ctrl .date img { display:inline-block; vertical-align:middle; margin-left:.25rem; -webkit-transition:transform .3s; transition:transform .3s; }
+.foodLst_wrap .calr_tit_ctrl .date:hover img,
+.foodLst_wrap .calr_tit_ctrl .date:focus img { -webkit-transform:rotateY(180deg); transform:rotateY(180deg); }
+.foodLst_wrap .calr_tit_ctrl .bt_calr_pre,
+.foodLst_wrap .calr_tit_ctrl .bt_calr_next { color:#000; font-size:1.3rem; -webkit-transition:transform .3s; transition:transform .3s; }
+.foodLst_wrap .calr_tit_ctrl .bt_calr_pre:hover,
+.foodLst_wrap .calr_tit_ctrl .bt_calr_pre:focus { color:#2856a4; -webkit-transform:translateX(-3px); transform:translateX(-3px); }
+.foodLst_wrap .calr_tit_ctrl .bt_calr_next:hover,
+.foodLst_wrap .calr_tit_ctrl .bt_calr_next:focus { color:#2856a4; -webkit-transform:translateX(3px); transform:translateX(3px); }
+
+
+/* 식단 테이블 */
+.foodLst_wrap .bbs_WriteA { margin-top:1.25rem; }
+.foodLst_wrap .bbs_WriteA th,
+.foodLst_wrap .bbs_WriteA td {text-align:center;word-break: keep-all;padding:1rem .5rem;font-size:.75rem;word-wrap:break-word;word-break:break-all;border: 1px solid #eaecf1;}
+.foodLst_wrap .bbs_WriteA td { vertical-align: top; }
+.foodLst_wrap .bbs_WriteA.fm_list td,
+.foodLst_wrap .bbs_WriteA.fm_list tbody th { vertical-align:top; }
+.foodLst_wrap .bbs_WriteA input[type="text"] { width:100%; font-size:.8rem; }
+.foodLst_wrap .bbs_WriteA input[type="text"]::placeholder,
+.foodLst_wrap .bbs_WriteA textarea::placeholder { color:#666; font-weight:400; font-size:.8rem; }
+.foodLst_wrap .bbs_WriteA input[type="text"]::-moz-placeholder,
+.foodLst_wrap .bbs_WriteA textarea::-moz-placeholder { color:#666; font-weight:400; font-size:.8rem; }
+.foodLst_wrap .bbs_WriteA input[type="text"]:-ms-input-placeholder,
+.foodLst_wrap .bbs_WriteA textarea:-ms-input-placeholder { color:#666; font-weight:400; font-size:.8rem; }
+.foodLst_wrap .bbs_WriteA input[type="text"]::-webkit-input-placeholder,
+.foodLst_wrap .bbs_WriteA textarea::-webkit-input-placeholder { color:#666; font-weight:400; font-size:.8rem; }
+.foodLst_wrap .bbs_WriteA textarea { width:100%; height:145px; margin-top:.25rem; padding:.5rem; resize:none; border:1px solid #ddd; color:#666; font-size:.8rem; }
+.foodLst_wrap .bbs_WriteA .fm_list_dv { overflow:hidden; }
+.foodLst_wrap .bbs_WriteA .fm_list_dv + .fm_list_dv { margin-top:.5rem; }
+.foodLst_wrap .bbs_WriteA .fm_tit_dv { position:relative; }
+.foodLst_wrap .bbs_WriteA .fm_tit_dv input[type="text"] { padding:0 2rem 0 .5rem; }
+.foodLst_wrap .bbs_WriteA .fm_tit_dv .bt_rm { position:absolute; top:50%; right:.5rem; -webkit-transform:translateY(-50%); transform:translateY(-50%); font-size:1.1rem; color:#525c6e;  }
+.foodLst_wrap .bbs_WriteA .fm_tit_dv .bt_rm:hover,
+.foodLst_wrap .bbs_WriteA .fm_tit_dv .bt_rm:focus { color:#214b9d; }
+.foodLst_wrap .bbs_WriteA .bt_add { position:relative; display:block; margin-bottom:.25rem; padding:0 1.5rem 0 .5rem; text-align:left; line-height:35px; background:#525c6e; color:#fff; font-size:.8rem; font-weight:600; }
+.foodLst_wrap .bbs_WriteA .bt_add > i { position:absolute; top:50%; right:.5rem; font-size:.9rem; -webkit-transform:translateY(-50%); transform:translateY(-50%); -webkit-transition:transform .3s; transition:transform .3s; }
+.foodLst_wrap .bbs_WriteA .bt_add:hover,
+.foodLst_wrap .bbs_WriteA .bt_add:focus { background:#214b9d; }
+.foodLst_wrap .bbs_WriteA .bt_add:hover > i,
+.foodLst_wrap .bbs_WriteA .bt_add:focus > i { -webkit-transform:translateY(-50%) rotate(180deg); transform:translateY(-50%) rotate(180deg); }
+.foodLst_wrap .fm_tit_p { display:inline-block; width: 100%; margin-bottom:.25rem; padding:0 .3rem; border:1px solid #22499d; background:#f7faff; color:#000; line-height:25px; font-weight:500; }
+
+
+/* 레이어 팝업 */
+.layout-popup-wrap { display:none; position:absolute; top: 3rem; right:0; z-index: 999; width:500px;}
+.layout-popup-wrap:before { position:absolute; top: -1.5rem; right: 6rem; width: 0px; height: 0px; border-top: 15px solid transparent; border-bottom: 15px solid rgba(0,0,0,.8); border-right: 15px solid transparent; border-left: 15px solid  transparent; content:"";}
+.layout-popup-wrap > .popup-wrap { padding: 1rem; background:rgba(0,0,0,.8); text-align:left; color:#fff; font-family: "NotoSans";}
+.popup-wrap .pop-head { width:100%; margin-bottom: 1rem; border-bottom: 1px dotted #fff;padding-bottom: 0.7rem;} /* 210112수정 */
+.popup-wrap .pop-head .htit { display: inline-block; font-size: 1rem; font-weight: 700; letter-spacing: -0.05em; color: #fff;}
+.popup-wrap .pop_bt_close { position:absolute; top:0; right:0; width:60px; height:60px; margin:0; text-align:center;}
+.foodLst_wrap .calr_top .side .pop_bt_close > i { position:absolute; top:50%; left:50%; -webkit-transform:translate(-50%, -50%); transform:translate(-50%, -50%); -webkit-transition:transform .3s; transition:transform .3s; }
+.popup-wrap .pop-cont div { word-break:break-all; white-space:normal; font-size: .75rem;}
+.popup-wrap .pop-cont div.meal_icon {position:relative;background:#fff;width: 200px;overflow: hidden;height:10rem;left:50%;/* margin: 0 auto; */transform:translateX(-50%); margin-bottom:1rem;} /* 220317 수정 */
+.popup-wrap .pop-cont div.meal_icon img {width: 100% !important;height:100%;text-align:center;} /* 220317 수정 */
+.popup-wrap .pop-cont div.KCal {position: relative;text-align:center;background: #00a0a8;width: 10rem;padding: 0.5rem;border-radius: 1rem;left: 50%;transform: translateX(-50%); margin-bottom:1rem;} /* 210112수정 */
+.popup-wrap .pop-cont div.mealList {width:100%; background:#fff; color:#222; text-align:center; padding:0.5rem;} /* 210112수정 */
+.popup-wrap .pop-cont div.meal_input input {width:100%; border:none;} /* 210112수정 */
+
+.popup-wrap2 .pop-head { width:100%; margin-bottom: 1rem; border-bottom: 1px dotted #fff;padding-bottom: 0.7rem;} /* 210112수정 */
+.popup-wrap2 .pop-head .htit { display: inline-block; font-size: 1rem; font-weight: 700; letter-spacing: -0.05em; color: #fff;}
+.popup-wrap2 .pop_bt_close { position:absolute; top:0; right:0; width:60px; height:60px; margin:0; text-align:center;}
+.popup-wrap2 .pop-cont div { word-break:break-all; white-space:normal; font-size: .75rem;}
+.popup-wrap2 .pop-cont div.meal_icon {position:relative;background:#fff;width: 100%;overflow: hidden;height:11rem;left:50%;/* margin: 0 auto; */transform:translateX(-50%); margin-bottom:1rem;} /* 220317 수정 */
+.popup-wrap2 .pop-cont div.meal_icon img {width: 100% !important;height:100%;text-align:center;} /* 220317 수정 */
+.popup-wrap2 .pop-cont div.KCal {position: relative;text-align:center;background: #00a0a8;width: 10rem;padding: 0.5rem;border-radius: 1rem;left: 50%;transform: translateX(-50%); margin-bottom:1rem;} /* 210112수정 */
+.popup-wrap2 .pop-cont div.mealList {width:100%; background:#fff; color:#222; text-align:center; padding:0.5rem;} /* 210112수정 */
+.popup-wrap2 .pop-cont div.meal_input input {width:100%; border:none;} /* 210112수정 */
+
+.sr-only {position: absolute; margin: -1px; padding: 0; width: 1px; height: 1px; border: 0; clip: rect(0,0,0,0); overflow: hidden;}
+.foodLst_wrap .calr_top .side .pop_bt_close:hover > i,
+.foodLst_wrap .calr_top .side .pop_bt_close:focus > i{ -webkit-transform:translate(-50%, -50%) rotate(180deg); transform:translate(-50%, -50%) rotate(180deg); }
+
+.layout-popup-wrap2 { display:none; position:absolute; top:-2.3rem; right:400px; z-index: 999; width:500px;}
+.layout-popup-wrap2 > .popup-wrap {padding: 1rem;background: rgba(0,100,100,.99);text-align:left;color:#fff;font-family: "NotoSans";/* position: relative; */}
+.layout-popup-wrap2 > .popup-wrap2 {padding: 1rem;background: rgba(0,100,100,.99);text-align:left;color:#fff;font-family: "NotoSans";/* position: relative; */}
+
+
+@media (max-width:1024px) { 
+	/* 식당 선텍 탭 */
+	.foodLst_wrap .foodmenuLst > li { width:33.333%; }
+
+	/* 박스 :박스 기본 타입 */
+  .foodbox_st1_img img{display:none; }
+  .foodbox_st1_img .txt_wrap{float:none; padding-left:0; width:100%; }
+  .foodbox_st1_1_img img{display:none; }
+  .foodbox_st1_1_img .txt_wrap{float:none; padding-left:0; width:100%; }
+}
+@media (max-width:768px) { 
+  /*식단 버튼*/
+	.btn_style1:hover,
+	.btn_style1:focus{background:#22499d; }
+	.btn_style2:hover,
+	.btn_style2:focus{background:#00a0a8; }
+	.btn_style3:hover,
+	.btn_style3:focus{background:#525c6e; }
+	
+	.btn_line_style1:hover,
+	.btn_line_style1:focus{border-color:#22499d; color:#22499d; }	
+	.btn_line_style2:hover,
+	.btn_line_style2:focus{border-color:#00a0a8; color:#00a0a8; }	
+	.btn_line_style3:hover,
+	.btn_line_style3:focus{border-color:#525c6e; color:#525c6e; }	
+	
+  /* 식단 테이블 */
+  .foodLst_wrap .bbs_WriteA { margin-top:1rem; }
+  .foodLst_wrap_edit.foodLst_wrap .bbs_WriteA { margin-top:0; }
+  .foodLst_wrap .bbs_WriteA .bt_add:hover, .foodLst_wrap .bbs_WriteA .bt_add:focus { background:#525c6e; }.foodLst_wrap .bbs_WriteA .bt_add:hover > i,
+  .foodLst_wrap .bbs_WriteA .bt_add:focus > i { -webkit-transform:translateY(-50%) rotate(0deg); transform:translateY(-50%) rotate(0deg); }
+  .foodLst_wrap .bbs_WriteA .fm_tit_dv .bt_rm:hover, .foodLst_wrap .bbs_WriteA .fm_tit_dv .bt_rm:focus { color:#525c6e; }	
+ 
+  /* 테이블 스크롤 */
+  .foodLst_wrap .bbs_WriteA.scroll_gr { width:100%; overflow-x:auto; background-repeat:no-repeat; background-image:-webkit-gradient(linear, right top, left top, from(rgba(0, 0, 0, 0.1)), to(rgba(0, 0, 0, 0))); background-image:linear-gradient(to left, rgba(0, 0, 0, 0.1) 0%, rgba(0, 0, 0, 0) 100%); background-position:right 5px; background-size:30px 100%; z-index:1; }
+  .foodLst_wrap .bbs_WriteA.scroll_gr table { width:100px; min-width:1000px; }
+ 
+  .foodLst_wrap_edit.foodLst_wrap .bbs_WriteA { margin-top:0; }
+ 
+  
+  /* 식단 테이블 컨트롤 */
+  .foodLst_wrap .calr_tit { display:block; margin-bottom:1rem; }
+  .foodLst_wrap .calr_tit_ctrl { position:relative; top:auto; left:auto; -webkit-transform:translate(0, 0); transform:translate(0, 0); }
+  .foodLst_wrap .calr_top .side_l { float:left; }
+  .foodLst_wrap .calr_top .side_r { margin-left:1rem; float:left; }
+  .foodLst_wrap .calr_top .side i { width:25px; height:25px; margin-right:.25rem; line-height:25px; font-size:.75rem; }
+  .foodLst_wrap .calr_tit_ctrl .date:hover img, .foodLst_wrap .calr_tit_ctrl .date:focus img { -webkit-transform:rotateY(0deg); transform:rotateY(0deg); }
+  .foodLst_wrap .calr_top .side_r a:hover i, .foodLst_wrap .calr_top .side_r a:focus i { background:#00a0a8; }
+  .foodLst_wrap .calr_tit_ctrl .bt_calr_pre:hover, 
+  .foodLst_wrap .calr_tit_ctrl .bt_calr_pre:focus,
+  .foodLst_wrap .calr_tit_ctrl .bt_calr_next:hover,
+  .foodLst_wrap .calr_tit_ctrl .bt_calr_next:focus { color:#000; -webkit-transform:translateX(0); transform:translateX(0); }
+  
+  /* 레이어 팝업 */
+  .layout-popup-wrap { right:auto; left:-8rem; width:300px; }
+  .layout-popup-wrap2 { right:auto; width:300px; }
+  .layout-popup-wrap:before { right:auto; left:8rem; }
+  .popup-wrap .pop_bt_close:hover > i,
+  .popup-wrap .pop_bt_close:focus > i { -webkit-transform:translate(-50%, -50%) rotate(0deg); transform:translate(-50%, -50%) rotate(0deg); }
+  
+}
+
+@media screen and (max-width:640px){
+  /*식단버튼*/
+   /* action초기화 :시작 *******************************/
+  .btn_style1:hover,
+  .btn_style1:focus{background:#22499d; }
+  .btn_style2:hover,
+  .btn_style2:focus{background:#00a0a8; }
+  .btn_style3:hover,
+  .btn_style3:focus{background:#525c6e; }
+  .btn_line_style1:hover,
+  .btn_line_style1:focus{border-color:#22499d; color:#22499d; }
+  .btn_line_style2:hover,
+  .btn_line_style2:focus{border-color:#00a0a8; color:#00a0a8; }
+  .btn_line_style3:hover,
+  .btn_line_style3:focus{border-color:#525c6e; color:#525c6e; }
+  [class^="btn_style"]:hover i,
+  [class^="btn_style"]:focus i,
+  [class^="btn_line_style"]:hover i,
+  [class^="btn_line_style"]:focus i{-webkit-transform:translateX(0); transform:translateX(0); }	
+  /* 박스 :박스 기본 타입 */
+  div[class^="foodbox_st"]{padding:0.75rem; }
+  .foodbox_st_ico{padding-left:0; }
+  .foodbox_st_ico .ico_boxImg{position:relative; left:auto; top:auto; margin:0 auto 10px; text-align:center; }
+  /* 박스 아이콘 */
+  .foodbox_st_ico .inner{padding-left:1.35rem; }
+}
+
+@media (max-width:480px) { 
+	/* 식당 선텍 탭 */
+	.foodLst_wrap .foodmenuLst > li { width:50%; }
+	.foodLst_wrap .foodmenuLst > li > a { font-size:.8rem; }
+	
+	/* 식단 테이블 컨트롤 */
+	.foodLst_wrap .calr_tit_ctrl .date .txt_p { font-size:.8rem; }
+	.foodLst_wrap .calr_tit_ctrl .date img { width:30px; height:30px; }
+}
+
+@media (max-width:380px) { 
+}

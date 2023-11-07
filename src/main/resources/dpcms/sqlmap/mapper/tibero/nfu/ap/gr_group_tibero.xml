@@ -1,0 +1,436 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+ 
+<mapper namespace="gr_group">
+<!-- 그룹관리 -->
+
+	<!-- 그룹 리스트 SQL -->
+	<sql id="selectGrouplist"> 
+		 SELECT   A.GROUP_SEQ
+                 ,A.GROUP_NM
+                 ,A.GROUP_CODE
+                 ,B.SYS_ID
+                 ,B.SYS_NM 
+           FROM   TAP_GR_GROUP_MANAGE A ,TAP_SM_SYS_MANAGE B 
+          WHERE   A.SYS_ID = B.SYS_ID  
+          <if test="@egovframework.MybatisUtils@isNotEmpty(sysId)">
+            AND   B.SYS_ID = #{sysId}
+       	  </if>
+       	  <if test="@egovframework.MybatisUtils@isNotEmpty(srchTxt)">
+		    AND   ( A.GROUP_NM like '%'||#{srchTxt}||'%' )
+          </if>                  
+       ORDER BY   A.GROUP_SEQ DESC 
+	</sql>
+
+	<!-- 그룹 리스트 조회 -->
+     <select id="selectGrouplist" parameterType="map" resultType="egovMap">
+     	 <include refid="selectGrouplist" /> 
+    </select>
+    
+     <!-- 그룹 리스트 (페이징) -->
+    <select id="selectGrouplistPaging" parameterType="map" resultType="egovMap">
+    	SELECT
+    		PL.*
+    	FROM (
+        	SELECT 
+        		PO.*
+        		,rownum as rsn
+			FROM (
+	    		<include refid="selectGrouplist" /> 
+				) PO
+		) PL
+		WHERE
+		<![CDATA[
+			rsn <= #{maxSn} 
+			AND rsn > #{minSn}
+		]]>
+    </select>
+    
+     <!-- 그룹 리스트 (페이징 전체 카운트) -->
+    <select id="selectGrouplistPagingCount" parameterType="map" resultType="int">
+    	SELECT   COUNT(*)
+	       FROM   TAP_GR_GROUP_MANAGE A ,TAP_SM_SYS_MANAGE B 
+          WHERE   A.SYS_ID = B.SYS_ID  
+          <if test="@egovframework.MybatisUtils@isNotEmpty(sysId)">
+            AND   B.SYS_ID = #{sysId}
+       	  </if>
+       	  <if test="@egovframework.MybatisUtils@isNotEmpty(srchTxt)">
+		    AND   ( A.GROUP_NM like '%'||#{srchTxt}||'%' )
+          </if>                  
+       ORDER BY   A.GROUP_SEQ DESC 
+    </select>
+    
+    <!--그룹명 중복체크  -->
+    <select id="selectGroupNmInfo" parameterType="map" resultType="egovMap">
+     	  SELECT   COUNT(*) AS GROUP_CNT
+            FROM   TAP_GR_GROUP_MANAGE 
+           WHERE   SYS_ID = #{sysId} 
+             AND   GROUP_NM  = #{groupNm}  
+    </select>
+    
+    <!--그룹정보조회  -->
+    <select id="selectGroupInfo" parameterType="map" resultType="egovMap">
+     	  SELECT   A.GROUP_SEQ
+     	   		  ,A.GROUP_NM
+     	   		  ,A.GROUP_CODE
+     	   		  ,A.SYS_ID
+     	   		  ,B.SYS_NM
+     	   		  ,B.INSTT_CODE
+            FROM   TAP_GR_GROUP_MANAGE A, TAP_SM_SYS_MANAGE B  
+           WHERE  A.SYS_ID = B.SYS_ID   
+             AND  A.GROUP_SEQ = #{groupSeq}   
+    </select>
+    
+    <!--그룹등록  -->
+    <insert id="insertGroupInfo" parameterType="map" >
+          INSERT INTO TAP_GR_GROUP_MANAGE (
+			 GROUP_SEQ
+		    ,GROUP_CODE
+			,GROUP_NM 
+			,SYS_ID             
+	      ) VALUES (
+			 SEQ_GROUP_SN.NEXTVAL
+			,SEQ_GROUP_SN.NEXTVAL
+			,#{groupNm}
+			,#{sysId}           
+          )
+     </insert> 
+     
+     <!--그룹정보수정 -->
+    <update id="updateGroupInfo" parameterType ="map">
+	     UPDATE  TAP_GR_GROUP_MANAGE	
+		    SET  GROUP_NM  = #{groupNm}
+			    ,SYS_ID    = #{sysId}
+	      WHERE  GROUP_SEQ = #{groupSeq} 
+	</update>
+	
+	<!--그룹삭제  -->
+	<delete id="deleteGroupInfo" parameterType="map" >
+         DELETE  
+           FROM  TAP_GR_GROUP_MANAGE 
+          WHERE  GROUP_SEQ = #{groupSeq}
+    </delete>
+    
+	<!--그룹삭제 시 그룹에 부여된 권한 삭제  -->
+	<delete id="deleteGroupAuthor" parameterType="map" >
+         DELETE 
+           FROM  TAP_GR_GROUP_AUTHOR 
+          WHERE  GROUP_CODE = #{groupCode}
+    </delete>
+    
+	<!--그룹삭제 시 그룹에 가입된 회원 삭제  -->
+	<delete id="deleteGroupMberInfo" parameterType="map" >
+         DELETE 
+           FROM  TAP_GR_GROUP_MBER 
+          WHERE  GROUP_CODE = #{groupCode}
+    </delete>
+    
+    <!-- 그룹에 부여된 권한리스트 조회 -->
+    <select id="selectAuthorGrplist" parameterType="map" resultType="egovMap">
+         SELECT  A.AUTHOR_CODE
+                ,B.AUTHOR_NM 
+           FROM  TAP_GR_GROUP_AUTHOR A, TAP_AU_AUTHOR_MANAGE B
+          WHERE  A.AUTHOR_CODE = B.AUTHOR_CODE
+            AND  A.GROUP_CODE  = #{groupCode}
+            AND  A.SYS_ID      = #{sysId}
+          <if test="@egovframework.MybatisUtils@isNotEmpty(srchAuthor)">
+            AND  ( A.AUTHOR_CODE like '%'||#{srchAuthor}||'%' or B.AUTHOR_NM like '%'||#{srchAuthor}||'%' )
+          </if>
+     </select>
+     
+    <!-- 그룹 회원 관리 -->
+    <!--  그룹 회원 리스트 조회 -->
+    <select id="selectMberGrplist" parameterType="map" resultType="egovMap">
+     	 SELECT   A.MBERGRP_SEQ
+     	   		 ,A.GROUP_CODE
+                 ,A.MBER_ID
+                 ,B.MBER_NM 
+           FROM   TAP_GR_GROUP_MBER A ,TAP_MM_MBER_MANAGE B, TAP_MM_MBER_TY C 
+          WHERE   A.MBER_ID    = B.MBER_ID  
+            AND   B.MBER_ID    = C.MBER_ID
+            AND   A.GROUP_CODE = #{groupCode}
+            AND   C.INSTT_CODE   = #{insttCode}
+           <if test="@egovframework.MybatisUtils@isNotEmpty(srchNMbr)">
+            AND   ( A.MBER_ID like '%'||#{srchNMbr}||'%' or B.MBER_NM like '%'||#{srchNMbr}||'%' )
+           </if>
+       ORDER BY   A.MBERGRP_SEQ DESC
+    </select>
+    
+    <!--  그룹 회원 가입 가능한 사용자 리스트 조회 -->
+    <select id="selectNGrpMberlist" parameterType="map" resultType="egovMap">
+		 SELECT   A.MBER_ID
+                 ,A.MBER_NM 		  
+           FROM   TAP_MM_MBER_MANAGE A, TAP_MM_MBER_TY B
+          WHERE   A.MBER_ID  NOT IN ( SELECT MBER_ID FROM TAP_GR_GROUP_MBER WHERE GROUP_CODE= #{groupCode})
+            AND   A.MBER_ID  = B.MBER_ID
+            AND   B.INSTT_CODE = #{insttCode}
+           <if test="@egovframework.MybatisUtils@isNotEmpty(srchYMbr)">
+            AND   ( A.MBER_ID like '%'||#{srchYMbr}||'%' or A.MBER_NM like '%'||#{srchYMbr}||'%' )
+           </if>
+       ORDER BY   A.MBER_ID DESC
+     </select>
+     
+    <!--  그룹 회원 중복체크 -->
+    <select id="selectGrpMbrIdlist" parameterType="map" resultType="egovMap">
+     	  SELECT  MBER_ID
+            FROM  TAP_GR_GROUP_MBER A
+           WHERE  A.GROUP_CODE = #{groupCode}
+    </select>
+    
+    <!-- 그룹 회원 가입 -->
+	<insert id="insertMberGrpInfo" parameterType="map" >
+          INSERT INTO TAP_GR_GROUP_MBER (
+			  MBERGRP_SEQ
+			 ,GROUP_CODE
+			 ,MBER_ID 
+			 ,SYS_ID             
+	      ) VALUES (
+			  SEQ_GROUP_MBER_SN.NEXTVAL           
+			 ,#{groupCode}          
+			 ,#{mberId}           
+			 ,#{sysId}          
+           )
+    </insert> 
+    
+    <!--  그룹 회원 탈퇴-->
+    <delete id="deleteMberGrpInfo" parameterType="map" >
+          DELETE 
+            FROM  TAP_GR_GROUP_MBER 
+           WHERE  GROUP_CODE = #{groupCode}
+             AND  MBER_ID = #{mberId}
+             AND  SYS_ID = #{sysId}
+    </delete>
+    
+    <!--  총관리자 리스트 +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ -->
+    <!--  시스템 리스트 통계 sql -->
+	<sql id="selectGroupState">
+		SELECT COUNT(*) AS CNT
+		FROM   TAP_GR_GROUP_MANAGE GR
+		WHERE   GR.SYS_ID = SM.SYS_ID  
+	</sql>
+	
+	<!--  시스템 리스트 sql -->
+	<sql id="selectGroupSmList">
+		SELECT IT.INSTT_CODE
+	          ,IT.INSTT_NM
+	          ,IT.INSTT_TY
+	          ,SM.SYS_ID
+			  ,SM.SYS_NM 
+			  ,( <include refid="selectGroupState" /> ) AS TOTAL_CNT                                                                
+			  FROM TAP_IM_INSTT_MANAGE IT, TAP_SM_SYS_MANAGE SM 
+			  WHERE IT.INSTT_CODE = SM.INSTT_CODE
+			  AND SM.SYS_STTUS = 'O'
+			
+			<if test='@egovframework.MybatisUtils@isEmpty(author) || author != "master"'>
+	         AND SM.SYS_ID NOT IN ('apple')
+	        </if>
+	        
+	        <if test="@egovframework.MybatisUtils@isNotEmpty(mberId)">
+		      AND SM.SYS_ID IN (
+					SELECT SYS_ID
+					  FROM TAP_AU_AUTHOR_MBER 
+					 WHERE MBER_ID = #{mberId}
+						   AND SYS_ID != 'apple'
+					   AND AUTHOR_CODE IN (1,2)	
+	        	)
+		     </if>
+		     
+	        <if test="@egovframework.MybatisUtils@isNotEmpty(insttCode)">
+		     AND   ( IT.INSTT_CODE =  #{insttCode}
+		     
+	                    OR  IT.UPPER_INSTT_CODE = #{upperInsttCode}
+	                    OR  IT.BSIS_INSTT_CODE = #{bsisInsttCode}
+	                    
+	               	)
+	         </if>
+	         
+		     <if test="@egovframework.MybatisUtils@isNotEmpty(insttGrad)">
+		     AND   ( IT.INSTT_GRAD IS NULL
+		     
+		     		 <if test="@egovframework.MybatisUtils@isNotEmpty(dtnt)">
+		                OR IT.INSTT_GRAD = #{dtnt}
+		             </if>
+		             <if test="@egovframework.MybatisUtils@isNotEmpty(elesch)">
+		                OR IT.INSTT_GRAD = #{elesch}
+		             </if>
+		             <if test="@egovframework.MybatisUtils@isNotEmpty(mskul)">    
+		                OR IT.INSTT_GRAD = #{mskul}
+		             </if> 
+		             <if test="@egovframework.MybatisUtils@isNotEmpty(hgschl)">
+		                OR IT.INSTT_GRAD = #{hgschl}
+		             </if>
+		             <if test="@egovframework.MybatisUtils@isNotEmpty(kndrgr)">     
+		                OR IT.INSTT_GRAD = #{kndrgr}
+		             </if>
+		             <if test="@egovframework.MybatisUtils@isNotEmpty(spcl)">
+		                OR IT.INSTT_GRAD = #{spcl}
+		             </if>
+		             
+		           )
+		     </if>
+		     
+		     <if test="@egovframework.MybatisUtils@isNotEmpty(sysTy)">
+		      AND   SM.SYS_TY = #{sysTy}
+		     </if>
+		     
+		     <if test="@egovframework.MybatisUtils@isNotEmpty(srchTxt)">
+		       AND  (  		 
+       				 SM.SYS_NM like '%'||#{srchTxt}||'%'
+              	  OR SM.SYS_TY like '%'||#{srchTxt}||'%' 
+		              	 
+		       )
+		    </if>
+			 
+			 ORDER BY   IT.INSTT_CODE, IT.INSTT_LEVEL DESC
+	</sql>
+	
+	<!--  시스템 리스트 -->
+	<select id="selectGroupSmList" parameterType="map" resultType="egovMap">
+		<include refid="selectGroupSmList"/>
+	</select>
+	
+	<!--  시스템 페이징 -->
+	<select id="selectGroupSmListPaging" parameterType="map" resultType="egovMap">
+		SELECT
+    		PL.*
+    	FROM (
+        	SELECT 
+        		PO.*
+        		,rownum as rsn
+			FROM (
+	    		<include refid="selectGroupSmList" /> 
+				) PO
+		) PL
+		WHERE
+		<![CDATA[
+			rsn <= #{maxSn} 
+			AND rsn > #{minSn}
+		]]>
+	</select>
+	
+	<!--  시스템 페이징 카운트 -->
+	<select id="selectGroupSmListPagingCount" parameterType="map" resultType="int">
+		SELECT 
+			COUNT(*)
+			FROM TAP_IM_INSTT_MANAGE IT, TAP_SM_SYS_MANAGE SM 
+			  WHERE IT.INSTT_CODE = SM.INSTT_CODE
+			  AND SM.SYS_STTUS = 'O'
+			
+			<if test='@egovframework.MybatisUtils@isEmpty(author) || author != "master"'>
+	         AND SM.SYS_ID NOT IN ('apple')
+	        </if>
+	        
+	        <if test="@egovframework.MybatisUtils@isNotEmpty(insttCode)">
+		     AND   ( IT.INSTT_CODE =  #{insttCode}
+		     
+	                    OR  IT.UPPER_INSTT_CODE = #{upperInsttCode}
+	                    OR  IT.BSIS_INSTT_CODE = #{bsisInsttCode}
+	                    
+	               	)
+	         </if>
+	         
+		     <if test="@egovframework.MybatisUtils@isNotEmpty(insttGrad)">
+		     AND   ( IT.INSTT_GRAD IS NULL
+		     
+		     		 <if test="@egovframework.MybatisUtils@isNotEmpty(dtnt)">
+		                OR IT.INSTT_GRAD = #{dtnt}
+		             </if>
+		             <if test="@egovframework.MybatisUtils@isNotEmpty(elesch)">
+		                OR IT.INSTT_GRAD = #{elesch}
+		             </if>
+		             <if test="@egovframework.MybatisUtils@isNotEmpty(mskul)">    
+		                OR IT.INSTT_GRAD = #{mskul}
+		             </if> 
+		             <if test="@egovframework.MybatisUtils@isNotEmpty(hgschl)">
+		                OR IT.INSTT_GRAD = #{hgschl}
+		             </if>
+		             <if test="@egovframework.MybatisUtils@isNotEmpty(kndrgr)">     
+		                OR IT.INSTT_GRAD = #{kndrgr}
+		             </if>
+		             <if test="@egovframework.MybatisUtils@isNotEmpty(spcl)">
+		                OR IT.INSTT_GRAD = #{spcl}
+		             </if>
+		             
+		           )
+		     </if>
+	        
+	        <if test="@egovframework.MybatisUtils@isNotEmpty(mberId)">
+		      AND SM.SYS_ID IN (
+					SELECT SYS_ID
+					  FROM TAP_AU_AUTHOR_MBER 
+					 WHERE MBER_ID = #{mberId}
+						   AND SYS_ID != 'apple'
+					   AND AUTHOR_CODE IN (1,2)	
+	        	)
+		     </if>
+		     
+		     <if test="@egovframework.MybatisUtils@isNotEmpty(sysTy)">
+		      AND   SM.SYS_TY = #{sysTy}
+		     </if>
+		     
+		     <if test="@egovframework.MybatisUtils@isNotEmpty(srchTxt)">
+		       AND  (  		 
+       				 SM.SYS_NM like '%'||#{srchTxt}||'%'
+              	  OR SM.SYS_TY like '%'||#{srchTxt}||'%' 
+		              	 
+		       )
+		    </if>
+			 
+			 ORDER BY   IT.INSTT_CODE, IT.INSTT_LEVEL DESC
+	</select>
+    <!--  총관리자 리스트 +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ -->
+    
+    <!-- 그룹코드 사용자 조회 (메뉴 관리) -->
+	<select id="selectGroupListByCode" parameterType="map" resultType="egovMap">
+		SELECT 
+		       GR.MBERGRP_SEQ,
+		       GR.GROUP_CODE,
+		       GR.MBER_ID,
+		       GR.SYS_ID,
+		       MM.MBER_NM
+		  FROM 
+		       TAP_GR_GROUP_MBER GR, TAP_MM_MBER_MANAGE MM
+		 WHERE 1 = 1
+		   AND GR.MBER_ID = MM.MBER_ID
+		   AND GR.SYS_ID = #{sysId}
+		   AND GR.GROUP_CODE = #{groupCode}
+	</select>
+	
+	<!-- 메뉴 그룹 리스트 -->
+	<select id="selectMenuGroupList" parameterType="map" resultType="egovMap">
+		SELECT 
+		       A.GROUP_SEQ,
+		       <choose>
+					<when test="@egovframework.MybatisUtils@isNotEmpty(sysId) and sysId=='apple'">B.SYS_NM || ' ' || A.GROUP_NM AS GROUP_NM,</when>
+					<otherwise>A.GROUP_NM,</otherwise>
+				</choose>
+		       A.SYS_ID,
+		       A.GROUP_CODE
+		  FROM
+		       TAP_GR_GROUP_MANAGE A ,TAP_SM_SYS_MANAGE B 
+		   WHERE   A.SYS_ID = B.SYS_ID  
+		   <if test="@egovframework.MybatisUtils@isNotEmpty(sysId) and sysId !='apple'">
+            AND   B.SYS_ID = #{sysId} 
+       	   </if> 
+		   AND A.GROUP_CODE NOT IN (SELECT AUTHOR_NO FROM TAP_MN_MENU_AUTHOR WHERE MENU_ID = #{menuId} AND AUTHOR_TY = 'G')	
+	</select>	   
+	
+	<!-- 메뉴관리에서 부여가능한 그룹리스트 -->
+	<select id="selectMenuAddGroupList" parameterType="map" resultType="egovMap">
+		SELECT   A.GROUP_SEQ
+				<choose>
+					<when test="@egovframework.MybatisUtils@isNotEmpty(sysId) and sysId=='apple'">,B.SYS_NM || ' ' || A.GROUP_NM AS GROUP_NM</when>
+					<otherwise>,A.GROUP_NM</otherwise>
+				</choose>
+                 ,A.GROUP_CODE
+                 ,B.SYS_ID
+                 ,B.SYS_NM 
+           FROM   TAP_GR_GROUP_MANAGE A ,TAP_SM_SYS_MANAGE B 
+          WHERE   A.SYS_ID = B.SYS_ID  
+          <if test="@egovframework.MybatisUtils@isNotEmpty(sysId) and sysId !='apple'">
+            AND   B.SYS_ID = #{sysId}
+       	  </if>
+       	  ORDER BY A.GROUP_SEQ DESC
+	</select>
+	   
+</mapper>

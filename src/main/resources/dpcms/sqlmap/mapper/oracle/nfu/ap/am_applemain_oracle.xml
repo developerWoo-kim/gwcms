@@ -1,0 +1,604 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="am_applemain">
+
+	<!-- 홈페이지 수 조회 쿼리문 -->
+	<sql id="hmCnt">
+		SELECT COUNT(*) AS CNT 
+		  FROM TAP_IM_INSTT_MANAGE IT
+		  	 , TAP_SM_SYS_MANAGE SM 
+		  WHERE IT.INSTT_CODE = SM.INSTT_CODE
+		  AND SYS_STTUS IN ('O','S','D')
+		  AND SM.SYS_ID NOT IN ('apple')
+		  <if test="@egovframework.MybatisUtils@isNotEmpty(insttCode)">
+	      AND   ( IT.INSTT_CODE =  #{insttCode}
+	     
+                    OR  IT.UPPER_INSTT_CODE = #{upperInsttCode}
+                    OR  IT.BSIS_INSTT_CODE = #{bsisInsttCode}
+                    
+               	)
+          </if>
+	</sql>
+	<!-- 홈페이지 총 수 -->
+	<select id="selectHmTotalCnt" parameterType="map" resultType="egovMap">
+		<include refid="hmCnt" /> 
+	</select>
+	
+	<!-- 운영 수, 중지수, 폐쇄수 -->
+	<select id="selectHmCnt" parameterType="map" resultType="egovMap">
+		SELECT
+			(<include refid="hmCnt" /> AND SYS_STTUS='O') AS O_CNT,
+			(<include refid="hmCnt" /> AND SYS_STTUS='S') AS S_CNT,
+			(<include refid="hmCnt" /> AND SYS_STTUS='D') AS D_CNT
+		FROM DUAL
+	</select>
+	
+	<!-- 총 회원수  -->
+	<select id="selectMberTotalCnt" parameterType="map" resultType="egovMap">
+		SELECT COUNT(*) AS CNT 
+		FROM TAP_IM_INSTT_MANAGE IM
+			,TAP_SM_SYS_MANAGE SM 
+			,TAP_MM_MBER_TY MT 
+			,TAP_CD_CMMNCODE_DETAIL CD
+		WHERE MT.INSTT_CODE = IM.INSTT_CODE
+		AND IM.INSTT_CODE=SM.INSTT_CODE
+		<if test='@egovframework.MybatisUtils@isNotEmpty(sysId)'>
+		AND SM.SYS_ID = #{sysId} 
+        </if>
+		AND SM.SYS_ID NOT IN ('apple')
+		AND MT.MBER_TY = CD.CMMN_DETAIL_CODE
+        AND CD.CMMN_CODE = 'memberType'
+        AND CD.USE_AT = 'Y'
+        <if test="@egovframework.MybatisUtils@isNotEmpty(insttCode)">
+      	AND   ( IM.INSTT_CODE =  #{insttCode}
+     
+                   OR  IM.UPPER_INSTT_CODE = #{upperInsttCode}
+                   OR  IM.BSIS_INSTT_CODE = #{bsisInsttCode}
+                   
+              	)
+         </if>
+	</select>
+	
+	<!-- 회원 구분 수 -->
+	<select id="selectMberCnt" parameterType="map" resultType="egovMap">
+		SELECT CD.CMMN_DETAIL_CODE_NM	AS CODE_NM
+			  ,CD.CMMN_DETAIL_CODE		AS CODE_NO
+			  ,SUM(CASE WHEN T.MBER_TY IS NULL THEN 0 ELSE 1 END) AS CNT
+		FROM 
+		TAP_CD_CMMNCODE_DETAIL CD LEFT  OUTER JOIN ( 
+		
+			SELECT MM.*
+			FROM 
+			    TAP_SM_SYS_MANAGE SM,
+			    TAP_IM_INSTT_MANAGE IM,
+			    TAP_MM_MBER_TY MM
+			WHERE SM.INSTT_CODE = IM.INSTT_CODE
+			AND MM.INSTT_CODE = IM.INSTT_CODE
+			<if test="@egovframework.MybatisUtils@isNotEmpty(sysId)">
+			AND SM.SYS_ID = #{sysId} 
+	        </if>
+			AND SM.SYS_ID NOT IN ('apple')
+			<if test="@egovframework.MybatisUtils@isNotEmpty(insttCode)">
+	      	AND   ( IM.INSTT_CODE =  #{insttCode}
+	     
+	                   OR  IM.UPPER_INSTT_CODE = #{upperInsttCode}
+	                   OR  IM.BSIS_INSTT_CODE = #{bsisInsttCode}
+	                   
+	              	)
+	         </if>
+			
+		) T ON T.MBER_TY = CD.CMMN_DETAIL_CODE
+		WHERE CD.CMMN_CODE = 'memberType'
+		 	AND CD.USE_AT = 'Y'
+		GROUP BY CD.CMMN_DETAIL_CODE_NM,CD.CMMN_DETAIL_CODE
+		ORDER BY CD.CMMN_DETAIL_CODE
+	</select>
+	
+	<!-- 오늘 접속자 수 -->
+	<select id="selectVisitTotalCnt" parameterType="map" resultType="egovMap"> <!--  미사용 중  -->
+		SELECT COUNT(*) AS CNT
+		FROM TAP_ST_MBER_ACCES ST
+			,TAP_SM_SYS_MANAGE SM
+		WHERE ST.INSTT_CODE = SM.INSTT_CODE
+		AND TO_CHAR(CONECT_DATE, 'YYYY/MM/DD') = TO_CHAR(SYSDATE, 'YYYY/MM/DD')
+		AND ST.CONECT_TY NOT IN ('logout')
+		AND SM.SYS_ID = #{sysId}
+		AND SM.SYS_ID NOT IN ('apple')
+		
+	</select>
+	
+	<!-- 오늘 방문자 수  -->
+	<select id="selectTdVisitTotalCnt" parameterType="map" resultType="egovMap">
+		SELECT COUNT(*) AS CNT 
+		FROM TAP_ST_VISIT_STATS ST, TAP_SM_SYS_MANAGE SM, TAP_IM_INSTT_MANAGE IM
+		WHERE VISIT_DE between TO_DATE(TO_CHAR(SYSDATE, 'YYYY/MM/DD')||'00:00:00','YYYY/MM/DD HH24:MI:SS')  and 
+        TO_DATE(TO_CHAR(SYSDATE, 'YYYY/MM/DD')||'23:59:59','YYYY/MM/DD HH24:MI:SS')
+		AND SM.INSTT_CODE = IM.INSTT_CODE
+        AND SM.SYS_ID = ST.SYS_ID 
+		AND ST.SESSION_ID IS NOT NULL 
+		<!-- logout 카운트 제외를 위해서 추가  -->
+		AND ST.SESSION_ID NOT IN ( 
+								SELECT SESSION_ID
+								  FROM TAP_ST_VISIT_STATS
+								 WHERE VISIT_REFER_URL LIKE '%logout%' 
+								 )
+		<if test="@egovframework.MybatisUtils@isNotEmpty(sysId)">
+		AND SM.SYS_ID = #{sysId}
+		</if>
+		<if test="@egovframework.MybatisUtils@isNotEmpty(insttCode)">
+      	AND   ( IM.INSTT_CODE =  #{insttCode}
+                   <!-- OR  IM.UPPER_INSTT_CODE = #{upperInsttCode} --> <!-- 기관코드만 필요한 상태 ( 전버전에서는 사용했음 ) -->
+                   <!-- OR  IM.BSIS_INSTT_CODE = #{bsisInsttCode} -->   <!-- 기관코드만 필요한 상태 ( 전버전에서는 사용했음 ) -->
+              	)
+         </if>
+	</select>
+	
+	<!-- 오늘 방문자 수 상세보기 -->
+	<select id="selectVisitCnt" parameterType="map" resultType="egovMap"> <!--  미사용 중  -->
+		SELECT SM.SYS_NM,COUNT(*) AS CNT
+		FROM TAP_SM_SYS_MANAGE SM
+			,TAP_ST_VISIT_STATS VT
+			,TAP_IM_INSTT_MANAGE IM
+		WHERE SM.SYS_ID = VT.SYS_ID
+		AND SM.INSTT_CODE = IM.INSTT_CODE
+		AND TO_CHAR(VT.VISIT_DE, 'YYYY/MM/DD') = TO_CHAR(SYSDATE, 'YYYY/MM/DD')
+		AND VT.SESSION_ID IS NOT NULL
+		<if test="@egovframework.MybatisUtils@isNotEmpty(insttCode)">  <!-- selectTotalVisitCnt.do를 사용하지 않아 사용 X  조건은 충족하여 upper,bsis에 null들어감  -->
+      	AND   ( IM.INSTT_CODE =  #{insttCode}
+     
+                   OR  IM.UPPER_INSTT_CODE = #{upperInsttCode}
+                   OR  IM.BSIS_INSTT_CODE = #{bsisInsttCode}
+                   
+              	)
+         </if>
+		GROUP BY SM.SYS_NM
+		ORDER BY CNT DESC
+	</select>
+	
+	<!-- 오늘 접속자 수 상세보기(한 사이트 관리) -->
+	<select id="selectVisitCntDetail" parameterType="map" resultType="egovMap">
+		SELECT 
+			CASE WHEN B.MM IS NULL THEN '비회원' ELSE B.MM END NM,
+			SUM(CASE WHEN A.SESSION_ID IS NULL THEN 0 ELSE 1 END) CNT
+		
+		FROM DUAL,(
+		    SELECT ST.SESSION_ID 
+		    FROM TAP_ST_VISIT_STATS ST
+		    	,TAP_SM_SYS_MANAGE SM
+		    WHERE SM.SYS_ID = ST.SYS_ID 
+		    AND SM.SYS_ID = #{sysId}
+		    AND TO_CHAR(ST.VISIT_DE,'YYYY/MM/DD') = TO_CHAR(SYSDATE,'YYYY/MM/DD')
+		    <!-- logout 카운트 제외를 위해서 추가  -->
+		    AND ST.SESSION_ID NOT IN ( 
+								    SELECT SESSION_ID
+									  FROM TAP_ST_VISIT_STATS
+									 WHERE VISIT_REFER_URL LIKE '%logout%' 
+								    )
+		) A LEFT OUTER JOIN (
+		    SELECT CD.CMMN_DETAIL_CODE_NM MM
+		    	  ,ST.SESSION_ID  
+		    FROM TAP_ST_MBER_ACCES ST
+		    	,TAP_SM_SYS_MANAGE SM
+		    	,TAP_MM_MBER_TY MM
+		    	,TAP_CD_CMMNCODE_DETAIL CD
+		    WHERE ST.INSTT_CODE = SM.INSTT_CODE
+		    <!-- AND ST.INSTT_CODE = MM.INSTT_CODE --> <!-- ST기관코드 :현재 사용중인 기관의 코드 / MM기관 코드 : 계정의 최상위 기관코드  SO.서로 맞지 않음 -->
+		    AND ST.CONECTR_ID =  MM.MBER_ID
+		    AND MM.MBER_TY = CD.CMMN_DETAIL_CODE
+		    AND CD.CMMN_CODE IN ('clasAuthorTy','memberType') <!-- 또는 AND CD.CMMN_CODE NOT IN 'clasGradeCode'  추가-->
+		    AND TO_CHAR(CONECT_DATE, 'YYYY/MM/DD') = TO_CHAR(SYSDATE, 'YYYY/MM/DD')
+		    AND ST.CONECT_TY NOT IN ('logout') 
+		    AND SM.SYS_ID = #{sysId}
+		) B ON A.SESSION_ID = B.SESSION_ID
+		
+		GROUP BY B.MM
+	</select>
+
+	<!-- 오늘 접속자 수 상세보기(관리자페이지) -->
+	<select id="selectVisitCntDetailApple" parameterType="map" resultType="egovMap">
+		SELECT 
+			   CASE WHEN A.MM IS NULL THEN '비회원' ELSE A.MM END NM,
+			   SUM(CASE WHEN A.SESSION_ID IS NULL THEN 0 ELSE 1 END) CNT
+		  FROM DUAL,(
+				    SELECT CD.CMMN_DETAIL_CODE_NM AS MM,
+				    	   ST.SESSION_ID  
+					  FROM TAP_ST_MBER_ACCES ST,
+				    	   TAP_SM_SYS_MANAGE SM,
+				    	   TAP_MM_MBER_TY MM,
+				    	   TAP_CD_CMMNCODE_DETAIL CD
+					 WHERE ST.INSTT_CODE = SM.INSTT_CODE
+					   AND ST.CONECTR_ID =  MM.MBER_ID
+				       AND MM.MBER_TY = CD.CMMN_DETAIL_CODE
+				       AND CD.CMMN_CODE IN ('clasAuthorTy')
+				       AND TO_CHAR(CONECT_DATE, 'YYYY/MM/DD') = TO_CHAR(SYSDATE, 'YYYY/MM/DD')
+				       AND ST.CONECT_TY NOT IN ('logout') 
+				       AND SM.SYS_ID = #{sysId} <!-- apple만 해당쿼리를 호출해 apple넣어도 됨 -->
+					) A
+	  GROUP BY A.MM
+	</select>
+	
+	<!-- 누적 방문자 수 상세보기 -->
+	<select id="selectTotalVisitCnt" parameterType="map" resultType="egovMap">
+		SELECT SM.SYS_NM,COUNT(*) AS CNT
+		FROM TAP_ST_VISIT_STATS ST
+			,TAP_SM_SYS_MANAGE SM
+			,TAP_IM_INSTT_MANAGE IM
+		WHERE SM.SYS_ID = ST.SYS_ID
+		AND SM.INSTT_CODE = IM.INSTT_CODE
+		<if test="@egovframework.MybatisUtils@isNotEmpty(insttCode)">
+      	AND   ( IM.INSTT_CODE =  #{insttCode}
+     
+                   OR  IM.UPPER_INSTT_CODE = #{upperInsttCode}
+                   OR  IM.BSIS_INSTT_CODE = #{bsisInsttCode}
+                   
+              	)
+         </if>
+		GROUP BY SM.SYS_NM
+		ORDER BY CNT DESC
+	</select>
+	
+	<!-- 가입대기건수 -->
+	<select id="selectConfmTotalCnt" parameterType="map" resultType="egovMap">
+		SELECT COUNT(*) AS CNT
+		  FROM (
+		SELECT MT.MBER_ID
+ 		FROM TAP_MM_MBER_TY MT
+ 			,TAP_SM_SYS_MANAGE SM
+ 			,TAP_CD_CMMNCODE_DETAIL CD
+ 			,TAP_IM_INSTT_MANAGE IM
+		WHERE MT.INSTT_CODE = SM.INSTT_CODE
+		AND MT.MBER_TY = CD.CMMN_DETAIL_CODE
+		AND SM.INSTT_CODE = IM.INSTT_CODE
+		AND CD.CMMN_CODE='memberType'
+		<if test="@egovframework.MybatisUtils@isNotEmpty(combineAt)">
+			<if test='combineAt == "N"'>
+				AND SM.SYS_ID = #{sysId}
+			</if>
+		</if>
+		<if test="@egovframework.MybatisUtils@isEmpty(combineAt)">
+		AND SM.SYS_ID = #{sysId}
+		</if>
+		AND  MT.CONFM_YN = 'N'
+		<if test="@egovframework.MybatisUtils@isNotEmpty(insttCode)">
+      	AND   ( IM.INSTT_CODE =  #{insttCode}
+     
+                   OR  IM.UPPER_INSTT_CODE = #{upperInsttCode}
+                   OR  IM.BSIS_INSTT_CODE = #{bsisInsttCode}
+                   
+              	)
+         </if>
+         GROUP BY MT.MBER_ID
+        )
+	</select>
+	
+	<!-- 가입대기건수 상세보기 -->
+	<select id="selectConfmCnt" parameterType="map" resultType="egovMap">
+		SELECT SM.SYS_NM
+			  ,count(*) AS CNT
+		FROM TAP_MM_MBER_TY MT
+			,TAP_SM_SYS_MANAGE SM
+			,TAP_CD_CMMNCODE_DETAIL CD
+			,TAP_IM_INSTT_MANAGE IM
+		WHERE MT.INSTT_CODE = SM.INSTT_CODE
+		AND MT.MBER_TY = CD.CMMN_DETAIL_CODE
+		AND SM.INSTT_CODE = IM.INSTT_CODE
+		AND CD.CMMN_CODE='memberType'
+		<if test="@egovframework.MybatisUtils@isNotEmpty(sysId)">
+		AND SM.SYS_ID = #{sysId}
+		</if>
+		AND MT.CONFM_YN = 'N'
+		<if test="@egovframework.MybatisUtils@isNotEmpty(insttCode)">
+      	AND   ( IM.INSTT_CODE =  #{insttCode}
+     
+                   OR  IM.UPPER_INSTT_CODE = #{upperInsttCode}
+                   OR  IM.BSIS_INSTT_CODE = #{bsisInsttCode}
+                   
+              	)
+         </if>
+		GROUP BY SM.SYS_NM
+	</select>
+	
+	<!-- 가입대기건수 상세보기(한사이트) -->
+	<select id="selectConfmCntDetail" parameterType="map" resultType="egovMap">
+		SELECT CD.CMMN_DETAIL_CODE_NM NM
+			  ,COUNT(*) CNT
+		FROM TAP_MM_MBER_TY MT
+			,TAP_SM_SYS_MANAGE SM
+			,TAP_CD_CMMNCODE_DETAIL CD
+		WHERE MT.INSTT_CODE = SM.INSTT_CODE
+		AND MT.MBER_TY = CD.CMMN_DETAIL_CODE
+		AND  MT.CONFM_YN = 'N'
+		AND SM.SYS_ID = #{sysId}
+		AND CD.CMMN_CODE='memberType'
+		GROUP BY CD.CMMN_DETAIL_CODE_NM
+	</select>
+	
+	<!-- 관리자 접속 리스트 -->
+	<select id="selectMngrConectList" parameterType="map" resultType="egovMap">
+		SELECT * FROM (
+		
+			SELECT ST.CONECTR_NM
+				  ,SM.SYS_NM
+				  ,ST.CONECT_DATE
+			FROM TAP_ST_MNGR_ACCES ST
+				,TAP_SM_SYS_MANAGE SM
+				,TAP_IM_INSTT_MANAGE IM
+			WHERE ST.INSTT_CODE = SM.INSTT_CODE
+			AND SM.INSTT_CODE = IM.INSTT_CODE
+			AND SM.SYS_ID NOT IN ('apple')
+			<if test="@egovframework.MybatisUtils@isNotEmpty(insttCode)">
+	      	AND   ( IM.INSTT_CODE =  #{insttCode}
+	     
+	                   OR  IM.UPPER_INSTT_CODE = #{upperInsttCode}
+	                   OR  IM.BSIS_INSTT_CODE = #{bsisInsttCode}
+	                   
+	              	)
+	         </if>
+			ORDER BY CONECT_DATE DESC
+		
+		) 
+		<![CDATA[
+			WHERE ROWNUM < 6
+		]]> 
+	</select>
+	
+	<!-- 관리자 접속 리스트(고도화전용) -->
+	<select id="selectSimpeMngrConectList" parameterType="map" resultType="egovMap">
+		SELECT * FROM (
+		
+            SELECT 
+                   ST.CONECTR_ID,
+                   ST.CONECTR_NM,
+                   ST.INSTT_NM,
+                   TO_CHAR(ST.CONECT_DATE, 'YYYY-MM-DD HH24:MI:SS') AS CONECT_DATE,
+                   (SELECT CMMN_DETAIL_CODE_NM FROM TAP_CD_CMMNCODE_DETAIL WHERE CMMN_CODE = 'memberType' AND CMMN_DETAIL_CODE = MT.MBER_TY) AS MBER_TY
+              FROM 
+                   TAP_ST_MNGR_ACCES ST,
+                   TAP_MM_MBER_TY MT
+             WHERE 1 = 1
+               AND ST.INSTT_CODE = #{insttCode}
+               AND ST.CONECTR_ID = MT.MBER_ID
+          ORDER BY ST.CONECT_DATE DESC
+		
+		) 
+		<![CDATA[
+			WHERE ROWNUM < 5
+		]]> 
+	</select>	
+	
+	<!-- 방문자 접속리스트 -->
+	<select id="selectVisitorConectList" parameterType="map" resultType="egovMap">
+	SELECT A.* FROM (
+	SELECT
+	S.*,ROWNUM AS RNUM
+	FROM(
+		SELECT ST.CONECTR_NM
+			  ,SM.SYS_NM
+			  ,ST.CONECT_DATE
+		FROM TAP_ST_MBER_ACCES ST
+			,TAP_SM_SYS_MANAGE SM
+<!-- 			,TAP_MM_MBER_TY MM -->
+<!-- 			,TAP_CD_CMMNCODE_DETAIL CD -->
+			,TAP_IM_INSTT_MANAGE IM
+			
+		WHERE ST.INSTT_CODE = SM.INSTT_CODE
+<!-- 		AND ST.CONECTR_ID = MM.MBER_ID -->
+<!-- 		AND ST.INSTT_CODE = MM.INSTT_CODE -->
+<!-- 		AND MM.MBER_TY = CD.CMMN_DETAIL_CODE -->
+		AND SM.INSTT_CODE = IM.INSTT_CODE
+<!-- 		AND CD.CMMN_CODE = 'memberType' -->
+<!-- 		AND CD.USE_AT = 'Y' -->
+		AND SM.SYS_ID NOT IN ('apple')
+		AND ST.CONECT_TY NOT IN ('logout')
+		<if test="@egovframework.MybatisUtils@isNotEmpty(combineAt)">
+			<if test='combineAt == "N"'>
+				AND SM.SYS_ID = #{sysId}
+			</if>
+		</if>
+		<!-- AND TO_CHAR(ST.CONECT_DATE,'YYYY/MM/DD') = TO_CHAR(SYSDATE,'YYYY/MM/DD') -->
+		AND ST.CONECT_DATE BETWEEN  TO_DATE(TO_CHAR(SYSDATE,'YYYY/MM/DD')||' 00:00:00', 'YYYY/MM/DD HH24:MI:SS') AND TO_DATE(TO_CHAR(SYSDATE,'YYYY/MM/DD')||' 23:59:59', 'YYYY/MM/DD HH24:MI:SS')
+		<if test="@egovframework.MybatisUtils@isNotEmpty(insttCode)">
+      	AND   ( IM.INSTT_CODE =  #{insttCode}
+     
+                   OR  IM.UPPER_INSTT_CODE = #{upperInsttCode}
+                   OR  IM.BSIS_INSTT_CODE = #{bsisInsttCode}
+                   
+              	)
+        </if>
+		ORDER BY CONECT_DATE DESC) S ) A  WHERE RNUM <![CDATA[<=]]> 100
+	</select>
+	
+	<!-- 방문자 접속리스트 (고도화 전용) -->
+	<select id="selectSimpleVisitorConectList" parameterType="map" resultType="egovMap">
+		SELECT * FROM (
+		
+            SELECT 
+                   ST.CONECTR_ID,
+                   ST.CONECTR_NM,
+                   ST.INSTT_NM,
+                   TO_CHAR(ST.CONECT_DATE, 'YYYY-MM-DD HH24:MI:SS') AS CONECT_DATE,
+                   (SELECT CMMN_DETAIL_CODE_NM FROM TAP_CD_CMMNCODE_DETAIL WHERE CMMN_CODE = 'memberType' AND CMMN_DETAIL_CODE = MT.MBER_TY) AS MBER_TY
+              FROM 
+                   TAP_ST_MBER_ACCES ST,
+                   TAP_MM_MBER_TY MT
+             WHERE 1 = 1
+               AND ST.INSTT_CODE = #{insttCode}
+               AND ST.CONECTR_ID = MT.MBER_ID
+          ORDER BY ST.CONECT_DATE DESC
+		
+		) 
+		<![CDATA[
+			WHERE ROWNUM < 5
+		]]> 
+	</select>	
+	
+	<!-- 12시간 전부터 방문자 수 랭킹 10-->
+	<select id="selectVisitList" parameterType="map" resultType="egovMap">
+		SELECT T.SYS_ID FROM (
+		
+		    SELECT SM.SYS_ID
+		    	  ,SM.SYS_NM,COUNT(*) AS CNT
+		    FROM TAP_ST_MBER_ACCES ST
+		    	,TAP_SM_SYS_MANAGE SM
+		    	,TAP_IM_INSTT_MANAGE IM
+		    WHERE ST.INSTT_CODE = SM.INSTT_CODE
+		    AND SM.INSTT_CODE = IM.INSTT_CODE
+		    <![CDATA[
+			    AND TO_CHAR(CONECT_DATE,'YYYY/MM/DD HH24') >= TO_CHAR(SYSDATE - 12/24,'YYYY/MM/DD HH24')
+			    AND TO_CHAR(CONECT_DATE ,'YYYY/MM/DD HH24') <= TO_CHAR(SYSDATE - 1/24,'YYYY/MM/DD HH24')
+ 			]]> 
+ 			AND SM.SYS_ID NOT IN ('apple')
+ 			<if test="@egovframework.MybatisUtils@isNotEmpty(insttCode)">
+	      	AND   ( IM.INSTT_CODE =  #{insttCode}
+	     
+	                   OR  IM.UPPER_INSTT_CODE = #{upperInsttCode}
+	                   OR  IM.BSIS_INSTT_CODE = #{bsisInsttCode}
+	                   
+	              	)
+	         </if>
+		    GROUP BY SM.SYS_ID,SM.SYS_NM
+		    ORDER BY CNT DESC
+		    
+		) T 
+		<![CDATA[
+			WHERE ROWNUM <= 10
+		]]> 
+	</select>
+	
+	<!-- 12시간부터 한시간 간격 리스트 -->
+	<select id="selectTimeList" parameterType="map" resultType="egovMap">
+		SELECT TO_CHAR(SYSDATE - 12/24,'MM/DD HH24') AS TIME FROM DUAL UNION ALL   
+		SELECT TO_CHAR(SYSDATE - 11/24,'MM/DD HH24') AS TIME FROM DUAL UNION ALL   
+		SELECT TO_CHAR(SYSDATE - 10/24,'MM/DD HH24') AS TIME FROM DUAL UNION ALL   
+		SELECT TO_CHAR(SYSDATE - 9/24, 'MM/DD HH24') AS TIME FROM DUAL UNION ALL   
+		SELECT TO_CHAR(SYSDATE - 8/24, 'MM/DD HH24') AS TIME FROM DUAL UNION ALL   
+		SELECT TO_CHAR(SYSDATE - 7/24, 'MM/DD HH24') AS TIME FROM DUAL UNION ALL   
+		SELECT TO_CHAR(SYSDATE - 6/24, 'MM/DD HH24') AS TIME FROM DUAL UNION ALL   
+		SELECT TO_CHAR(SYSDATE - 5/24, 'MM/DD HH24') AS TIME FROM DUAL UNION ALL   
+		SELECT TO_CHAR(SYSDATE - 4/24, 'MM/DD HH24') AS TIME FROM DUAL UNION ALL   
+		SELECT TO_CHAR(SYSDATE - 3/24, 'MM/DD HH24') AS TIME FROM DUAL UNION ALL   
+		SELECT TO_CHAR(SYSDATE - 2/24, 'MM/DD HH24') AS TIME FROM DUAL UNION ALL   
+		SELECT TO_CHAR(SYSDATE - 1/24, 'MM/DD HH24') AS TIME FROM DUAL
+	</select>
+	
+	<!-- 12시간 동안 방문자 수 구하기 -->
+	<select id="visitCntList" parameterType="map" resultType="egovMap">
+		SELECT B.NM
+		      ,T.TIME 
+			  ,SUM(CASE WHEN B.VISIT IS NULL THEN 0 ELSE 1 END) AS CNT 
+		FROM DUAL,
+		(
+			SELECT TO_CHAR(SYSDATE - 12/24,'YYYY/MM/DD HH24') AS TIME FROM DUAL UNION ALL   
+			SELECT TO_CHAR(SYSDATE - 11/24,'YYYY/MM/DD HH24') AS TIME FROM DUAL UNION ALL   
+			SELECT TO_CHAR(SYSDATE - 10/24,'YYYY/MM/DD HH24') AS TIME FROM DUAL UNION ALL   
+			SELECT TO_CHAR(SYSDATE - 9/24,'YYYY/MM/DD HH24') AS TIME FROM DUAL UNION ALL   
+			SELECT TO_CHAR(SYSDATE - 8/24,'YYYY/MM/DD HH24') AS TIME FROM DUAL UNION ALL   
+			SELECT TO_CHAR(SYSDATE - 7/24,'YYYY/MM/DD HH24') AS TIME FROM DUAL UNION ALL   
+			SELECT TO_CHAR(SYSDATE - 6/24,'YYYY/MM/DD HH24') AS TIME FROM DUAL UNION ALL   
+			SELECT TO_CHAR(SYSDATE - 5/24,'YYYY/MM/DD HH24') AS TIME FROM DUAL UNION ALL   
+			SELECT TO_CHAR(SYSDATE - 4/24,'YYYY/MM/DD HH24') AS TIME FROM DUAL UNION ALL   
+			SELECT TO_CHAR(SYSDATE - 3/24,'YYYY/MM/DD HH24') AS TIME FROM DUAL UNION ALL   
+			SELECT TO_CHAR(SYSDATE - 2/24,'YYYY/MM/DD HH24') AS TIME FROM DUAL UNION ALL   
+			SELECT TO_CHAR(SYSDATE - 1/24,'YYYY/MM/DD HH24') AS TIME FROM DUAL
+		) T LEFT OUTER JOIN
+		(
+			SELECT SM.SYS_NM AS NM
+				  ,TO_CHAR(CONECT_DATE,'YYYY/MM/DD HH24') AS VISIT
+			FROM TAP_ST_MBER_ACCES ST, TAP_SM_SYS_MANAGE SM
+			WHERE ST.INSTT_CODE = SM.INSTT_CODE
+			AND TO_CHAR(CONECT_DATE,'YYYY/MM/DD HH24') >= TO_CHAR(SYSDATE - 12/24,'YYYY/MM/DD HH24')
+			AND SM.SYS_ID= #{sysId}
+			ORDER BY VISIT DESC
+		) B ON T.TIME = B.VISIT
+		GROUP BY B.NM,T.TIME
+		ORDER BY T.TIME
+	</select>
+	
+	<!-- 게시판리스트 조회 -->
+	<select id="selectBbsList" parameterType="map" resultType="egovMap">
+		SELECT * 
+		FROM (
+			SELECT 
+			      BBS_SJ
+			  FROM 
+			  	   TAP_BM_BBS_MANAGE BM,
+			       TAP_SM_SYS_MANAGE SM
+			 WHERE BM.SYS_ID = SM.SYS_ID
+			   AND BM.BBS_USE_AT = 'Y' 
+			   <if test="@egovframework.MybatisUtils@isNotEmpty(sysId)">
+	             AND  SM.SYS_ID = #{sysId}
+	       	   </if>
+	           ORDER BY BM.BBS_ID DESC
+	    ) 
+		<![CDATA[
+			WHERE ROWNUM <= 5
+		]]> 
+	</select>
+	
+	<!-- 자주찾는 메뉴 10 -->
+	<select id="selectMenuList" parameterType="map" resultType="egovMap">
+		SELECT * 
+		FROM (
+			SELECT MN.MENU_NM
+				  ,COUNT(*) AS CNT 
+			FROM TAP_ST_MENU_STATS ST, TAP_MN_MENU_MANAGE MN
+			WHERE ST.MENU_ID = MN.MENU_ID
+			AND MN.SYS_ID = #{sysId}
+			GROUP BY MN.MENU_NM
+			ORDER BY CNT DESC
+		) 
+		<![CDATA[
+			WHERE ROWNUM <= 10
+		]]> 
+	</select>
+	
+	<!-- 월별 방문자 수 -->
+	<select id="selectMonthList" parameterType="map" resultType="egovMap">
+		SELECT D.CURR_MONTH
+        	  ,SUM(CASE WHEN B.VISIT IS NULL THEN 0 ELSE 1 END) AS CNT
+		FROM DUAL,
+		(
+			SELECT TO_CHAR(ADD_MONTHS(ADD_MONTHS(SYSDATE,-12), LEVEL -1),'YYYY/MM') CURR_MONTH
+			FROM DUAL
+			<![CDATA[
+				CONNECT BY ADD_MONTHS(ADD_MONTHS(SYSDATE,-12), LEVEL -1)  <= SYSDATE
+			]]> 
+		) D
+		LEFT OUTER JOIN
+		(
+			SELECT TO_CHAR(VISIT_DE,'YYYY/MM') AS VISIT
+			FROM TAP_ST_VISIT_STATS ST
+				,TAP_SM_SYS_MANAGE SM
+			WHERE SM.SYS_ID = ST.SYS_ID
+			AND SM.SYS_ID= #{sysId}
+			AND TO_CHAR(VISIT_DE,'YYYY/MM') BETWEEN TO_CHAR(ADD_MONTHS(SYSDATE,-12),'YYYY/MM') AND TO_CHAR(SYSDATE,'YYYY/MM')
+			ORDER BY VISIT DESC
+		) B ON D.CURR_MONTH = B.VISIT
+		GROUP BY D.CURR_MONTH
+		ORDER BY D.CURR_MONTH
+	</select>
+	
+	<!-- 오늘 하루 등록된 글 수 -->
+	<select id="selectUploadTotalCnt" parameterType="map" resultType="egovMap">
+		SELECT COUNT(*) CNT
+		FROM TCO_NA_NTT_MANAGE NA
+			,TAP_BM_BBS_MANAGE BM
+		WHERE NA.BBS_ID = BM.BBS_ID
+		AND SYS_ID = #{sysId}
+		AND TO_CHAR(NA.REG_DT,'YYYY/MM/DD') = TO_CHAR(SYSDATE,'YYYY/MM/DD')
+	</select>
+	
+	<!-- 오늘 하루 등록된 글 수 상세보기 -->
+	<select id="selectUploadCnt" parameterType="map" resultType="egovMap">
+		SELECT BM.BBS_SJ SJ
+			  ,COUNT(*) CNT
+		FROM TCO_NA_NTT_MANAGE NA
+			,TAP_BM_BBS_MANAGE BM
+		WHERE NA.BBS_ID = BM.BBS_ID
+		AND SYS_ID = #{sysId}
+		AND TO_CHAR(NA.REG_DT,'YYYY/MM/DD') = TO_CHAR(SYSDATE,'YYYY/MM/DD')
+		GROUP BY BM.BBS_SJ
+	</select>
+	
+</mapper>

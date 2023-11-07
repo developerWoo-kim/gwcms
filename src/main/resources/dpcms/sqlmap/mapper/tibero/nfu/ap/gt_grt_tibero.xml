@@ -1,0 +1,284 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="gt_grt">
+
+    <!--인사말 조회 -->
+    <select id="selectGrtInfo" parameterType="map" resultType="egovMap">
+       SELECT    TG.GRT_SN
+       			,TG.GRT_TMPLAT
+		        ,TG.SYS_ID
+		        ,TG.GRT_TITLE
+		        ,TG.GRT_SUBTITL
+		        ,TG.GRT_CN
+		        ,TG.GRT_SIGN
+		        ,TG.GRT_OFCPS
+		        ,TG.FILE_ID
+		        ,TG.CREAT_USID
+		        ,TG.CREAT_USNM
+		        ,TG.CREAT_USIP
+		        ,TG.CREAT_DT
+		        <if test="@egovframework.MybatisUtils@isNotEmpty(sysId)">
+		        ,(SELECT SYS_NM FROM TAP_SM_SYS_MANAGE WHERE SYS_ID=#{sysId}) AS SYS_NM
+		        </if>
+	     FROM   TAP_GT_GRT_MANAGE TG
+       <if test="@egovframework.MybatisUtils@isNotEmpty(sysId)">
+        WHERE   TG.SYS_ID = #{sysId}
+       </if>
+    </select>
+    
+     <!--인사말 등록 -->
+	<insert id="insertGrtInfo" parameterType="map" >
+	     INSERT INTO TAP_GT_GRT_MANAGE (
+			 GRT_SN
+		    ,SYS_ID
+		    ,GRT_TMPLAT
+			,GRT_TITLE
+		    ,GRT_SUBTITL
+			,GRT_CN
+		    ,GRT_SIGN
+			,GRT_OFCPS
+			,FILE_ID           
+			,CREAT_USID
+			,CREAT_USNM
+			,CREAT_USIP
+		    ,CREAT_DT
+		    
+		) VALUES (
+		     SEQ_GRT_SN.NEXTVAL
+		    ,#{sysId} 
+		    ,#{grtTmplat} 
+		    ,#{grtTitle} 
+		    ,#{grtSubtitl} 
+		    ,#{grtCn} 
+            ,#{grtSign} 
+  	        ,#{grtOfcps} 
+            ,#{fileGrpKey}
+            ,#{creatUsid}
+            ,#{creatUsnm}
+            ,#{creatUsip}
+            ,sysdate
+            
+		)
+	 </insert>
+	 
+     <!-- 인사말 수정 -->
+     <update id="updateGrtInfo" parameterType ="map">
+		  UPDATE  TAP_GT_GRT_MANAGE	
+			 SET  GRT_TITLE        = #{grtTitle}
+			 	 ,GRT_TMPLAT       = #{grtTmplat}
+			     ,GRT_SUBTITL      = #{grtSubtitl}
+			     ,GRT_CN           = #{grtCn}
+			     ,GRT_SIGN         = #{grtSign}
+			     ,GRT_OFCPS        = #{grtOfcps}
+			     ,FILE_ID          = #{fileId} 
+		   WHERE  GRT_SN = #{grtSn}
+	</update>
+	
+	<!--인사말 삭제 -->
+	<delete id="deleteGrtInfo" parameterType="map" >
+         DELETE 
+	       FROM  TAP_GT_GRT_MANAGE
+	      WHERE  GRT_SN = #{grtSn}
+    </delete>
+    
+    <!-- 인사말 시스템 리스트 퀴리문 시작 -->
+    
+    <!-- 인사말 시스템 리스트 통계 sql -->
+    <sql id="selectGrtState">
+    	SELECT COUNT(*) FROM TAP_GT_GRT_MANAGE WHERE SYS_ID = SM.SYS_ID 
+    </sql>
+    
+    <!-- 인사말 시스템 리스트 sql -->
+	<sql id="selectGrtSmList">
+		SELECT IT.INSTT_CODE
+	          ,IT.INSTT_NM
+	          ,IT.INSTT_TY
+	          ,IT.INSTT_GRAD
+	          ,SM.SYS_ID
+			  ,SM.SYS_NM 
+			  ,SM.SYS_TY 
+			  ,rank() OVER (ORDER BY IT.INSTT_CODE DESC, IT.INSTT_LEVEL) as rank
+			  ,NVL2(GT.SYS_ID,1,0) AS UPLOAD_CNT   
+			  ,CMMN_DETAIL_CODE_NM AS TYNAME                                                      
+			  FROM TAP_IM_INSTT_MANAGE IT,  TAP_CD_CMMNCODE_DETAIL CD, TAP_SM_SYS_MANAGE SM 
+			  	LEFT OUTER JOIN TAP_GT_GRT_MANAGE GT 
+			  	ON GT.SYS_ID = SM.SYS_ID
+			  WHERE IT.INSTT_CODE = SM.INSTT_CODE
+			  AND CMMN_CODE='sysTy' and CMMN_DETAIL_CODE = SM.SYS_TY
+			  AND SM.SYS_STTUS = 'O'
+			  AND CD.USE_AT = 'Y'
+	         AND SM.SYS_ID NOT IN ('apple')
+	        
+	        <if test="@egovframework.MybatisUtils@isNotEmpty(insttCode)">
+		     AND   ( IT.INSTT_CODE =  #{insttCode}
+		     
+	                    OR  IT.UPPER_INSTT_CODE = #{upperInsttCode}
+	                    OR  IT.BSIS_INSTT_CODE = #{bsisInsttCode}
+	                    
+	               	)
+	         </if>
+	         
+		     <if test="@egovframework.MybatisUtils@isNotEmpty(insttGrad)">
+		     AND   ( IT.INSTT_GRAD IS NULL
+		     
+		     		 <if test="@egovframework.MybatisUtils@isNotEmpty(dtnt)">
+		                OR IT.INSTT_GRAD = #{dtnt}
+		             </if>
+		             <if test="@egovframework.MybatisUtils@isNotEmpty(elesch)">
+		                OR IT.INSTT_GRAD = #{elesch}
+		             </if>
+		             <if test="@egovframework.MybatisUtils@isNotEmpty(mskul)">    
+		                OR IT.INSTT_GRAD = #{mskul}
+		             </if> 
+		             <if test="@egovframework.MybatisUtils@isNotEmpty(hgschl)">
+		                OR IT.INSTT_GRAD = #{hgschl}
+		             </if>
+		             <if test="@egovframework.MybatisUtils@isNotEmpty(kndrgr)">     
+		                OR IT.INSTT_GRAD = #{kndrgr}
+		             </if>
+		             <if test="@egovframework.MybatisUtils@isNotEmpty(spcl)">
+		                OR IT.INSTT_GRAD = #{spcl}
+		             </if>
+		             
+		           )
+		     </if>
+	        
+	        <if test="@egovframework.MybatisUtils@isNotEmpty(mberId)">
+		      AND SM.SYS_ID IN (
+					SELECT SYS_ID
+					  FROM TAP_AU_AUTHOR_MBER 
+					 WHERE MBER_ID = #{mberId}
+						   AND SYS_ID != 'apple'
+					   AND AUTHOR_CODE IN (1,2)	
+	        	)
+		     </if>
+		     
+		     <if test="@egovframework.MybatisUtils@isNotEmpty(sysTy)">
+		      AND   SM.SYS_TY = #{sysTy}
+		     </if>
+		     
+		     <if test="@egovframework.MybatisUtils@isNotEmpty(srchTxt)">
+		       AND  (  		 
+       				 SM.SYS_NM like '%'||#{srchTxt}||'%'
+              	  OR SM.SYS_TY like '%'||#{srchTxt}||'%' 
+		              	 
+		       )
+		    </if>
+		     
+		     <if test="@egovframework.MybatisUtils@isNotEmpty(uploadCom)">
+		       AND  NVL2(GT.SYS_ID,1,0)  = #{uploadCom}
+		    </if>
+			 
+			 ORDER BY   IT.INSTT_CODE, IT.INSTT_LEVEL DESC
+	</sql>
+	
+	<!-- 인사말 시스템 리스트 -->
+	<select id="selectGrtSmList" parameterType="map" resultType="egovMap">
+		<include refid="selectGrtSmList"/>
+	</select>
+	
+	<!-- 인사말 시스템 페이징 -->
+	<select id="selectGrtSmListPaging" parameterType="map" resultType="egovMap">
+		SELECT
+    		PL.*
+    	FROM (
+        	SELECT 
+        		PO.*
+        		,rownum as rsn
+			FROM (
+	    		<include refid="selectGrtSmList" /> 
+				) PO
+		) PL
+		WHERE
+		<![CDATA[
+			rsn <= #{maxSn} 
+			AND rsn > #{minSn}
+		]]>
+	</select>
+	
+	<!-- 인사말 시스템 페이징 카운트 -->
+	<select id="selectGrtSmListPagingCount" parameterType="map" resultType="int">
+		SELECT 
+			COUNT(*)
+			FROM TAP_IM_INSTT_MANAGE IT,  TAP_CD_CMMNCODE_DETAIL CD, TAP_SM_SYS_MANAGE SM 
+			  	LEFT OUTER JOIN TAP_GT_GRT_MANAGE GT 
+			  	ON GT.SYS_ID = SM.SYS_ID
+			  WHERE IT.INSTT_CODE = SM.INSTT_CODE
+			  AND CMMN_CODE='sysTy' and CMMN_DETAIL_CODE = SM.SYS_TY
+			  AND SM.SYS_STTUS = 'O'
+			  AND CD.USE_AT = 'Y'
+	         AND SM.SYS_ID NOT IN ('apple')
+	        
+	        <if test="@egovframework.MybatisUtils@isNotEmpty(insttCode)">
+		     AND   ( IT.INSTT_CODE =  #{insttCode}
+		     
+	                    OR  IT.UPPER_INSTT_CODE = #{upperInsttCode}
+	                    OR  IT.BSIS_INSTT_CODE = #{bsisInsttCode}
+	                    
+	               	)
+	         </if>
+	         
+		     <if test="@egovframework.MybatisUtils@isNotEmpty(insttGrad)">
+		     AND   ( IT.INSTT_GRAD IS NULL
+		     
+		     		 <if test="@egovframework.MybatisUtils@isNotEmpty(dtnt)">
+		                OR IT.INSTT_GRAD = #{dtnt}
+		             </if>
+		             <if test="@egovframework.MybatisUtils@isNotEmpty(elesch)">
+		                OR IT.INSTT_GRAD = #{elesch}
+		             </if>
+		             <if test="@egovframework.MybatisUtils@isNotEmpty(mskul)">    
+		                OR IT.INSTT_GRAD = #{mskul}
+		             </if> 
+		             <if test="@egovframework.MybatisUtils@isNotEmpty(hgschl)">
+		                OR IT.INSTT_GRAD = #{hgschl}
+		             </if>
+		             <if test="@egovframework.MybatisUtils@isNotEmpty(kndrgr)">     
+		                OR IT.INSTT_GRAD = #{kndrgr}
+		             </if>
+		             <if test="@egovframework.MybatisUtils@isNotEmpty(spcl)">
+		                OR IT.INSTT_GRAD = #{spcl}
+		             </if>
+		             
+		           )
+		     </if>
+	        
+	        <if test="@egovframework.MybatisUtils@isNotEmpty(mberId)">
+		      AND SM.SYS_ID IN (
+					SELECT SYS_ID
+					  FROM TAP_AU_AUTHOR_MBER 
+					 WHERE MBER_ID = #{mberId}
+						   AND SYS_ID != 'apple'
+					   AND AUTHOR_CODE IN (1,2)	
+	        	)
+		     </if>
+		     
+		     <if test="@egovframework.MybatisUtils@isNotEmpty(sysTy)">
+		      AND   SM.SYS_TY = #{sysTy}
+		     </if>
+		     
+		     <if test="@egovframework.MybatisUtils@isNotEmpty(srchTxt)">
+		       AND  (  		 
+       				 SM.SYS_NM like '%'||#{srchTxt}||'%'
+              	  OR SM.SYS_TY like '%'||#{srchTxt}||'%' 
+		              	 
+		       )
+		    </if>
+		    
+		    <if test="@egovframework.MybatisUtils@isNotEmpty(uploadCom)">
+		       AND  NVL2(GT.SYS_ID,1,0)  = #{uploadCom}
+		    </if>
+			 
+			 ORDER BY   IT.INSTT_CODE, IT.INSTT_LEVEL DESC
+	</select>	
+    
+	<select id="sysTyList" parameterType="map" resultType="egovMap">
+    	SELECT * 
+    	FROM TAP_CD_CMMNCODE_DETAIL 
+    	WHERE CMMN_CODE = 'sysTy'
+    	AND USE_AT = 'Y'
+	</select>
+    <!-- 인사말 시스템 리스트 퀴리문 종료 -->
+    
+</mapper>

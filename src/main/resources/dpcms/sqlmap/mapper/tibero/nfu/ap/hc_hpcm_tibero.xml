@@ -1,0 +1,239 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="hc_hpcm">
+
+	<!-- 도움말 조회 쿼리 -->
+    <sql id="selectHpcmListSql" >
+        SELECT 
+		HM.HPCM_SN
+		,HM.HPCM_TY
+		,HM.HPCM_SJ
+		,HM.HPCM_DC
+		,HM.REG_ID
+		,HM.REG_IP
+		,TO_CHAR(HM.RGSDE,'YYYY/MM/DD') AS RGSDE
+		,MM.MBER_NM
+		,rank() OVER (ORDER BY HM.RGSDE,HM.HPCM_SN) as rank
+		FROM TAP_HM_HPCM_MANAGE HM, TAP_MM_MBER_MANAGE MM
+		WHERE MM.MBER_ID = HM.REG_ID
+        <if test="@egovframework.MybatisUtils@isNotEmpty(hpcmSn)">
+        	AND HM.HPCM_SN = #{hpcmSn}
+		</if>
+        	
+        <if test="@egovframework.MybatisUtils@isNotEmpty(hpcmTy)">
+        	AND HM.HPCM_TY = #{hpcmTy}
+		</if>
+
+		<if test="@egovframework.MybatisUtils@isNotEmpty(srchHpcmOp)">
+	     	<if test='srchHpcmOp=="T"'>
+	     		AND HM.HPCM_SJ LIKE '%'||#{srchHpcm}||'%'
+	     	</if>
+	     	<if test='srchHpcmOp=="W"'>
+	     		AND HM.REG_ID LIKE '%'||#{srchHpcm}||'%'
+	     	</if>
+	    </if>
+		ORDER BY HM.RGSDE DESC,HM.HPCM_SN DESC
+		
+    </sql>
+	
+<!-- 	투표 리스트 조회 -->
+	<select id="selectHpcmList" parameterType="map" resultType="egovMap">
+		<include refid="selectHpcmListSql" /> 
+	</select>
+	
+	<!-- 투표 리스트 조회(페이징) -->
+    <select id="selectHpcmListPaging" parameterType="map" resultType="egovMap">
+    	SELECT
+    		PL.*
+    	FROM (
+        	SELECT 
+        		PO.*
+        		,rownum as rsn
+			FROM (
+	    		<include refid="selectHpcmListSql" /> 
+				) PO
+		) PL
+		WHERE
+		<![CDATA[
+  			rsn <= #{maxSn}   
+  			AND rsn > #{minSn}  
+  		]]> 
+    </select>
+   
+<!--     투표 리스트 조회(페이징 전체 카운트) -->
+    <select id="selectHpcmListPagingCount" parameterType="map" resultType="int">
+    	SELECT 
+		 COUNT(*) 
+		FROM TAP_HM_HPCM_MANAGE HM, TAP_MM_MBER_MANAGE MM
+		WHERE MM.MBER_ID = HM.REG_ID
+		
+       <if test="@egovframework.MybatisUtils@isNotEmpty(hpcmSn)">
+        	AND HM.HPCM_SN = #{hpcmSn}
+		</if>
+		
+        <if test="@egovframework.MybatisUtils@isNotEmpty(hpcmTy)">
+        	AND HM.HPCM_TY = #{hpcmTy}
+		</if>
+
+        <if test="@egovframework.MybatisUtils@isNotEmpty(srchHpcmOp)">
+	     	<if test='srchHpcmOp=="T"'>
+	     		AND HM.HPCM_SJ LIKE '%'||#{srchHpcm}||'%'
+	     	</if>
+	     	<if test='srchHpcmOp=="W"'>
+	     		AND HM.REG_ID LIKE '%'||#{srchHpcm}||'%'
+	     	</if>
+	    </if>
+		ORDER BY  HM.RGSDE DESC,HM.HPCM_SN DESC
+    </select>
+
+	<!-- 도움말등록 -->
+	<insert id="insertHpcm" parameterType="map">
+		insert into TAP_HM_HPCM_MANAGE(
+		    HPCM_SN
+			,HPCM_TY
+			,HPCM_SJ
+			,HPCM_DC
+			,REG_ID
+			,REG_IP
+			,HPCM_RESN
+			,RGSDE
+		)values(
+		    SEQ_HPCM_SN.nextval,
+		    #{hpcmType},
+		    #{hpcmTitle},
+		    #{hpcmContent},
+		    #{creatId},
+		    #{creatIp},
+		    #{hpcmResn},
+		    SYSDATE
+		)
+	</insert>
+	
+	<!-- 도움말 단건 조회 -->
+	<select id="hpcminfo" parameterType="map" resultType="egovMap">
+		SELECT 
+			HM.HPCM_SN
+			,HM.HPCM_TY
+			,HM.HPCM_SJ
+			,HM.HPCM_DC
+			,HM.REG_ID
+			,HM.REG_IP
+			,TO_CHAR(HM.RGSDE,'YYYY/MM/DD') AS RGSDE
+			,MM.MBER_NM
+		FROM TAP_HM_HPCM_MANAGE HM, TAP_MM_MBER_MANAGE MM
+		WHERE MM.MBER_ID = HM.REG_ID
+		AND HM.HPCM_SN = #{hpcmSn}
+	</select>
+	
+	<!-- 도움말 수정 -->
+	<update id="updateHpcm" parameterType="map">
+		UPDATE TAP_HM_HPCM_MANAGE SET 
+			HPCM_TY = #{hpcmType}
+			,HPCM_SJ = #{hpcmTitle}
+			,HPCM_DC = #{hpcmContent}
+			,REG_ID = #{creatId}
+			,REG_IP = #{creatIp}
+			,RGSDE = SYSDATE
+		WHERE HPCM_SN = #{hpcmSn}
+	</update>
+	
+	<!-- 도움말 삭제 -->
+	<delete id="deleteHpcm" parameterType="map">
+		DELETE FROM TAP_HM_HPCM_MANAGE WHERE HPCM_SN = #{hpcmSn}
+	</delete>
+
+	<!-- 신규도움말 -->
+	<!-- 도움말 목록 베이스 -->
+	<sql id="selectHelpList">
+		SELECT HPCM_SN
+			,HPCM_TY
+			,HPCM_SJ
+			,HPCM_DC
+			,HPCM_RESN
+			,REG_ID
+			,REG_IP
+			,RGSDE
+		FROM TAP_HM_HPCM_MANAGE 
+		ORDER BY HPCM_SN DESC
+	</sql>
+	
+	<!-- 도움말 조회 -->
+	<select id="selectHelpInfo" parameterType="map" resultType="egovMap">
+		SELECT HM.HPCM_SN
+			,HM.HPCM_TY
+			,HM.HPCM_SJ
+			,HM.HPCM_DC
+			,HM.HPCM_RESN
+			,HM.REG_ID
+			,(SELECT MBER_NM FROM TAP_MM_MBER_MANAGE WHERE MBER_ID = HM.REG_ID) AS REG_NM
+			,HM.REG_IP
+			,TO_CHAR(HM.RGSDE,'YYYY/MM/DD') AS RGSDE
+		FROM (<include refid="selectHelpList" />) HM
+		WHERE HM.HPCM_TY = #{hpcmTy}
+		AND ROWNUM = 1
+	</select>
+	
+	<!-- 도움말 이력목록 베이스 -->
+	<sql id="selectHelpHistList">
+		SELECT HM.HPCM_SN
+			,HM.HPCM_TY
+			,HM.HPCM_SJ
+			,HM.HPCM_DC
+			,HM.HPCM_RESN
+			,HM.REG_ID
+			,(SELECT MBER_NM FROM TAP_MM_MBER_MANAGE WHERE MBER_ID = HM.REG_ID) AS REG_NM
+			,HM.REG_IP
+			,TO_CHAR(HM.RGSDE,'YYYY/MM/DD') AS RGSDE
+			,ROW_NUMBER() OVER(ORDER BY HM.HPCM_SN DESC) AS RSN
+		FROM (<include refid="selectHelpList" />) HM
+		<![CDATA[
+		WHERE HM.HPCM_TY = #{hpcmTy}
+		]]>
+	</sql>
+	
+	<!-- 도움말 이력목록 -->
+	<select id="selectHelpHistList" parameterType="map" resultType="egovMap">
+		<include refid="selectHelpHistList" />
+	</select>
+	
+	<!-- 도움말 이력목록 페이징 -->
+	<select id="selectHelpHistListPaging" parameterType="map" resultType="egovMap">
+		SELECT
+    		PL.*
+    	FROM (
+        	SELECT 
+        		PO.*
+			FROM (
+	    		<include refid="selectHelpHistList" /> 
+				) PO
+		) PL
+		WHERE
+		<![CDATA[
+			rsn <= #{maxSn} 
+			AND rsn > #{minSn}
+		]]>
+	</select>
+	
+	<!-- 도움말 이력목록 페이징 카운트 -->
+	<select id="selectHelpHistListPagingCount" parameterType="map" resultType="int">
+		SELECT COUNT(P.HPCM_SN)
+		FROM (<include refid="selectHelpHistList" />) P
+	</select>
+	
+	<!-- 도움말 이력 단건조회 -->
+	<select id="selectHelpHistInfo" parameterType="map" resultType="egovMap">
+		SELECT HM.HPCM_SN
+			,HM.HPCM_TY
+			,HM.HPCM_SJ
+			,HM.HPCM_DC
+			,HM.HPCM_RESN
+			,HM.REG_ID
+			,(SELECT MBER_NM FROM TAP_MM_MBER_MANAGE WHERE MBER_ID = HM.REG_ID) AS REG_NM
+			,HM.REG_IP
+			,TO_CHAR(HM.RGSDE,'YYYY/MM/DD') AS RGSDE
+		FROM TAP_HM_HPCM_MANAGE HM
+		WHERE HM.HPCM_SN = #{hpcmSn}
+		AND HM.HPCM_TY = #{hpcmTy}
+	</select>
+</mapper>

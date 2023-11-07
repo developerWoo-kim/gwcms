@@ -1,0 +1,591 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="nt_ntts">
+	
+	<resultMap id="clobMap" type="egovMap">
+        <result property="NT_NTTS" column="NT_NTTS" jdbcType="CLOB" javaType="java.lang.String"/>
+    </resultMap>
+    
+	<!-- 시스템 게시판 게시물 조회 쿼리 -->
+	<sql id="selectNttsListSql">
+		SELECT NT.BBS_ID
+			,NT.NTT_SN
+			,NT.UPPER_NTT_SN
+			,NT.NTT_SJ
+			,NT.REG_ID				
+			,NT.REG_NM AS ORI_REG_NM
+			<choose>
+				<when test="@egovframework.MybatisUtils@isNotEmpty(annymtyUseAt)">
+<!-- 			,REPLACE(NT.REG_NM, (SUBSTR(NT.REG_NM, 2, 1)), '*') AS REG_NM 	 -->
+			,REPLACE(NT.REG_NM, (SUBSTR(NT.REG_NM, 2)), '**') AS REG_NM
+				</when>
+				<otherwise>
+			,NT.REG_NM
+				</otherwise>
+			</choose>
+			,NT.REG_IP
+			,TO_CHAR(NT.REG_DT, 'YYYY/MM/DD HH24:MI:SS') AS REG_DT
+			,NT.NTT_RDCNT
+			,NT.NTT_OPPS_CO
+			,NT.NTT_APPRVL_CO
+			,NT.NTT_STTUS
+			,NT.NTT_USE_AT
+			,NT.SECRET_AT
+			,NT.SMS_AT
+			,NT.EMAIL_AT
+			,NT.NOTICE_AT
+			,NT.NOTICE_BEGIN_DT
+			,NT.NOTICE_END_DT
+			<!-- ,NT.VIDEO_TY
+			,NT.YOUTB_LINK
+			,NT.VIDEO_ID -->
+			,NT.ADIT_COL1
+			,NT.ADIT_COL2
+			,NT.ADIT_COL3
+			,NT.ADIT_COL4
+			,NT.ADIT_COL5
+			,NT.ADIT_COL6
+			,NT.ADIT_COL7
+			,NT.ADIT_COL8
+			,NT.ADIT_COL9
+			,NT.ADIT_COL10
+			,NT.CLSDR_AT
+			,NT.CONFM_AT
+			,TO_CHAR(NT.CONFM_BEGIN_DT, 'YYYY/MM/DD') AS CONFM_BEGIN_DT
+			,TO_CHAR(NT.CONFM_END_DT, 'YYYY/MM/DD') AS CONFM_END_DT
+			,NT.CONFM_MBER_ID
+			,NT.CONFM_MBER_NM
+			,TO_CHAR(NT.CONFM_DT, 'YYYY/MM/DD') AS CONFM_DT
+			<!-- ,NT.DEL_ID
+			,TO_CHAR(NT.DEL_DT, 'YYYY/MM/DD') AS DEL_DT
+			,NT.DEL_INFO
+			,TO_CHAR(NT.NTT_STTUS_DT, 'YYYY/MM/DD') AS NTT_STTUS_DT
+			,NT.CHRG_ID
+			,TO_CHAR(NT.CHRG_APNT_DT, 'YYYY/MM/DD') AS CHRG_APNT_DT -->
+			,BM.BBS_TY AS BBS_TY , BM.BBS_SJ AS BBS_SJ,
+ 		( SELECT COUNT(*) FROM TCO_NA_NTT_FILE NF WHERE NF.NTT_SN = NT.NTT_SN )  AS FILE_CHK
+<!--  		,(SELECT COUNT(*) FROM TCO_NA_NTT_HIST NH WHERE NH.NTT_SN = NT.NTT_SN AND NH.HIST_TY = 'T')  AS NTT_DWLD_CO -->
+		 ,ROW_NUMBER() OVER(ORDER BY NT.REG_DT DESC) AS RSN
+ 		 FROM 
+		 	TCO_NA_NTT_MANAGE NT, TAP_BM_BBS_MANAGE BM
+		WHERE 
+		 	NT.BBS_ID = BM.BBS_ID
+			AND BM.SYS_ID = #{sysId}
+			AND (NT.NTT_USE_AT ='Y' OR NT.NTT_USE_AT ='H')
+			AND BM.BBS_USE_AT = 'Y'
+   		<if test="@egovframework.MybatisUtils@isNotEmpty(searchBgnde) and @egovframework.MybatisUtils@isNotEmpty(searchEndde)">
+		     <![CDATA[
+					AND   NT.REG_DT >= #{searchBgnde}
+					AND   NT.REG_DT <= #{searchEndde}
+			  ]]>
+		</if>
+			
+		<if test="@egovframework.MybatisUtils@isNotEmpty(nttsSearchValue)">
+		   AND ((BM.BBS_ID LIKE '%'||#{nttsSearchValue}||'%') OR (BM.BBS_SJ LIKE '%'||#{nttsSearchValue}||'%') OR (NT.NTT_SJ LIKE '%'||#{nttsSearchValue}||'%')OR (NT.NTT_SN LIKE '%'||#{nttsSearchValue}||'%'))
+		</if>
+		<if test="@egovframework.MybatisUtils@isNotEmpty(searchBbsType)">
+			AND BM.BBS_TY = #{searchBbsType}	
+		</if>
+		<if test="@egovframework.MybatisUtils@isNotEmpty(searchBbsId)">
+			AND BM.BBS_ID = #{searchBbsId}	
+		</if>
+		<if test="@egovframework.MybatisUtils@isNotEmpty(hideNttCheck)">
+			AND NTT_SN IN
+			<foreach collection="nttSn" item="nttSnInfo" index="index" open="(" close=")" separator=",">
+	      		#{nttSnInfo}
+			</foreach>
+		</if>
+		ORDER BY NT.REG_DT DESC
+		
+	</sql>
+	
+	<!-- 해당 시스템 게시물 조회 -->
+    <select id="selectNttTotalList" parameterType="map" resultType="egovMap">
+    	<include refid="selectNttsListSql" /> 
+    </select>
+	
+	
+    <!-- 게시판 리스트 조회(페이징) -->
+    <select id="selectNttTotalListPaging" parameterType="map" resultType="egovMap">	
+		SELECT
+    		PL.*
+    	FROM (
+        	SELECT 
+        		PO.*
+			FROM (
+	    		<include refid="selectNttsListSql" /> 
+				) PO
+		) PL
+		WHERE
+		<![CDATA[
+			rsn <= #{maxSn} 
+			AND rsn > #{minSn}
+		]]>		
+    </select>
+    
+    <!-- 게시판 리스트 조회(페이징 전체 카운트) -->
+    <select id="selectNttTotalListPagingCount" parameterType="map" resultType="int">
+    	SELECT COUNT(*)
+	    FROM TCO_NA_NTT_MANAGE NT,TAP_BM_BBS_MANAGE BM
+        WHERE 
+        	BM.BBS_USE_AT = 'Y'
+       	AND NT.BBS_ID = BM.BBS_ID
+       	AND (NT.NTT_USE_AT ='Y' OR NT.NTT_USE_AT ='H')
+       	AND BM.SYS_ID = #{sysId}
+   		<if test="@egovframework.MybatisUtils@isNotEmpty(searchBgnde) and @egovframework.MybatisUtils@isNotEmpty(searchEndde)">
+		     <![CDATA[
+					AND   NT.REG_DT >= #{searchBgnde}
+					AND   NT.REG_DT <= #{searchEndde}
+			  ]]>
+		</if>
+
+		
+        <if test="@egovframework.MybatisUtils@isNotEmpty(nttsSearchValue)">
+        	AND ((BM.BBS_ID LIKE '%'||#{nttsSearchValue}||'%') OR (BM.BBS_SJ LIKE '%'||#{nttsSearchValue}||'%') OR (NT.NTT_SJ LIKE '%'||#{nttsSearchValue}||'%') OR (NT.NTT_SN LIKE '%'||#{nttsSearchValue}||'%'))
+        </if>
+        
+		<if test="@egovframework.MybatisUtils@isNotEmpty(searchBbsType)">
+			AND BM.BBS_TY = #{searchBbsType}	
+		</if>
+		<if test="@egovframework.MybatisUtils@isNotEmpty(searchBbsId)">
+			AND BM.BBS_ID = #{searchBbsId}	
+		</if>
+    </select>
+
+
+	<!-- 게시물 관리 홈페이지목록 리스트 sql -->
+	<sql id="selectNttTotalSmList">
+		SELECT IT.INSTT_CODE
+	          ,IT.INSTT_NM
+	          ,IT.INSTT_TY
+	          ,SM.SYS_ID
+			  ,SM.SYS_NM 
+			   ,ROW_NUMBER() OVER(ORDER BY IT.INSTT_CODE, IT.INSTT_LEVEL DESC) AS RSN                                                              
+			  FROM TAP_IM_INSTT_MANAGE IT, TAP_SM_SYS_MANAGE SM 
+			  WHERE IT.INSTT_CODE = SM.INSTT_CODE
+			  AND SM.SYS_STTUS = 'O'
+			
+			<if test='@egovframework.MybatisUtils@isEmpty(author) || author != "master"'>
+	         AND SM.SYS_ID NOT IN ('apple')
+	        </if>
+	        
+	        <if test="@egovframework.MybatisUtils@isNotEmpty(mberId)">
+		      AND SM.SYS_ID IN (
+					SELECT SYS_ID
+					  FROM TAP_AU_AUTHOR_MBER 
+					 WHERE MBER_ID = #{mberId}
+						   AND SYS_ID != 'apple'
+					   AND AUTHOR_CODE IN (1,2)	
+	        	)
+		     </if>
+		     
+	        <if test="@egovframework.MybatisUtils@isNotEmpty(insttCode)">
+		     AND   ( IT.INSTT_CODE =  #{insttCode}
+	                    OR  IT.UPPER_INSTT_CODE = #{upperInsttCode}
+	                    OR  IT.BSIS_INSTT_CODE = #{bsisInsttCode}
+	               	)
+	         </if>
+	         
+		     <if test="@egovframework.MybatisUtils@isNotEmpty(insttGrad)">
+		     AND   ( IT.INSTT_GRAD IS NULL
+		     		 <if test="@egovframework.MybatisUtils@isNotEmpty(dtnt)">
+		                OR IT.INSTT_GRAD = #{dtnt}
+		             </if>
+		             <if test="@egovframework.MybatisUtils@isNotEmpty(elesch)">
+		                OR IT.INSTT_GRAD = #{elesch}
+		             </if>
+		             <if test="@egovframework.MybatisUtils@isNotEmpty(mskul)">    
+		                OR IT.INSTT_GRAD = #{mskul}
+		             </if> 
+		             <if test="@egovframework.MybatisUtils@isNotEmpty(hgschl)">
+		                OR IT.INSTT_GRAD = #{hgschl}
+		             </if>
+		             <if test="@egovframework.MybatisUtils@isNotEmpty(kndrgr)">     
+		                OR IT.INSTT_GRAD = #{kndrgr}
+		             </if>
+		             <if test="@egovframework.MybatisUtils@isNotEmpty(spcl)">
+		                OR IT.INSTT_GRAD = #{spcl}
+		             </if>
+		           )
+		     </if>
+		     
+		     <if test="@egovframework.MybatisUtils@isNotEmpty(sysTy)">
+		      AND   SM.SYS_TY = #{sysTy}
+		     </if>
+		     
+		     <if test="@egovframework.MybatisUtils@isNotEmpty(srchTxt)">
+		       AND  (  		 
+       				 SM.SYS_NM LIKE '%'||#{srchTxt}||'%'
+              	  OR SM.SYS_TY LIKE '%'||#{srchTxt}||'%'
+		       )
+		    </if>
+			 
+<!-- 			 ORDER BY   IT.INSTT_CODE, IT.INSTT_LEVEL DESC -->
+	</sql>
+	
+	<!-- 게시물 관리 홈페이지목록 리스트 -->
+	<select id="selectNttTotalSmList" parameterType="map" resultType="egovMap">
+		<include refid="selectNttTotalSmList"/>
+	</select>
+	
+	<!-- 게시물 관리 홈페이지목록 리스트 페이징 -->
+	<select id="selectNttTotalSmListPaging" parameterType="map" resultType="egovMap">
+		SELECT
+    		PL.*
+    	FROM (
+        	SELECT 
+        		PO.*
+			FROM (
+	    		<include refid="selectNttTotalSmList" /> 
+				) PO
+		) PL
+		WHERE
+		<![CDATA[
+			rsn <= #{maxSn} 
+			AND rsn > #{minSn}
+		]]>
+	</select>
+	
+	<!-- 게시물 관리 홈페이지목록 리스트 페이징 카운트 -->
+	<select id="selectNttTotalSmListPagingCount" parameterType="map" resultType="int">
+		SELECT 
+			COUNT(*)
+			FROM TAP_IM_INSTT_MANAGE IT, TAP_SM_SYS_MANAGE SM 
+			  WHERE IT.INSTT_CODE = SM.INSTT_CODE
+			  AND SM.SYS_STTUS = 'O'
+			
+			<if test='@egovframework.MybatisUtils@isEmpty(author) || author != "master"'>
+	         AND SM.SYS_ID NOT IN ('apple')
+	        </if>
+	        
+	        <if test="@egovframework.MybatisUtils@isNotEmpty(insttCode)">
+		     AND   ( IT.INSTT_CODE =  #{insttCode}
+                    OR  IT.UPPER_INSTT_CODE = #{upperInsttCode}
+                    OR  IT.BSIS_INSTT_CODE = #{bsisInsttCode}
+	               	)
+	         </if>
+	         
+		     <if test="@egovframework.MybatisUtils@isNotEmpty(insttGrad)">
+		     AND   ( IT.INSTT_GRAD IS NULL
+		     		 <if test="@egovframework.MybatisUtils@isNotEmpty(dtnt)">
+		                OR IT.INSTT_GRAD = #{dtnt}
+		             </if>
+		             <if test="@egovframework.MybatisUtils@isNotEmpty(elesch)">
+		                OR IT.INSTT_GRAD = #{elesch}
+		             </if>
+		             <if test="@egovframework.MybatisUtils@isNotEmpty(mskul)">    
+		                OR IT.INSTT_GRAD = #{mskul}
+		             </if> 
+		             <if test="@egovframework.MybatisUtils@isNotEmpty(hgschl)">
+		                OR IT.INSTT_GRAD = #{hgschl}
+		             </if>
+		             <if test="@egovframework.MybatisUtils@isNotEmpty(kndrgr)">     
+		                OR IT.INSTT_GRAD = #{kndrgr}
+		             </if>
+		             <if test="@egovframework.MybatisUtils@isNotEmpty(spcl)">
+		                OR IT.INSTT_GRAD = #{spcl}
+		             </if>
+		           )
+		     </if>
+	        
+	        <if test="@egovframework.MybatisUtils@isNotEmpty(mberId)">
+		      AND SM.SYS_ID IN (
+					SELECT SYS_ID
+					  FROM TAP_AU_AUTHOR_MBER 
+					 WHERE MBER_ID = #{mberId}
+						   AND SYS_ID != 'apple'
+					   AND AUTHOR_CODE IN (1,2)	
+	        	)
+		     </if>
+		     
+		     <if test="@egovframework.MybatisUtils@isNotEmpty(sysTy)">
+		      AND   SM.SYS_TY = #{sysTy}
+		     </if>
+		     
+		     <if test="@egovframework.MybatisUtils@isNotEmpty(srchTxt)">
+		       AND  (  		 
+       				 SM.SYS_NM LIKE '%'||#{srchTxt}||'%'
+              	  OR SM.SYS_TY LIKE '%'||#{srchTxt}||'%'
+		       )
+		    </if>
+	</select>
+
+	
+    <update id="deletenttTotalInfo">
+    	UPDATE 
+    		TCO_NA_NTT_MANAGE NT
+    	SET
+    		NT.NTT_USE_AT = 'N'
+    		<!-- NTT_DTRN = #{nttDtrn} -->
+    	WHERE
+    		NT.NTT_SN IN
+    		<foreach collection="nttSn" item="item" index="index" open="(" close=")" separator=",">
+				#{item}
+			</foreach>
+		AND NT.BBS_ID = (
+			SELECT BM.BBS_ID 
+				FROM TAP_BM_BBS_MANAGE BM 
+				WHERE BM.BBS_ID = NT.BBS_ID 
+				AND BM.SYS_ID = #{sysId}
+		)
+    </update>
+    
+    <select id="selectbbsListInfo" resultType="egovMap">
+    	SELECT 
+     		*
+     	FROM 
+     		TAP_BM_BBS_MANAGE
+     	WHERE 
+    		BBS_USE_AT ='Y'
+    	AND SYS_ID = #{sysId}
+    	<if test="@egovframework.MybatisUtils@isNotEmpty(searchBbsType)">
+		AND BBS_TY = #{searchBbsType}	
+		</if>
+    </select>  
+    
+    <select id="selectbbsTypeInfo" resultType="egovMap">
+    	SELECT 
+     		CMMN_DETAIL_CODE AS BBS_TY,
+			CMMN_DETAIL_CODE_NM AS BBS_NM
+     	FROM 
+     		TAP_CD_CMMNCODE_DETAIL
+     	WHERE CMMN_CODE ='bbsType'
+     	AND USE_AT = 'Y'
+    </select> 
+    
+    <select id="selectNttExcelList" parameterType="map" resultMap="clobMap">
+	    SELECT
+	    	<if test="@egovframework.MybatisUtils@isNotEmpty(bbsId)">
+			   A.BBS_ID,
+			</if>
+			<if test="@egovframework.MybatisUtils@isNotEmpty(nttSn)">
+			   A.NTT_SN,
+			</if>
+			<if test="@egovframework.MybatisUtils@isNotEmpty(bbsSj)">
+			   A.BBS_SJ,
+			</if>
+			<if test="@egovframework.MybatisUtils@isNotEmpty(bbsTy)">
+			   B.CMMN_DETAIL_CODE_NM AS BBS_TY,
+			</if>
+			<if test="@egovframework.MybatisUtils@isNotEmpty(nttSj)">
+			   A.NTT_SJ,
+			</if>
+			<if test="@egovframework.MybatisUtils@isNotEmpty(regNm)">
+			   A.REG_NM,
+			</if>
+			<if test="@egovframework.MybatisUtils@isNotEmpty(regDt)">
+			   A.REG_DT,
+			</if>
+			<if test="@egovframework.MybatisUtils@isNotEmpty(nttRdcnt)">
+			   A.NTT_RDCNT,
+			</if>
+			<if test="@egovframework.MybatisUtils@isNotEmpty(fileChk)">
+			   A.FILE_CHK,
+			</if>
+				A.TEMPVAL 
+			FROM 	
+	    	(SELECT 
+	    		<if test="@egovframework.MybatisUtils@isNotEmpty(bbsId)">
+				   NT.BBS_ID AS BBS_ID,
+				</if>
+				<if test="@egovframework.MybatisUtils@isNotEmpty(nttSn)">
+				   NT.NTT_SN AS NTT_SN,
+				</if>
+				<if test="@egovframework.MybatisUtils@isNotEmpty(bbsSj)">
+				   BM.BBS_SJ AS BBS_SJ,
+				</if>
+				   BM.BBS_TY AS BBS_TYPE, 
+				<if test="@egovframework.MybatisUtils@isNotEmpty(nttSj)">
+				    NT.NTT_SJ AS NTT_SJ,
+				</if>
+				<if test="@egovframework.MybatisUtils@isNotEmpty(regNm)">
+				  NT.REG_NM AS REG_NM,
+				</if>
+				<if test="@egovframework.MybatisUtils@isNotEmpty(regDt)">
+				   NT.REG_DT AS REG_DT,
+				</if>
+				<if test="@egovframework.MybatisUtils@isNotEmpty(nttRdcnt)">
+				  NT.NTT_RDCNT AS NTT_RDCNT,
+				</if>
+				<if test="@egovframework.MybatisUtils@isNotEmpty(fileChk)">
+				  (SELECT COUNT(*) FROM TCO_NA_NTT_FILE NF WHERE NF.NTT_SN = NT.NTT_SN )  AS FILE_CHK,
+				</if>
+				 (SELECT 'TEMPVAL' FROM DUAL) AS TEMPVAL
+			 FROM 
+			 	TCO_NA_NTT_MANAGE NT, TAP_BM_BBS_MANAGE BM
+			WHERE 
+			 	NT.BBS_ID = BM.BBS_ID
+				AND BM.SYS_ID = #{sysId}
+				AND NT.NTT_USE_AT ='Y'	
+				AND BM.BBS_USE_AT = 'Y'
+	   		<if test="@egovframework.MybatisUtils@isNotEmpty(searchBgnde) and @egovframework.MybatisUtils@isNotEmpty(searchEndde)">
+			     <![CDATA[
+						AND   NT.REG_DT >= #{searchBgnde}
+						AND   NT.REG_DT <= #{searchEndde}
+				  ]]>
+			</if>
+				
+			<if test="@egovframework.MybatisUtils@isNotEmpty(nttsSearchValue)">
+			   AND ((BM.BBS_ID LIKE '%'||#{nttsSearchValue}||'%') OR (BM.BBS_SJ LIKE '%'||#{nttsSearchValue}||'%'))
+			</if>
+			<if test="@egovframework.MybatisUtils@isNotEmpty(searchBbsType)">
+				AND BM.BBS_TY = #{searchBbsType}	
+			</if>
+			<if test="@egovframework.MybatisUtils@isNotEmpty(searchBbsId)">
+				AND BM.BBS_ID = #{searchBbsId}	
+			</if>
+			)A , TAP_CD_CMMNCODE_DETAIL B 
+		  WHERE B.CMMN_CODE = 'bbsType'
+      		AND A.BBS_TYPE = B.CMMN_DETAIL_CODE
+		 ORDER BY A.BBS_ID DESC
+    </select> 
+    
+    <select id="selectNttExcelList2" parameterType="map" resultMap="clobMap">
+    	SELECT 
+    		BBS_ID
+    		, NTT_SN
+    		, BBS_SJ
+    		, CMMN_DETAIL_CODE_NM AS BBS_TY
+    		, NTT_SJ
+    		, REG_NM
+    		, TO_CHAR(REG_DT, 'YYYY/MM/DD HH24:MI') AS REG_DT
+    		, NTT_RDCNT
+    		, FILE_CHK
+    		, NTT_CN
+    	FROM 
+	    	(SELECT 
+				   NT.BBS_ID AS BBS_ID,
+				   NT.NTT_SN AS NTT_SN,
+				   BM.BBS_SJ AS BBS_SJ,
+				   BM.BBS_TY AS BBS_TYPE, 
+				   NT.NTT_SJ AS NTT_SJ,
+				   NT.REG_NM AS REG_NM,
+				   NT.REG_DT AS REG_DT,
+				   NT.NTT_RDCNT AS NTT_RDCNT,
+				   (SELECT COUNT(*) FROM TCO_NA_NTT_FILE NF WHERE NF.NTT_SN = NT.NTT_SN )  AS FILE_CHK, 
+				   NT.NTT_CN AS NTT_CN 
+			 FROM 
+			 	TCO_NA_NTT_MANAGE NT, TAP_BM_BBS_MANAGE BM
+			WHERE 
+			 	NT.BBS_ID = BM.BBS_ID
+				AND BM.SYS_ID = #{sysId}
+				AND NT.NTT_USE_AT ='Y'	
+				AND BM.BBS_USE_AT = 'Y'
+				AND NT.NTT_SN IN
+				<foreach collection="nttSn" item="item" index="index" open="(" close=")" separator=",">
+					#{item}
+				</foreach>
+	   		<if test="@egovframework.MybatisUtils@isNotEmpty(searchBgnde) and @egovframework.MybatisUtils@isNotEmpty(searchEndde)">
+			     <![CDATA[
+						AND   NT.REG_DT >= #{searchBgnde}
+						AND   NT.REG_DT <= #{searchEndde}
+				  ]]>
+			</if>
+				
+			<if test="@egovframework.MybatisUtils@isNotEmpty(nttsSearchValue)">
+			   AND ((BM.BBS_ID LIKE '%'||#{nttsSearchValue}||'%') OR (BM.BBS_SJ LIKE '%'||#{nttsSearchValue}||'%'))
+			</if>
+			<if test="@egovframework.MybatisUtils@isNotEmpty(searchBbsType)">
+				AND BM.BBS_TY = #{searchBbsType}	
+			</if>
+			<if test="@egovframework.MybatisUtils@isNotEmpty(searchBbsId)">
+				AND BM.BBS_ID = #{searchBbsId}	
+			</if>
+			) A , TAP_CD_CMMNCODE_DETAIL B 
+		WHERE B.CMMN_CODE = 'bbsType'
+      		 AND A.BBS_TYPE = B.CMMN_DETAIL_CODE
+		ORDER BY A.BBS_ID DESC
+    </select> 
+    
+     <select id="selectNttExcelFileList" parameterType="map" resultMap="clobMap">
+    	SELECT 
+			   NT.BBS_ID AS BBS_ID,
+			   NT.NTT_SN AS NTT_SN,
+			   BM.BBS_SJ AS BBS_SJ,
+			   BM.BBS_TY AS BBS_TY, 
+			    NT.NTT_SJ AS NTT_SJ,
+			  NT.REG_NM AS REG_NM,
+			   NT.REG_DT AS REG_DT,
+			  NT.NTT_RDCNT AS NTT_RDCNT,
+			  (SELECT COUNT(*) FROM TCO_NA_NTT_FILE NF WHERE NF.NTT_SN = NT.NTT_SN )  AS FILE_CHK,
+			   NF.FILE_SN,
+			   NF.FILE_NM,
+       		   NF.FLPTH
+		 FROM 
+		 	TCO_NA_NTT_MANAGE NT, TAP_BM_BBS_MANAGE BM, TCO_NA_NTT_FILE NF
+		WHERE 
+		 	NT.BBS_ID = BM.BBS_ID
+	        AND NT.BBS_ID = NF.BBS_ID
+	        AND BM.BBS_ID = NF.BBS_ID
+	        AND NT.NTT_SN = NF.NTT_SN
+			AND BM.SYS_ID = #{sysId}
+			AND NT.NTT_USE_AT ='Y'	
+			AND BM.BBS_USE_AT = 'Y'
+			AND NT.NTT_SN IN
+				<foreach collection="nttSn" item="item" index="index" open="(" close=")" separator=",">
+					#{item}
+				</foreach>
+   		<if test="@egovframework.MybatisUtils@isNotEmpty(searchBgnde) and @egovframework.MybatisUtils@isNotEmpty(searchEndde)">
+		     <![CDATA[
+					AND   NT.REG_DT >= #{searchBgnde}
+					AND   NT.REG_DT <= #{searchEndde}
+			  ]]>
+		</if>
+			
+		<if test="@egovframework.MybatisUtils@isNotEmpty(nttsSearchValue)">
+		   AND ((BM.BBS_ID LIKE '%'||#{nttsSearchValue}||'%') OR (BM.BBS_SJ LIKE '%'||#{nttsSearchValue}||'%'))
+		</if>
+		<if test="@egovframework.MybatisUtils@isNotEmpty(searchBbsType)">
+			AND BM.BBS_TY = #{searchBbsType}	
+		</if>
+		<if test="@egovframework.MybatisUtils@isNotEmpty(searchBbsId)">
+			AND BM.BBS_ID = #{searchBbsId}	
+		</if>
+		 ORDER BY NT.BBS_ID DESC
+    </select> 
+    
+        
+    <!-- 선택된 게시물 조회 -->
+    <select id="selectNttList" parameterType="map" resultType="egovMap">
+    	SELECT
+    		BBS_ID
+    		,	NTT_SN
+    		,	NTT_SJ
+    	FROM
+    		TCO_NA_NTT_MANAGE
+    	WHERE
+    		NTT_SN IN
+	    		<foreach collection="nttSn" item="item" index="index" open="(" close=")" separator=",">
+					#{item}
+				</foreach>
+    </select>
+    
+      <!-- 게시물 이동 -->
+    <update id="updateFileBbsId" parameterType="map">
+    	UPDATE TCO_NA_NTT_FILE 
+    	   SET BBS_ID = #{bbsId}
+    	 WHERE NTT_SN = #{nttSn}
+    </update>
+    
+    <!-- 홈페이지명 조회 -->
+    <select id="selectSysNm" parameterType="map" resultType="String">
+    	SELECT
+    		SYS_NM
+    	FROM
+    		TAP_SM_SYS_MANAGE
+    	WHERE
+    		SYS_ID = #{sysId}
+    </select>
+    
+    
+     <!--게시물 숨김 설정 -->
+ 	<update id="updateNttHideInfo" parameterType="map" >
+		
+    	UPDATE TCO_NA_NTT_MANAGE
+		SET NTT_USE_AT = #{nttUseAt}
+		WHERE NTT_SN = #{nttSn}
+		
+	</update>
+	
+</mapper>

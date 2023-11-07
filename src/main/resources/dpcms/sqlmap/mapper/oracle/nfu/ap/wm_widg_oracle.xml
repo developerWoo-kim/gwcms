@@ -1,0 +1,557 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="wm_widg">
+
+	<resultMap type="egovMap" id="clobMap">
+		<result property="NTT_CN" column="NTT_CN" javaType="java.lang.String" jdbcType="CLOB" />
+	</resultMap>
+
+	<!-- 위젯 시퀀스 조회 -->
+    <!-- <select id="selectSeqByWidgSn" resultType="string">
+		SELECT IFNULL(MAX(WIDG_SN + 1), 1) FROM TAP_WM_WIDGET_MANAGE S
+    </select> -->
+	<select id="selectSeqByWidgSn" resultType="string">
+        SELECT SEQ_WIDG_SN.NEXTVAL
+        FROM DUAL
+    </select>
+
+	<!-- 위젯 정보 조회 -->
+	<select id="selectWidgInfo" parameterType="map" resultType="egovMap">
+		SELECT *
+		  FROM TAP_WM_WIDGET_MANAGE
+		 WHERE 1=1
+		<if test='@egovframework.MybatisUtils@isNotEmpty(widgSn) and widgSn != "0"'>
+		   AND WIDG_SN = #{widgSn}
+		</if>
+		<if test='@egovframework.MybatisUtils@isEmpty(widgSn) or widgSn == "0"'>
+		  AND WIDG_ID = #{widgId}
+		  AND SYS_ID = #{widgSysId}
+		</if>
+	</select>
+	
+	<!-- 위젯 등록 -->
+	<insert id="insertWidgInfo" parameterType="map">
+		INSERT INTO TAP_WM_WIDGET_MANAGE (
+				WIDG_SN,
+				WIDG_ID,
+				SYS_ID,
+				TMPLAT_ID,
+				WIDG_TY,
+				WIDG_CO,
+				CREAT_ID,
+				CREAT_NM,
+				CREAT_IP,
+				CREAT_DT
+		) VALUES (
+				#{widgSn},
+				#{widgId},
+				#{widgSysId},
+				#{tmplatId},
+				#{widgTy},
+				#{widgCo},
+				#{creatId},
+				#{creatNm},
+				#{creatIp},
+				SYSDATE
+		)
+	</insert>
+	
+	<!-- 위젯 데이터 목록 조회(widgId, sysId) -->
+	<select id="selectWidgDataListByWidgIdAndSysId" parameterType="map" resultType="egovMap">
+		SELECT *
+		  FROM TAP_WM_WIDGET_DATA
+		 WHERE WIDG_SN = (
+							SELECT WIDG_SN
+							  FROM TAP_WM_WIDGET_MANAGE
+							 WHERE WIDG_ID = #{widgId}
+							   AND SYS_ID = #{widgSysId}
+						 )
+	  ORDER BY WIDG_DATA_ORDR
+	</select>
+	
+	<!-- 위젯 데이터 등록 -->
+	<insert id="insertWidgDataInfo" parameterType="map">
+		INSERT INTO TAP_WM_WIDGET_DATA (
+				WIDG_DATA_SN,
+				WIDG_SN,
+				WIDG_DATA_ID,
+				WIDG_DATA_SJ,
+				WIDG_DATA_TY,
+				WIDG_DATA_CO,
+				WIDG_DATA_URL,
+				WIDG_DATA_URL_TRGT,
+				WIDG_DATA_FLPTH,
+				WIDG_DATA_ALTRTV_TEXT,
+				WIDG_DATA_BCRN_COLOR,
+				WIDG_DATA_SKN_CLASS,
+				WIDG_DATA_ORDR,
+				CREAT_ID,
+				CREAT_NM,
+				CREAT_IP,
+				CREAT_DT
+		) VALUES (
+				SEQ_WIDG_DATA_SN.NEXTVAL,
+				#{widgSn},
+				NVL(#{widgDataId},0),
+				#{widgDataSj},
+				#{widgDataTy},
+				NVL(#{widgDataCo},1),
+				#{widgDataUrl},
+				NVL(#{widgDataUrlTrgt},'_self'),
+				#{widgDataFlpth},
+				#{widgDataAltrtvText},
+				#{widgDataBcrnColor},
+				#{widgDataSknClass},
+				NVL(#{widgDataOrdr},20),
+				#{creatId},
+				#{creatNm},
+				#{creatIp},
+				SYSDATE
+		)
+	</insert>
+	
+	<!-- 위젯 데이터 수정 -->
+	<update id="updateWidgDataInfo" parameterType="map">
+		UPDATE TAP_WM_WIDGET_DATA
+		   SET WIDG_DATA_SJ = #{widgDataSj},
+			   WIDG_DATA_ID = NVL(#{widgDataId},0),
+			   WIDG_DATA_TY = #{widgDataTy},
+			   WIDG_DATA_CO = NVL(#{widgDataCo},1),
+			   WIDG_DATA_URL = #{widgDataUrl},
+			   WIDG_DATA_URL_TRGT = NVL(#{widgDataUrlTrgt},'_self'),
+			   WIDG_DATA_FLPTH = #{widgDataFlpth},
+			   WIDG_DATA_ALTRTV_TEXT = #{widgDataAltrtvText},
+			   WIDG_DATA_BCRN_COLOR = #{widgDataBcrnColor},
+			   WIDG_DATA_SKN_CLASS = #{widgDataSknClass},
+			   WIDG_DATA_ORDR = NVL(#{widgDataOrdr},20)
+		 WHERE WIDG_DATA_SN = #{widgDataSn}
+	</update>
+	
+	<!-- 위젯 데이터 삭제 -->
+	<delete id="deleteWidgIdToManage" parameterType="map">
+		DELETE FROM TAP_WM_WIDGET_MANAGE
+			  WHERE 1 = 1
+			    AND WIDG_ID = #{widgId}
+			    AND SYS_ID = #{sysId}
+	</delete>
+	
+	<!-- 위젯 데이터 목록 삭제 -->
+	<delete id="deleteWidgIdToData" parameterType="map">
+		DELETE FROM TAP_WM_WIDGET_DATA
+			  WHERE WIDG_SN IN (
+				  					SELECT WIDG_SN
+				  					  FROM TAP_WM_WIDGET_MANAGE
+				  					 WHERE 1 = 1
+				  					   AND WIDG_ID = #{widgId}
+				  					   AND SYS_ID = #{sysId}
+			  				   )
+	</delete>
+	
+	<!-- 위젯 데이터 목록 삭제(widgDataSnList) -->
+	<delete id="deleteWidgDataListByWidgDataSnList" parameterType="map">
+		DELETE FROM TAP_WM_WIDGET_DATA
+			  WHERE WIDG_SN = #{widgSn}
+				AND WIDG_DATA_SN NOT IN
+		<foreach collection="widgDataSnList" item="item" open="(" close=")" separator=",">
+		 	#{item}
+		</foreach>
+	</delete>
+	
+	<!-- 위젯 데이터 목록 삭제(widgDataSn) -->
+	<delete id="deleteWidgDataListByWidgDataSn" parameterType="map">
+		<![CDATA[
+		DELETE FROM TAP_WM_WIDGET_DATA
+			  WHERE WIDG_SN = #{widgSn}
+				AND WIDG_DATA_SN <> #{widgDataSn}
+		]]>		
+	</delete>
+	
+	<!-- 타입별 메뉴정보 조회 -->
+	<select id="selectMenuInfoList" parameterType="map" resultType="egovMap">
+		SELECT SYS_ID,
+			   SYS_NM,
+			   UPPER_MENU_ID,
+			   UPPER_MENU_NM,
+			   MENU_ID,
+			   MENU_NM,
+			   MENU_LEVEL,
+			   MENU_TY,
+			   CNTNTS_ID,
+			   MENU_LINK,
+			   MENU_URL,
+			   CNNC_MENU_ID,
+			   USE_AT,
+			   CONECT_AT,
+			   CONECT_AUTHOR,
+			   SORT_ORDR,
+			   NEW_WIN_AT,
+			   CNTNTS_AT,
+			   RCLICK_AT,
+			   LWPRT_RCLICK_AT,
+			   CLSDR_AT,
+			   TAB_AT,
+			   UPEND_AT
+		  FROM TAP_MN_MENU_MANAGE 
+		 WHERE 1 = 1
+		   AND USE_AT = 'Y'
+		   AND SYS_ID = #{widgSysId}
+		   AND MENU_TY = #{menuTy}
+	</select>
+	
+	<!-- 게시판 목록 조회 -->
+	<select id="selectBbsNomalList" parameterType="map" resultType="egovMap">
+		SELECT BM.BBS_ID,
+		       BM.SYS_ID,
+		       BM.BBS_TY,
+		       BM.BBS_SJ,
+		       BM.MENU_COURS
+		  FROM TAP_BM_BBS_MANAGE BM,
+		       TAP_BM_BBS_AUTHOR BA,
+		       TAP_MN_MENU_MANAGE MN
+		 WHERE BM.BBS_ID = BA.BBS_ID
+		   AND BM.MENU_ID = MN.MENU_ID
+		   AND BA.READNG_AUTHOR = 'common=0'
+		   AND BM.SYS_ID = #{widgSysId}
+		   AND BM.BBS_USE_AT = 'Y'
+		   AND BM.BBS_TY IN ( 'NORMAL' )
+	  ORDER BY BM.BBS_SJ    
+	</select>
+
+	<!-- 사진 게시판 목록 조회 -->
+	<select id="selectBbsGalList" parameterType="map" resultType="egovMap">
+		SELECT BM.BBS_ID,
+		       BM.SYS_ID,
+		       BM.BBS_TY,
+		       BM.BBS_SJ,
+		       BM.MENU_COURS
+		  FROM TAP_BM_BBS_MANAGE BM,
+		       TAP_BM_BBS_AUTHOR BA,
+		       TAP_MN_MENU_MANAGE MN
+		 WHERE BM.BBS_ID = BA.BBS_ID
+		   AND BM.MENU_ID = MN.MENU_ID
+		   AND BA.READNG_AUTHOR IN ( 'common=0', 'common=1' , 'common=2')
+		   AND BM.SYS_ID = #{widgSysId}
+		   AND BM.BBS_USE_AT = 'Y'
+		   AND BM.BBS_TY IN ( 'GAL','PIC' )
+	  ORDER BY BM.BBS_SJ    
+	</select>
+	
+	<!-- 메뉴 목록 조회 -->
+	<select id="selectMenuList" parameterType="map" resultType="egovMap">
+		SELECT SYS_ID,
+		       UPPER_MENU_NM,
+		       MENU_ID,
+		       MENU_NM,
+		       MENU_LEVEL,
+		       MENU_TY,
+		       MENU_URL,
+		       CNTNTS_ID
+		  FROM TAP_MN_MENU_MANAGE
+		 WHERE SYS_ID = #{widgSysId}
+		   AND USE_AT = 'Y'
+		   AND CONECT_AUTHOR = 'common=0'
+	  ORDER BY SORT_ORDR    
+	</select>
+	
+	<!-- 게시글 목록 조회(일반) -->
+	<select id="selectNormalNttList" parameterType="map" resultType="egovMap">
+	<![CDATA[
+		SELECT PO.*
+		  FROM (
+			    SELECT NT.BBS_ID,
+			           NT.NTT_SN,
+			           NT.NTT_SJ,
+			           NT.REG_ID,
+			           NT.REG_NM,
+			           NT.REG_DT,
+			           TO_CHAR(NT.REG_DT,'YYYYMMDD') AS REG_DT_CHAR,
+			           ROWNUM AS RSN
+			      FROM TCO_NA_NTT_MANAGE NT, TAP_BM_BBS_MANAGE BM
+			     WHERE NT.BBS_ID = BM.BBS_ID
+			       AND NT.BBS_ID = #{bbsId}
+			       AND NT.NTT_USE_AT = 'Y'
+			       AND NT.SECRET_AT = 'N'
+			  ORDER BY NT.REG_DT DESC 
+				) PO
+		 WHERE RSN > 0 
+		   AND RSN < 21
+	]]> 
+	</select>
+	
+	<!-- 게시글 목록 조회(사진) -->
+	<select id="selectPicNttList" parameterType="map" resultType="egovMap">
+	<![CDATA[
+		SELECT PO.*
+		FROM (
+		    SELECT NT.BBS_ID,
+		           NT.NTT_SN,
+		           NT.NTT_SJ,
+		           NT.REG_ID,
+		           NT.REG_NM,
+		           NT.REG_DT,
+		           TO_CHAR(NT.REG_DT,'YYYYMMDD') AS REG_DT_CHAR,
+		           NF.FILE_SN,
+		           NF.FILE_NM,
+		           NF.FLPTH,
+		           NF.THUMB_FILPTH,
+		           ROWNUM AS RSN
+		    FROM TCO_NA_NTT_MANAGE NT
+		        LEFT OUTER JOIN 
+		        (
+		            SELECT NTT_SN, FILE_SN, FILE_NM, FLPTH, THUMB_FILPTH FROM TCO_NA_NTT_FILE WHERE FILE_SN IN (
+		                SELECT MAX(FILE_SN) FROM TCO_NA_NTT_FILE WHERE FILE_TY = 'img' AND BBS_ID = #{bbsId} GROUP BY NTT_SN
+		            )
+		        ) NF ON NT.NTT_SN = NF.NTT_SN, TAP_BM_BBS_MANAGE BM
+		    WHERE NT.BBS_ID = BM.BBS_ID 
+		    	AND NT.BBS_ID = #{bbsId}
+		        AND NT.NTT_USE_AT = 'Y'
+		        AND NT.SECRET_AT = 'N'
+		   ORDER BY NT.REG_DT DESC
+		) PO
+		WHERE RSN > 0 AND RSN < 21 
+	]]> 
+	</select>
+	
+	<!-- 게시글 목록 조회(갤러리) -->
+	<select id="selectGalNttList" parameterType="map" resultMap="clobMap">
+	<![CDATA[
+		SELECT PO.*
+		FROM (
+		    SELECT NT.BBS_ID,
+		           NT.NTT_SN,
+		           NT.NTT_SJ,
+		           NT.NTT_CN,
+		           NT.REG_ID,
+		           NT.REG_NM,
+		           NT.REG_DT,
+		           TO_CHAR(NT.REG_DT,'YYYYMMDD') AS REG_DT_CHAR,
+		           NF.FILE_SN,
+		           NF.FILE_NM,
+		           NF.FLPTH,
+		           NF.THUMB_FILPTH,
+		           ROW_NUMBER() OVER(ORDER BY NT.REG_DT DESC) AS ROWNUM
+		    FROM TCO_NA_NTT_MANAGE NT 
+		        LEFT OUTER JOIN 
+		        (
+		            SELECT NTT_SN, FILE_SN, FILE_NM, FLPTH, THUMB_FILPTH FROM TCO_NA_NTT_FILE WHERE FILE_SN IN (
+		                SELECT MAX(FILE_SN) FROM TCO_NA_NTT_FILE WHERE FILE_TY = 'img' AND BBS_ID = #{bbsId} GROUP BY NTT_SN
+		            )
+		        ) NF ON NT.NTT_SN = NF.NTT_SN, TAP_BM_BBS_MANAGE BM
+		    WHERE NT.BBS_ID = BM.BBS_ID 
+		    	AND NT.BBS_ID = #{bbsId}
+		        AND NT.NTT_USE_AT = 'Y'
+		        AND NT.SECRET_AT = 'N'
+		   ORDER BY NT.REG_DT DESC 
+		) PO 
+		WHERE PO.ROWNUM > 0 AND PO.ROWNUM < 21 
+	]]> 
+	</select>
+	
+	<!-- 게시글 동적 조회(일반, 사진, 갤러리) -->
+	<select id="selectNttListByBbsId" parameterType="map" resultMap="clobMap">
+			SELECT
+				   PL.*,
+			       (
+			            SELECT FLPTH
+			              FROM TCO_NA_NTT_FILE NF
+			             WHERE PL.NTT_SN = NF.NTT_SN
+			               AND NF.FILE_TY = 'img'
+			               AND ROWNUM = 1
+			       ) AS FLPTH,
+			       (
+			            SELECT THUMB_FILPTH
+			              FROM TCO_NA_NTT_FILE NF
+			             WHERE PL.NTT_SN = NF.NTT_SN
+			               AND NF.FILE_TY = 'img'
+			               AND ROWNUM = 1
+			       ) AS THUMB_FILPTH
+			  FROM
+			  	   (
+                      SELECT NT.NTT_SN,
+                             NT.NTT_SJ,
+                             NT.REG_DT,
+                             TO_CHAR(NT.REG_DT,'YYYY') AS REG_DT1,
+                             TO_CHAR(NT.REG_DT,'MM') AS REG_DT2,
+                             TO_CHAR(NT.REG_DT,'DD') AS REG_DT3,
+                             NT.REG_NM,
+                             NT.NTT_CN,
+                             BM.MENU_ID,
+                             BM.BBS_SJ,
+                             CASE
+								WHEN TO_CHAR(SYSDATE, 'YYYY/MM/DD HH24:MI:SS') 
+                                    BETWEEN TO_CHAR(NT.REG_DT, 'YYYY/MM/DD HH24:MI:SS') 
+                                        AND TO_CHAR(NT.REG_DT + #{newHour}/24, 'YYYY/MM/DD HH24:MI:SS') THEN 'Y'
+								ELSE 'N'
+							 END AS NEW_CHECK,
+			                 NVL(NT.ADIT_COL1 ,'') AS ADIT_COL1
+                        FROM TCO_NA_NTT_MANAGE NT, TAP_BM_BBS_MANAGE BM
+                       WHERE NT.BBS_ID=BM.BBS_ID
+                         AND NT.BBS_ID = #{bbsId}
+                         AND NT.NTT_USE_AT = 'Y'
+                         AND NT.SECRET_AT = 'N'
+                         AND NT.CLSDR_AT = 'N'
+                         AND NT.CONFM_AT != 'N'
+                    ORDER BY NT.REG_DT DESC
+			       ) PL
+			 WHERE 1 = 1
+			 <![CDATA[
+			   AND ROWNUM <= #{nttCount}
+			 ]]>
+	</select>
+	
+	<!-- 이미지 목록 조회 -->
+	<select id="selectWidgImgList" parameterType="map" resultType="egovMap">
+		SELECT WIDG_DATA_FLPTH AS WIDG_FLPTH
+		  FROM TAP_WM_WIDGET_DATA
+		 WHERE WIDG_SN IN (
+						    SELECT WIDG_SN
+						    FROM TAP_WM_WIDGET_MANAGE
+						    WHERE SYS_ID = #{widgSysId}
+						        AND WIDG_TY = #{widgTy}     
+						  )
+		   AND WIDG_DATA_FLPTH IS NOT NULL
+		UNION 
+		SELECT WIDG_IMAGE_FLPTH AS WIDG_FLPTH
+		  FROM TAP_WM_WIDGET_IMAGE
+		 WHERE WIDG_IMAGE_TY = #{widgTy}
+		   AND WIDG_IMAGE_TMPLAT_ID = #{tmplatId}
+		   AND WIDG_IMAGE_FLPTH IS NOT NULL
+				
+	</select>
+	
+	<!-- ********* 위젯 이미지 관리 ********* -->
+	<!-- 위젯 이미지 등록 -->
+	<insert id="insertWidgImgInfo" parameterType="map">
+		INSERT INTO TAP_WM_WIDGET_IMAGE (
+				WIDG_IMAGE_SN,
+				WIDG_IMAGE_TY,
+				WIDG_IMAGE_TMPLAT_ID,
+				WIDG_IMAGE_FLPTH,
+				WIDG_IMAGE_ALTRTV_TEXT,
+				CREAT_ID,
+				CREAT_NM,
+				CREAT_IP,
+				CREAT_DT
+		) VALUES (
+				SEQ_WIDG_IMAGE_SN.NEXTVAL,
+				#{widgImageTy},
+				#{widgImageTmplatId},
+				#{widgImageFlpth},
+				#{widgImageAltrtvText},
+				#{creatId},
+				#{creatNm},
+				#{creatIp},
+				SYSDATE
+		)
+	</insert>
+	
+	<!-- 위젯 이미지관리 리스트 조회 -->
+	<select id="selectWidgIconImageList" parameterType="map" resultType="egovMap">
+		SELECT *
+		FROM TAP_WM_WIDGET_IMAGE
+		WHERE 1=1
+		  AND WIDG_IMAGE_TMPLAT_ID = #{tmplatId}
+	 ORDER BY WIDG_IMAGE_SN DESC
+	</select>
+
+	<!-- 위젯 이미지관리 리스트 조회 -->
+	<select id="selectWidgIconImageInfo" parameterType="map" resultType="egovMap">
+		SELECT *
+		FROM TAP_WM_WIDGET_IMAGE
+		WHERE 1=1
+		  AND WIDG_IMAGE_SN = #{widgImageSn}
+	</select>
+	
+	<!-- 위젯 이미지관리 리스트 수정 -->
+	<update id="updateWidgImgInfo" parameterType="map">
+		UPDATE TAP_WM_WIDGET_IMAGE
+		   SET WIDG_IMAGE_TY = #{widgImageTy},
+			   WIDG_IMAGE_FLPTH = #{widgImageFlpth},
+			   WIDG_IMAGE_ALTRTV_TEXT = #{widgImageAltrtvText}
+		 WHERE WIDG_IMAGE_SN = #{widgImageSn}
+	</update>
+	
+	<!-- 위젯 이미지관리 리스트 삭제 -->
+	<delete id="deleteWidgImgInfo" parameterType="map">
+		DELETE FROM TAP_WM_WIDGET_IMAGE
+			  WHERE WIDG_IMAGE_SN = #{widgImageSn}
+	</delete>
+	
+	<!-- 메인 페이지 [위젯 메인 이미지 불러오기] -->
+	<select id="selectSysMainImgList" parameterType="map" resultType="egovMap">
+		SELECT
+			   WIDG_DATA_SN,
+			   WIDG_SN,
+			   WIDG_DATA_ID,
+			   WIDG_DATA_SJ,
+			   WIDG_DATA_TY,
+			   WIDG_DATA_CO,
+			   WIDG_DATA_URL,
+			   WIDG_DATA_URL_TRGT,
+			   WIDG_DATA_FLPTH,
+			   WIDG_DATA_ALTRTV_TEXT,
+			   WIDG_DATA_BCRN_COLOR,
+			   WIDG_DATA_SKN_CLASS,
+			   WIDG_DATA_ORDR,
+			   CREAT_ID,
+			   CREAT_NM,
+			   CREAT_IP,
+			   CREAT_DT		 
+		  FROM 
+		  	   TAP_WM_WIDGET_DATA		  
+		 WHERE 1 = 1
+		   AND WIDG_SN IN (SELECT WIDG_SN FROM TAP_WM_WIDGET_MANAGE WHERE SYS_ID = #{sysId} AND WIDG_TY = 'MAINIMG')
+  	  ORDER BY WIDG_DATA_ORDR
+	</select>
+	
+	<!-- 메인 일정 조회 -->
+	<select id="selectSchduInfoList" parameterType="map" resultType="egovMap">
+ 		SELECT 
+			  TO_CHAR(TO_DATE(BGNDE), 'YYYY/MM/DD') as BGNDE,
+			  TO_CHAR(TO_DATE(ENDDE), 'YYYY/MM/DD') as ENDDE,
+			  TO_CHAR(TO_DATE(BGNDE),'YYYY') AS BGNDE_Y,
+			  TO_CHAR(TO_DATE(BGNDE),'MM') AS BGNDE_M,
+			  TO_CHAR(TO_DATE(BGNDE),'DD') AS BGNDE_D,
+			  TO_CHAR(TO_DATE(ENDDE),'YYYY') AS ENDDE_Y,
+			  TO_CHAR(TO_DATE(ENDDE),'MM') AS ENDDE_M,
+			  TO_CHAR(TO_DATE(ENDDE),'DD') AS ENDDE_D,
+			  BGNDE_TIME,
+			  ENDDE_TIME,
+			  SCHDUL_CN,
+			  SCHDUL_TITLE,
+			  SYS_ID,
+			  SCHDUL_SEQ,
+			  COLOR
+		 FROM TAP_SC_SCHDUL_MANAGE
+		WHERE 1=1
+		<if test="@egovframework.MybatisUtils@isNotEmpty(srchDate)">
+		  AND (
+			   TO_CHAR(TO_DATE(BGNDE), 'YYYY/MM') = #{srchDate}
+			   OR TO_CHAR(TO_DATE(ENDDE), 'YYYY/MM') = #{srchDate}
+			   OR (#{srchDate} BETWEEN TO_CHAR(TO_DATE(BGNDE), 'YYYY/MM') AND TO_CHAR(TO_DATE(ENDDE), 'YYYY/MM') )
+			  )
+		</if>
+		<if test="@egovframework.MybatisUtils@isNotEmpty(mi)">
+		  AND SYS_ID = #{sysId}
+		</if>
+	 ORDER BY BGNDE ASC
+	</select>
+
+	<!-- 메인 식단 조회 -->
+	<select id="selectWmWidgNowDate" parameterType="map" resultType="egovMap">
+		SELECT DT.DIET_TY,
+		       DI.SYS_ID,
+		       DI.DIET_DATE,
+		       DI.DIET_CN,
+		       DI.DIET_CAL,
+		       DI.ORGPLCE
+		  FROM TAP_DI_DIET_MANAGE DI, TAP_DI_DIET_TY DT
+		 WHERE 1=1
+		   AND DI.SYS_ID = #{sysId}
+		   AND DI.DIET_TY_SEQ = DT.DIET_TY_SEQ
+		   AND TO_CHAR(TO_DATE(DI.DIET_DATE), 'YYYY/MM/DD') = TO_CHAR(SYSDATE, 'YYYY/MM/DD')
+	</select>
+	
+	
+</mapper>

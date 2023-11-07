@@ -1,0 +1,297 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="di_diet">
+
+<!-- 식단관리 시스템  리스트 sql-->
+	<sql id ="selectDietSmList">
+	  SELECT   IT.INSTT_CODE
+	          ,IT.INSTT_NM
+	          ,IT.INSTT_TY
+	          ,SM.SYS_ID
+	          ,SM.SYS_NM
+	          ,SM.SYS_TY
+              ,( <include refid="selectDietStats" /> AND DI.SYS_ID = SM.SYS_ID ) AS TOTAL_CNT
+	    FROM   TAP_IM_INSTT_MANAGE IT, TAP_SM_SYS_MANAGE SM
+	   WHERE   IT.INSTT_CODE = SM.INSTT_CODE
+         AND   SM.SYS_STTUS = 'O'
+	   <include refid="srchDietSmList" />
+	ORDER BY   IT.INSTT_CODE, IT.INSTT_LEVEL DESC
+	</sql>
+
+	<!--  식단관리 시스템  리스트 통계 sql-->
+	<sql id ="selectDietStats">
+		SELECT COUNT(*)
+          FROM TAP_DI_DIET_MANAGE DI
+         WHERE 1=1
+	</sql>
+
+	 <!--  식단관리 시스템  리스트 검색조건 sql-->
+	<sql id ="srchDietSmList">
+
+        <if test='@egovframework.MybatisUtils@isEmpty(author) || author != "master"'>
+         AND SM.SYS_ID NOT IN ('apple')
+        </if>
+
+        <if test="@egovframework.MybatisUtils@isNotEmpty(insttCode)">
+	     AND   ( IT.INSTT_CODE =  #{insttCode}
+
+                    OR  IT.UPPER_INSTT_CODE = #{upperInsttCode}
+                    OR  IT.BSIS_INSTT_CODE = #{bsisInsttCode}
+
+               	)
+         </if>
+
+	     <if test="@egovframework.MybatisUtils@isNotEmpty(srchSmTxt)">
+	       AND  (
+	       				 SM.SYS_NM like '%'||#{srchSmTxt}||'%'
+	              	  OR SM.SYS_TY like '%'||#{srchSmTxt}||'%'
+
+	            )
+	    </if>
+
+	</sql>
+
+	<!--  식단관리 시스템  리스트  -->
+    <select id="selectDietSmList" parameterType="egovMap" resultType="egovMap">
+	 	<include refid="selectDietSmList" />
+	 </select>
+
+	<!-- 식단관리 시스템  리스트(페이징) -->
+    <select id="selectDietSmListPaging" parameterType="map" resultType="egovMap">
+    	SELECT
+    		PL.*
+    	FROM (
+        	SELECT
+        		PO.*
+        		,rownum as rsn
+			FROM (
+	    		<include refid="selectDietSmList" />
+				) PO
+		) PL
+		WHERE
+		<![CDATA[
+			rsn <= #{maxSn}
+			AND rsn > #{minSn}
+		]]>
+    </select>
+
+    <!-- 식단관리 시스템  리스트 (페이징 전체 카운트) -->
+    <select id="selectDietSmListPagingCount" parameterType="map" resultType="int">
+    	SELECT   COUNT(*)
+	      FROM  ( <include refid="selectDietSmList" /> ) A
+    </select>
+
+	<!-- 식단 구분 관리 시퀀스 획득 -->
+	<select id="selectSeqDietTy" parameterType="map" resultType="egovMap">
+        SELECT SEQ_DIET_TY_SN.CURRVAL FROM DUAL
+    </select>
+
+   <!--식단관리 리스트 -->
+    <sql id="selectDietList" >
+        SELECT   A.DIET_SEQ
+	            ,A.SYS_ID
+		        ,TO_CHAR(A.DIET_DATE, 'YYYY/MM/DD') as DIET_DATE
+		        ,A.DIET_CN
+		        ,A.DIET_CAL
+		        ,A.ORGPLCE
+		        ,A.IMAGE_ID
+		        ,B.DIET_TY_SEQ
+		        ,B.DIET_TY
+		        ,B.DIET_ORDR
+	      FROM   TAP_DI_DIET_MANAGE A, TAP_DI_DIET_TY B
+	     WHERE   A.SYS_ID = #{sysId}
+	       AND   A.DIET_TY_SEQ = B.DIET_TY_SEQ
+
+	<if test="@egovframework.MybatisUtils@isNotEmpty(dietTy)">
+	       AND   B.DIET_TY = #{dietTy}
+	</if>
+
+	<if test="@egovframework.MybatisUtils@isNotEmpty(dietTySeq)">
+	  	   AND   B.DIET_TY_SEQ = #{dietTySeq}
+	</if>
+
+	 <if test="@egovframework.MybatisUtils@isNotEmpty(monthFirst)">
+        <![CDATA[
+          AND  ( ( DIET_DATE >= #{monthFirst} AND  DIET_DATE <= #{monthEnmt} ) )
+         ]]>
+     </if>
+    </sql>
+
+    <!--식단관리 리스트 조회 -->
+    <select id="selectDietList" parameterType="map" resultType="egovMap">
+    	<include refid="selectDietList" />
+    </select>
+
+    <!--식단관리 구분값 리스트 조회 -->
+    <select id="selectDietTyList" parameterType="map" resultType="egovMap">
+	    SELECT   DIET_TY_SEQ
+		        ,SYS_ID
+		        ,DIET_TY
+		        ,DIET_ORDR
+		  FROM   TAP_DI_DIET_TY
+		 WHERE   SYS_ID = #{sysId}
+      ORDER BY   DIET_ORDR ASC
+    </select>
+
+    <!--식단관리 상세 조회 -->
+    <select id="selectDietInfo" parameterType="map" resultType="egovMap">
+    	<include refid="selectDietList" />
+    	   AND   DIET_SEQ = #{dietSeq}
+    </select>
+
+  	<!--식단관리 입력 -->
+	<insert id="insertDietInfo" parameterType="map" >
+        INSERT INTO TAP_DI_DIET_MANAGE (
+		    DIET_SEQ
+		   ,DIET_TY_SEQ
+		   ,SYS_ID
+		   ,DIET_DATE
+		   ,DIET_CN
+		   ,DIET_CAL
+		   ,ORGPLCE
+		   ,IMAGE_ID
+	     ) VALUES (
+			SEQ_DIET_SN.NEXTVAL
+		   ,#{dietTySeq}
+		   ,#{sysId}
+		   ,#{dietDate}
+		   ,#{dietCn}
+		   ,#{dietCal}
+		   ,#{orgplce}
+		   ,#{fileGrpKey}
+	      )
+		 </insert>
+
+    <!--식단구분 입력 -->
+	<insert id="insertDietTyInfo" parameterType="map" >
+		 INSERT INTO TAP_DI_DIET_TY (
+			 DIET_TY_SEQ
+			,SYS_ID
+			,DIET_TY
+			,DIET_ORDR
+	     ) VALUES (
+		     SEQ_DIET_TY_SN.NEXTVAL
+			,#{sysId}
+			,#{dietTy}
+			,(SELECT NVL(MAX(DIET_ORDR)+1,1) FROM  TAP_DI_DIET_TY)
+	     )
+		 </insert>
+
+     <!-- 식단관리 수정 -->
+    <update id="updateDietInfo" parameterType ="map">
+		 UPDATE  TAP_DI_DIET_MANAGE
+	  	    SET  DIET_DATE   = #{dietDate}
+			    ,DIET_CN     = #{dietCn}
+			    ,DIET_CAL    = #{dietCal}
+	            ,ORGPLCE     = #{orgplce}
+	            ,IMAGE_ID    = #{fileGrpKey}
+    	        ,DIET_TY_SEQ = #{dietTySeq}
+		  WHERE  DIET_SEQ    = #{dietSeq}
+	</update>
+
+     <!-- 식단관리 구분 수정 -->
+    <update id="updateDietTyInfo" parameterType ="map">
+	    UPDATE  TAP_DI_DIET_TY
+		   SET  DIET_TY     = #{dietTy}
+	     WHERE  DIET_TY_SEQ = #{dietTySeq}
+    </update>
+
+    <!--식단관리 구분 정렬순서 수정 -->
+    <update id="updateDietTyOrdr" parameterType ="map">
+	    UPDATE  TAP_DI_DIET_TY
+		   SET  DIET_ORDR 	= #{dietOrdr}
+	     WHERE  DIET_TY_SEQ = #{dietTySeq}
+    </update>
+
+    <!--식단구분 삭제 -->
+    <delete id="deleteDietTyInfo" parameterType="map" >
+	     DELETE FROM TAP_DI_DIET_TY
+	     WHERE  DIET_TY_SEQ = #{dietTySeq}
+    </delete>
+
+	<!--식단 삭제  SQL-->
+    <sql id="deleteDietInfo">
+        DELETE  FROM  TAP_DI_DIET_MANAGE
+    </sql>
+
+    <!--식단 삭제 -->
+    <delete id="deleteDietInfo" parameterType="map" >
+	 <include refid="deleteDietInfo" />
+	     WHERE  DIET_SEQ = #{dietSeq}
+    </delete>
+
+    <!--식단 구분 삭제 시 해당 식단 전체 삭제 -->
+    <delete id="deleteDietAllInfo" parameterType="map" >
+	 <include refid="deleteDietInfo" />
+	     WHERE  DIET_TY_SEQ = #{dietTySeq}
+    </delete>
+
+    <!-- 시스템별 식단 조회 SQL -->
+    <sql id="selectDietListBySysId" >
+      SELECT   A.*
+    		  ,B.DIET_TY
+    		  ,C.FILE_STRE_COURS
+           	  ,C.ORIGNL_FILE_NM
+    	FROM   TAP_DI_DIET_MANAGE A
+    		    LEFT OUTER JOIN
+           	   TSA_ATCH_FILE_DETAIL C
+          ON
+           	   A.IMAGE_ID = C.FILE_ID
+    	  	  ,TAP_DI_DIET_TY B
+		WHERE  A.DIET_TY_SEQ = B.DIET_TY_SEQ
+	      AND  A.SYS_ID = #{sysId}
+    </sql>
+
+    <!-- 시스템별 식단 조회  -->
+    <select id="selectDietListBySysId" parameterType="map" resultType="egovMap">
+   		  <include refid="selectDietListBySysId" />
+   		  AND A.DIET_TY_SEQ = #{dietTySeq}
+     ORDER BY B.DIET_ORDR , A.DIET_SEQ
+    </select>
+
+    <!-- 오늘의식단 조회 -->
+    <select id="selectDietTodayListBySysId" parameterType="map" resultType="egovMap">
+   		  <include refid="selectDietListBySysId" />
+		  AND  A.DIET_DATE = TO_DATE(TO_CHAR(SYSDATE, 'YYYY/MM/DD') || ' 00:00:00','YYYY/MM/DD HH24:MI:SS')
+     ORDER BY  B.DIET_ORDR , A.DIET_SEQ
+    </select>
+
+	<!-- 나이스연계 등록시에 선택한 월 삭제 진행 -->
+	<update id="deleteDietMenuPlanNeisData" parameterType="map">
+		UPDATE
+			TAP_DI_DIET_MANAGE
+		SET
+			  USE_AT	= 'N'
+			, MOD_ID	= #{mberId}
+			, MOD_DT	= NOW()
+		WHERE
+			SYS_ID = #{sysId}
+		AND
+			DATE_FORMAT(FM_DT,'%Y-%m') = #{delDate}
+	</update>
+
+  	<!--식단관리 NIES 연계 데이터 입력 -->
+	<insert id="insertDietNiesInfo" parameterType="map" >
+        INSERT INTO TAP_DI_DIET_MANAGE (
+		    DIET_SEQ
+		   ,DIET_TY_SEQ
+		   ,SYS_ID
+		   ,DIET_DATE
+		   ,DIET_CN
+		   ,DIET_CAL
+		   ,ORGPLCE
+		   ,IMAGE_ID
+	     ) VALUES (
+			SEQ_DIET_SN.NEXTVAL
+		   ,#{dietTySeq}
+		   ,#{sysId}
+		   ,#{dietDate}
+		   ,#{dietCn}
+		   ,#{dietCal}
+		   ,#{orgplce}
+		   ,#{fileGrpKey}
+	      )
+		 </insert>
+		 <!--//식단관리 NIES 연계 데이터 입력 -->
+</mapper>

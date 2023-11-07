@@ -1,0 +1,122 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="cmm_file">
+	 
+	 <!-- fileId( fileGrpKey ) 조회 -->
+	<select id="cmm_file.selectfileId"   resultType="String">
+        SELECT SQ_FILE_ID.NEXTVAL FROM DUAL
+    </select>
+    
+    <insert id="cmm_file.fileMasterInsert" parameterType="map">
+        INSERT INTO TSA_ATCH_FILE (
+            FILE_ID
+           ,CREAT_DT
+           ,USE_AT
+        ) VALUES (
+            #{fileId}
+           ,SYSDATE 
+           ,'Y'        
+        )
+    </insert>
+    
+    <insert id="cmm_file.fileDetailInsert" parameterType="map">
+        <selectKey resultType="string" keyProperty="fileSn" order="BEFORE">
+            SELECT SQ_FILE_SN.nextval FROM DUAL
+        </selectKey>
+        INSERT INTO TSA_ATCH_FILE_DETAIL (
+            FILE_ID
+           ,FILE_SN
+           ,FILE_STRE_COURS
+           ,STRE_FILE_NM
+           ,ORIGNL_FILE_NM
+           ,FILE_EXTSN
+           ,FILE_MG
+           ,FILE_DTLS
+           ,CREAT_DT
+           ,USE_AT
+        ) VALUES (
+            #{fileId}
+           ,#{fileSn}
+           ,#{fileStreCours}
+           ,#{streFileNm}
+           ,#{orignlFileNm}
+           ,#{fileExtsn}
+           ,#{fileSize}
+           ,#{fileDtls}
+           ,SYSDATE 
+           ,'Y'
+        )
+    </insert>
+    
+    <select id="cmm_file.fileList" parameterType="map" resultType="egovMap">
+        SELECT b.FILE_ID AS FILE_GRP_KEY
+              ,b.FILE_SN AS FILE_KEY
+              ,b.FILE_STRE_COURS AS FILE_PATH   
+              ,b.STRE_FILE_NM 
+              ,b.ORIGNL_FILE_NM
+              ,b.FILE_EXTSN
+              ,b.FILE_MG AS FILE_SIZE
+              ,b.FILE_DTLS 
+              ,COUNT(1) OVER () T_CNT
+          FROM TSA_ATCH_FILE a
+              ,TSA_ATCH_FILE_DETAIL b
+         WHERE a.USE_AT = 'Y'
+           AND b.USE_AT = 'Y'
+           AND a.FILE_ID = b.FILE_ID
+           AND a.FILE_ID = #{fileGrpKey}
+    </select>
+    
+    <!-- 컨텐츠 파일 조회 -->
+    <select id="cmm_file.cntntsFileInfo" parameterType="map" resultType="egovMap">
+        SELECT FILE_ID
+              ,FILE_SN AS FILE_KEY
+              ,FILE_STRE_COURS AS FILE_PATH
+              ,STRE_FILE_NM
+              ,ORIGNL_FILE_NM
+              ,FILE_EXTSN
+              ,FILE_MG
+              ,FILE_DTLS
+              ,USE_AT
+          FROM TSA_ATCH_FILE_DETAIL
+         WHERE FILE_SN = (SELECT FILE_SN FROM TSA_ATCH_FILE_DETAIL WHERE FILE_ID = #{fileKey})
+    </select>
+    
+    <select id="cmm_file.fileInfo" parameterType="map" resultType="egovMap">
+        SELECT FILE_ID
+              ,FILE_SN AS FILE_KEY
+              ,FILE_STRE_COURS AS FILE_PATH
+              ,STRE_FILE_NM
+              ,ORIGNL_FILE_NM
+              ,FILE_EXTSN
+              ,FILE_MG
+              ,FILE_DTLS
+              ,USE_AT
+          FROM TSA_ATCH_FILE_DETAIL
+		 WHERE FILE_SN = #{fileKey}
+    </select>
+    
+<!--     <delete id="cmm_file.fileDelete" parameterType="map"> -->
+<!--          TSA_ATCH_FILE_DETAIL -->
+<!--          WHERE FILE_SN = #{fileSn} -->
+<!--     </delete> -->
+    
+     <update id="cmm_file.fileDelete" parameterType="map">
+        UPDATE TSA_ATCH_FILE_DETAIL
+           SET USE_AT = 'N'
+         WHERE FILE_SN = #{fileKey}
+    </update>
+    
+    <update id="cmm_file.fileDeleteAll" parameterType="map">
+        UPDATE TSA_ATCH_FILE
+           SET USE_AT = 'N'
+         WHERE FILE_ID = #{fileGrpKey}
+    </update>
+    
+    <!-- 로고 기존파일 삭제용 -->
+    <select id="cmm_file.fileIdInfo" parameterType="map" resultType="string">
+        SELECT FILE_ID
+          FROM TSA_ATCH_FILE_DETAIL
+         WHERE FILE_STRE_COURS = #{filePath}
+    </select>
+</mapper>

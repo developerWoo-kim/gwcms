@@ -1,0 +1,734 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="rm_reqst">
+
+	<resultMap id="clobMap" type="egovMap">
+        <result property="REQST_CN" column="REQST_CN" jdbcType="CLOB" javaType="java.lang.String"/>
+    </resultMap>
+
+	<!-- 온라인 신청 리스트 -->
+	<sql id="selectReqstList">
+		SELECT 
+			   A.REQST_NO
+			  ,A.SYS_ID
+			  ,A.REQST_TY
+			  ,A.REQST_SJ
+			  ,A.REQST_CN
+			  ,A.REQST_CONFM_STTUS
+			  ,A.REQST_NMPR
+			  ,A.REQST_TRGET
+			  ,A.REQST_AUTHOR
+			  ,A.REQST_PD_USE_AT
+			  ,TO_CHAR(A.REQST_BGNDE, 'YYYY/MM/DD') AS REQST_BGNDE
+              ,TO_CHAR(A.REQST_ENDDE, 'YYYY/MM/DD') AS REQST_ENDDE
+              ,A.OPER_PD_USE_AT
+			  ,TO_CHAR(A.OPER_BGNDE, 'YYYY/MM/DD') AS OPER_BGNDE
+			  ,TO_CHAR(A.OPER_ENDDE, 'YYYY/MM/DD') AS OPER_ENDDE
+			  ,A.CREAT_ID
+			  ,A.CREAT_IP
+			  ,TO_CHAR(A.CREAT_DT, 'YYYY/MM/DD HH24:MI:SS') AS CREAT_DT
+			  ,A.USE_AT
+			  ,A.ETC
+              ,B.MBER_NM
+			  ,NVL((SELECT COUNT(1) FROM TAP_RM_REQST_NMPR WHERE REQST_NO = A.REQST_NO AND REQST_AT = 'Y' GROUP BY REQST_NO),0) AS NOW_REQST_NMPR
+		  FROM 
+		   	   TAP_RM_REQST_MANAGE A, TAP_MM_MBER_MANAGE B
+		 WHERE 1 = 1
+           AND A.CREAT_ID = B.MBER_ID
+		   AND A.SYS_ID = #{sysId}
+		<if test="@egovframework.MybatisUtils@isNotEmpty(srchTxt)">           
+           AND A.REQST_SJ LIKE '%'||#{srchTxt}||'%'
+		</if>          		   
+      ORDER BY A.CREAT_DT DESC      
+	</sql>
+	
+	<!-- 온라인 신청 리스트 -->
+	<select id="selectReqstList" parameterType="map" resultType="egovMap">
+		<include refid="selectReqstList" />
+	</select>	
+	
+	<!-- 온라인 신청 리스트 (페이징) -->
+    <select id="selectReqstListPaging" parameterType="map" resultType="egovMap">
+		SELECT PL.*
+		  FROM ( SELECT PO.* 
+		  		 	   ,ROWNUM AS RSN
+		           FROM ( <include refid="selectReqstList" /> ) PO ) PL
+		 WHERE 1 = 1 
+		 <![CDATA[ 
+		   AND RSN <= #{maxSn}
+		   AND RSN > #{minSn} 
+		 ]]>		
+    </select>
+    
+    <!-- 온라인 신청 리스트 (페이징 전체 카운트) -->
+    <select id="selectReqstListPagingCount" parameterType="map" resultType="int">
+		SELECT COUNT(*)
+		  FROM TAP_RM_REQST_MANAGE
+		 WHERE 1 = 1
+		   AND SYS_ID = #{sysId}	
+		<if test="@egovframework.MybatisUtils@isNotEmpty(srchTxt)">           
+           AND REQST_SJ LIKE '%'||#{srchTxt}||'%'
+		</if>			   	  
+    </select>
+    
+	<!-- 온라인 신청 정보 -->
+	<select id="selectReqstInfo" parameterType="map" resultMap="clobMap">
+		SELECT 
+			   REQST_NO
+			  ,SYS_ID
+			  ,REQST_TY
+			  ,REQST_SJ
+			  ,REQST_CN
+			  ,REQST_CONFM_STTUS
+			  ,REQST_NMPR
+			  ,REQST_TRGET
+			  ,REQST_AUTHOR
+			  ,REQST_PD_USE_AT
+			  ,TO_CHAR(REQST_BGNDE, 'YYYY/MM/DD') AS REQST_BGNDE
+              ,TO_CHAR(REQST_ENDDE, 'YYYY/MM/DD') AS REQST_ENDDE
+              ,OPER_PD_USE_AT
+			  ,TO_CHAR(OPER_BGNDE, 'YYYY/MM/DD') AS OPER_BGNDE
+			  ,TO_CHAR(OPER_ENDDE, 'YYYY/MM/DD') AS OPER_ENDDE            
+			  ,CREAT_ID
+			  ,CREAT_IP
+			  ,TO_CHAR(CREAT_DT, 'YYYY/MM/DD HH24:MI:SS') AS CREAT_DT
+			  ,USE_AT
+			  ,ETC
+			  ,CASE					   
+                 WHEN (TO_CHAR(SYSDATE, 'YYYYMMDD') BETWEEN TO_CHAR(REQST_BGNDE, 'YYYYMMDD') AND TO_CHAR(REQST_ENDDE, 'YYYYMMDD'))
+                   OR (REQST_BGNDE IS NULL AND REQST_ENDDE IS NULL)
+			     THEN 'Y'
+			     ELSE 'N'
+			   END AS TIME_CHECK			    
+		  FROM 
+		       TAP_RM_REQST_MANAGE
+		 WHERE 1 = 1
+		   AND REQST_NO = #{reqstNo}
+	</select>	    
+    
+	<!-- 온라인 신청 정보 등록 -->
+    <insert id="insertReqstInfo" parameterType="map">
+		<selectKey keyProperty="reqstNo" resultType="java.lang.Integer" order="BEFORE">
+			SELECT NVL(MAX(REQST_NO + 1), 1) FROM TAP_RM_REQST_MANAGE
+		</selectKey>      
+			INSERT INTO TAP_RM_REQST_MANAGE
+				(
+					 REQST_NO
+					,SYS_ID
+					,REQST_TY
+					,REQST_SJ
+					,REQST_CN
+					,REQST_CONFM_STTUS
+					,REQST_NMPR
+					,REQST_TRGET
+					,REQST_AUTHOR
+					,REQST_PD_USE_AT
+					,REQST_BGNDE
+					,REQST_ENDDE
+					,OPER_PD_USE_AT
+					,OPER_BGNDE
+					,OPER_ENDDE
+					,CREAT_ID
+					,CREAT_IP
+					,CREAT_DT
+					,USE_AT
+					,ETC					         
+				)
+			VALUES
+				(
+					 #{reqstNo}
+					,#{sysId}
+					,#{reqstTy}
+					,#{reqstSj}
+					,#{reqstCn}
+					,#{reqstConfmSttus}
+					,#{reqstNmpr}
+					,#{reqstTrget}
+					,#{reqstAuthor}
+					,#{reqstPdUseAt}
+					,#{reqstBgnde}
+					,#{reqstEndde}
+					,#{operPdUseAt}
+					,#{operBgnde}
+					,#{operEndde}
+					,#{creatId}
+					,#{creatIp}
+					,SYSDATE
+					,'Y'
+					,#{etc}
+				)    	
+    </insert>
+    
+	<!-- 온라인 신청 정보 수정 -->
+	<update id="updateReqstInfo" parameterType="map">
+		UPDATE TAP_RM_REQST_MANAGE
+		   SET REQST_TY = #{reqstTy}
+			  ,REQST_SJ = #{reqstSj}
+			  ,REQST_CN = #{reqstCn}
+			  ,REQST_NMPR = #{reqstNmpr}
+			  ,REQST_TRGET = #{reqstTrget}
+			  ,REQST_AUTHOR = #{reqstAuthor}
+			  ,REQST_PD_USE_AT = #{reqstPdUseAt}
+			  ,REQST_BGNDE = #{reqstBgnde}
+			  ,REQST_ENDDE = #{reqstEndde}
+              ,OPER_PD_USE_AT = #{operPdUseAt}
+			  ,OPER_BGNDE = #{operBgnde}
+			  ,OPER_ENDDE = #{operEndde}
+			  ,UPDT_ID = #{updtId}
+			  ,UPDT_IP = #{updtIp}
+			  ,UPDT_DE = SYSDATE
+			  ,USE_AT = #{useAt}
+			  ,ETC = #{etc}
+    	 WHERE REQST_NO = #{reqstNo}
+    </update>
+    
+    <!-- 온라인 신청 정보 삭제 -->
+    <!-- 
+    <update id="deleteReqstInfo" parameterType="map">
+		UPDATE TAP_RM_REQST_MANAGE
+		   SET USE_AT = #{useAt}
+    	 WHERE REQST_NO = #{reqstNo}		   
+    </update>
+     -->
+     
+	<delete id="deleteReqstInfo" parameterType="map">
+		DELETE FROM TAP_RM_REQST_MANAGE 
+    	 WHERE REQST_NO = #{reqstNo}
+	</delete>
+
+	<!-- 온라인 신청 인원 삭제 -->	
+	<delete id="deleteReqstNmprInfo" parameterType="map">
+		DELETE FROM TAP_RM_REQST_NMPR 
+    	 WHERE REQST_NO = #{reqstNo}
+	</delete>	
+	 
+    <!-- 온라인 신청 정보 승인/취소 -->
+    <update id="updateReqstConfmSttus" parameterType="map">
+		UPDATE TAP_RM_REQST_MANAGE
+		   SET REQST_CONFM_STTUS = #{reqstConfmSttus}
+    	 WHERE REQST_NO = #{reqstNo}
+    </update>
+    
+    <!-- 홈페이지 온라인 신청 리스트 [회원] -->
+    <sql id="selectMberReqstList">
+		SELECT 
+		  	   A.REQST_NO
+			  ,A.SYS_ID
+			  ,A.REQST_TY
+			  ,A.REQST_SJ
+			  ,A.REQST_CN
+			  ,A.REQST_CONFM_STTUS
+			  ,A.REQST_NMPR
+			  ,A.REQST_TRGET
+			  ,A.REQST_AUTHOR
+			  ,A.REQST_PD_USE_AT
+			  ,TO_CHAR(A.REQST_BGNDE, 'YYYY/MM/DD') AS REQST_BGNDE
+		      ,TO_CHAR(A.REQST_ENDDE, 'YYYY/MM/DD') AS REQST_ENDDE
+		      ,A.OPER_PD_USE_AT
+			  ,TO_CHAR(A.OPER_BGNDE, 'YYYY/MM/DD') AS OPER_BGNDE
+			  ,TO_CHAR(A.OPER_ENDDE, 'YYYY/MM/DD') AS OPER_ENDDE
+			  ,A.CREAT_ID
+			  ,A.CREAT_IP
+			  ,TO_CHAR(A.CREAT_DT, 'YYYY/MM/DD HH24:MI:SS') AS CREAT_DT
+			  ,A.USE_AT
+			  ,A.ETC
+		      ,B.NMPR_NO
+		      ,NVL((SELECT COUNT(1) FROM TAP_RM_REQST_NMPR WHERE REQST_NO = A.REQST_NO AND REQST_AT = 'Y' GROUP BY REQST_NO),0) AS NOW_REQST_NMPR
+			  ,CASE					   
+		         WHEN (TO_CHAR(SYSDATE, 'YYYYMMDD') BETWEEN TO_CHAR(A.REQST_BGNDE, 'YYYYMMDD') AND TO_CHAR(A.REQST_ENDDE, 'YYYYMMDD'))
+		           OR (REQST_BGNDE IS NULL AND REQST_ENDDE IS NULL)
+			     THEN 'Y'
+			     ELSE 'N'
+			   END AS TIME_CHECK
+		  FROM 
+		  	   TAP_RM_REQST_MANAGE A, 
+		       ( 
+					SELECT NMPR_NO
+						  ,REQST_NO
+						  ,REQST_USID
+						  ,REQST_USIP
+						  ,REQST_DT
+						  ,REQST_AT
+					  FROM TAP_RM_REQST_NMPR 
+					 WHERE 1 = 1
+					   AND REQST_USID = #{reqstUsid} 
+					   AND REQST_AT = 'Y' 
+		       ) B
+		 WHERE 1 = 1
+		   AND A.REQST_NO = B.REQST_NO(+)
+		   AND A.SYS_ID = #{sysId}
+		<if test="@egovframework.MybatisUtils@isNotEmpty(reqstAll)">           
+           AND A.USE_AT = #{reqstAll}
+		   AND A.REQST_CONFM_STTUS = 'C'
+		</if>	   		   
+	  ORDER BY A.CREAT_DT DESC
+    </sql>
+    
+    <!-- 홈페이지 온라인 신청 리스트 [회원] -->
+    <select id="selectMberReqstList" parameterType="map" resultType="egovMap">
+    	<include refid="selectMberReqstList" />
+    </select>  
+    
+	<!-- 홈페이지 온라인 신청 리스트 [회원] (페이징) -->
+    <select id="selectMberReqstListPaging" parameterType="map" resultType="egovMap">
+		SELECT PL.*
+		  FROM ( SELECT PO.* 
+		  		 	   ,ROWNUM AS RSN
+		           FROM ( <include refid="selectMberReqstList" /> ) PO ) PL
+		 WHERE 1 = 1 
+		 <![CDATA[ 
+		   AND RSN <= #{maxSn}
+		   AND RSN > #{minSn} 
+		 ]]>		
+    </select>
+    
+    <!-- 홈페이지 온라인 신청 리스트 [회원] (페이징 전체 카운트) -->
+    <select id="selectMberReqstListPagingCount" parameterType="map" resultType="int">
+		SELECT COUNT(*)
+		  FROM 
+		  	   TAP_RM_REQST_MANAGE A, 
+		       ( 
+					SELECT NMPR_NO
+						  ,REQST_NO
+						  ,REQST_USID
+						  ,REQST_USIP
+						  ,REQST_DT
+						  ,REQST_AT
+					  FROM TAP_RM_REQST_NMPR 
+					 WHERE 1 = 1
+					   AND REQST_USID = #{reqstUsid} 
+					   AND REQST_AT = 'Y' 
+		       ) B
+		 WHERE 1 = 1
+		   AND A.REQST_NO = B.REQST_NO(+)
+		   AND A.SYS_ID = #{sysId}
+		<if test="@egovframework.MybatisUtils@isNotEmpty(reqstAll)">           
+           AND A.USE_AT = #{reqstAll}
+		   AND A.REQST_CONFM_STTUS = 'C'
+		</if>
+    </select>    
+    
+    <!-- 홈페이지 온라인 신청 리스트 [비회원] -->
+    <sql id="selectNmbrReqstList">
+		SELECT A.REQST_NO
+			  ,A.SYS_ID
+			  ,A.REQST_TY
+			  ,A.REQST_SJ
+			  ,A.REQST_CN
+			  ,A.REQST_CONFM_STTUS
+			  ,A.REQST_NMPR
+			  ,A.REQST_TRGET
+			  ,A.REQST_AUTHOR
+			  ,A.REQST_PD_USE_AT
+			  ,TO_CHAR(A.REQST_BGNDE, 'YYYY/MM/DD') AS REQST_BGNDE
+		      ,TO_CHAR(A.REQST_ENDDE, 'YYYY/MM/DD') AS REQST_ENDDE
+		      ,A.OPER_PD_USE_AT
+			  ,TO_CHAR(A.OPER_BGNDE, 'YYYY/MM/DD') AS OPER_BGNDE
+			  ,TO_CHAR(A.OPER_ENDDE, 'YYYY/MM/DD') AS OPER_ENDDE
+			  ,A.CREAT_ID
+			  ,A.CREAT_IP
+			  ,TO_CHAR(A.CREAT_DT, 'YYYY/MM/DD HH24:MI:SS') AS CREAT_DT
+			  ,A.USE_AT
+			  ,A.ETC
+			  ,0 AS NMPR_NO
+			  ,NVL((SELECT COUNT(1) FROM TAP_RM_REQST_NMPR WHERE REQST_NO = A.REQST_NO AND REQST_AT = 'Y' GROUP BY REQST_NO),0) AS NOW_REQST_NMPR
+			  ,CASE					   
+		         WHEN (TO_CHAR(SYSDATE, 'YYYYMMDD') BETWEEN TO_CHAR(A.REQST_BGNDE, 'YYYYMMDD') AND TO_CHAR(A.REQST_ENDDE, 'YYYYMMDD'))
+		           OR (REQST_BGNDE IS NULL AND REQST_ENDDE IS NULL)
+			     THEN 'Y'
+			     ELSE 'N'
+			   END AS TIME_CHECK						  
+		  FROM TAP_RM_REQST_MANAGE A
+		 WHERE 1 = 1
+		   AND A.SYS_ID = #{sysId}
+		<if test="@egovframework.MybatisUtils@isNotEmpty(reqstAll)">           
+           AND A.USE_AT = #{reqstAll}
+		</if>	 
+		   AND A.REQST_CONFM_STTUS = 'C'
+	  ORDER BY A.CREAT_DT DESC 
+    </sql>    
+    
+	<!-- 홈페이지 온라인 신청 리스트 [비회원] -->
+	<select id="selectNmbrReqstList" parameterType="map" resultType="egovMap">
+		<include refid="selectNmbrReqstList" />
+	</select>	
+	
+	<!-- 홈페이지 온라인 신청 리스트 [비회원] (페이징) -->
+    <select id="selectNmbrReqstListPaging" parameterType="map" resultType="egovMap">
+		SELECT PL.*
+		  FROM ( SELECT PO.* 
+		  		 	   ,ROWNUM AS RSN
+		           FROM ( <include refid="selectNmbrReqstList" /> ) PO ) PL
+		 WHERE 1 = 1 
+		 <![CDATA[ 
+		   AND RSN <= #{maxSn}
+		   AND RSN > #{minSn} 
+		 ]]>		
+    </select>
+    
+    <!-- 홈페이지 온라인 신청 리스트 [비회원] (페이징 전체 카운트) -->
+    <select id="selectNmbrReqstListPagingCount" parameterType="map" resultType="int">
+		SELECT COUNT(*)
+		  FROM TAP_RM_REQST_MANAGE A
+		 WHERE 1 = 1
+		   AND A.SYS_ID = #{sysId}
+		<if test="@egovframework.MybatisUtils@isNotEmpty(reqstAll)">           
+           AND A.USE_AT = #{reqstAll}
+		</if>	 
+		   AND A.REQST_CONFM_STTUS = 'C'
+    </select>    
+    
+	<!-- 신청 (신규) -->
+    <insert id="insertReqstMberInfo" parameterType="map">
+		<selectKey keyProperty="nmprNo" resultType="java.lang.Integer" order="BEFORE">
+			SELECT NVL(MAX(NMPR_NO + 1), 1) FROM TAP_RM_REQST_NMPR
+		</selectKey>      
+			INSERT INTO TAP_RM_REQST_NMPR
+				(
+					 NMPR_NO
+					,REQST_NO
+					,REQST_USID
+					,REQST_USIP
+					,REQST_DT
+					,REQST_AT									         
+				)
+			VALUES
+				(
+					 #{nmprNo}
+					,#{reqstNo}
+					,#{reqstUsid}
+					,#{reqstUsip}
+					,SYSDATE
+					,#{reqstAt}
+				)    	
+    </insert>
+    
+	<!-- 신청 (재신청) -->
+	<update id="updateReqstMberInfo" parameterType="map">
+		UPDATE TAP_RM_REQST_NMPR
+		   SET REQST_AT = #{reqstAt}
+    	 WHERE 1 = 1
+		   AND REQST_NO = #{reqstNo}
+		   AND REQST_USID = #{reqstUsid}
+    </update>    
+    
+	<!-- 신청 (취소) -->
+	<update id="deleteReqstMberInfo" parameterType="map">
+		UPDATE TAP_RM_REQST_NMPR
+		   SET REQST_AT = #{reqstAt}
+    	 WHERE 1 = 1
+    	   AND NMPR_NO = #{nmprNo}
+    </update>
+    
+    <!-- 신청 인원 정보 (NMPR_NO) -->
+    <select id="selectReqstMberInfo" parameterType="map" resultType="egovMap">
+		SELECT NMPR_NO
+			  ,REQST_NO
+			  ,REQST_USID
+			  ,REQST_USIP
+			  ,REQST_DT
+			  ,REQST_AT
+		  FROM TAP_RM_REQST_NMPR 
+		 WHERE 1 = 1
+		   AND NMPR_NO = #{nmprNo}    
+    </select>  
+    
+    <!-- 신청 인원 정보 (REQST_NO, REQST_USID) -->
+    <select id="selectReqstMberInfoToCheck" parameterType="map" resultType="egovMap">
+		SELECT NMPR_NO
+			  ,REQST_NO
+			  ,REQST_USID
+			  ,REQST_USIP
+			  ,REQST_DT
+			  ,REQST_AT
+		  FROM TAP_RM_REQST_NMPR 
+		 WHERE 1 = 1
+		   AND REQST_NO = #{reqstNo}
+		   AND REQST_USID = #{reqstUsid}
+    </select>
+    
+    <!-- 신청 인원 리스트 -->
+    <select id="selectReqstMberList" parameterType="map" resultType="egovMap">
+        SELECT RM.NMPR_NO
+              ,RM.REQST_NO
+              ,RM.REQST_USID
+              ,RM.REQST_USIP
+              ,TO_CHAR(RM.REQST_DT, 'YYYY/MM/DD HH24:MI:SS') AS REQST_DT
+              ,RM.REQST_AT
+              ,MM.MBER_NM
+          FROM TAP_RM_REQST_NMPR RM, TAP_MM_MBER_MANAGE MM
+         WHERE 1 = 1
+           AND RM.REQST_USID = MM.MBER_ID(+)
+           AND RM.REQST_NO = #{reqstNo}
+		<if test="@egovframework.MybatisUtils@isNotEmpty(reqstAt)">           
+           AND RM.REQST_AT = #{reqstAt}
+		</if>	           
+      ORDER BY RM.REQST_DT    
+    </select>    
+    
+    <!-- 신청 설정 정보 -->
+    <select id="selectReqstOptnInfo" parameterType="map" resultType="egovMap">
+		SELECT SYS_ID,
+		       ATMC_CONFM_AT
+		  FROM TAP_RM_REQST_OPTN
+		 WHERE 1 = 1
+		   AND SYS_ID = #{sysId}
+    </select>
+    
+    <!-- 자동승인 설정 -->
+    <update id="updateReqstAutoConfm" parameterType="map">
+		MERGE INTO TAP_RM_REQST_OPTN 
+	    	 USING DUAL 
+	       		ON (SYS_ID = #{sysId})
+		WHEN MATCHED THEN
+		    UPDATE 
+		       SET ATMC_CONFM_AT = #{atmcConfmAt}
+		WHEN NOT MATCHED THEN
+		    INSERT
+		        (
+		             SYS_ID
+		            ,ATMC_CONFM_AT
+		        )
+		    VALUES
+		        (
+		             #{sysId}
+		            ,#{atmcConfmAt}
+		        )
+    </update>
+		 
+	<!-- 신청 가능 상태 체크 -->
+    <select id="selectReqstInsertCheck" parameterType="map" resultType="java.lang.String">
+		SELECT CASE
+			   	WHEN NVL((SELECT COUNT(1) FROM TAP_RM_REQST_NMPR WHERE REQST_AT = 'Y' AND REQST_NO = #{reqstNo} GROUP BY REQST_NO),0) <![CDATA[<]]> REQST_NMPR
+			    THEN 'Y'
+		        ELSE 'N' 
+		       END AS CHECK_COUNT
+		  FROM TAP_RM_REQST_MANAGE
+		 WHERE 1 = 1
+		   AND REQST_NO = #{reqstNo}
+    </select>
+    
+    <!-- 신청 현황 리스트 -->
+    <sql id="selectUserReqstSttusList">
+		SELECT A.REQST_SJ, 
+		       A.REQST_TRGET, 
+		       NVL((SELECT COUNT(1) FROM TAP_RM_REQST_NMPR WHERE REQST_NO = A.REQST_NO AND REQST_AT = 'Y' GROUP BY REQST_NO),0) AS NOW_REQST_NMPR,
+		       A.REQST_NMPR,
+		       TO_CHAR(B.REQST_DT, 'YYYY/MM/DD HH24:MI:SS') AS REQST_DT,
+		       B.REQST_AT,
+		       B.NMPR_NO,
+               CASE					   
+                 WHEN (TO_CHAR(SYSDATE, 'YYYYMMDD') BETWEEN TO_CHAR(A.REQST_BGNDE, 'YYYYMMDD') AND TO_CHAR(A.REQST_ENDDE, 'YYYYMMDD'))
+                   OR (A.REQST_BGNDE IS NULL AND A.REQST_ENDDE IS NULL)
+			     THEN 'Y'
+			     ELSE 'N'
+			   END AS TIME_CHECK  		       
+		  FROM TAP_RM_REQST_MANAGE A, (SELECT REQST_NO, REQST_AT, REQST_DT, NMPR_NO FROM TAP_RM_REQST_NMPR WHERE REQST_USID = #{reqstUsid}) B
+		 WHERE 1 = 1
+		   AND A.REQST_NO = B.REQST_NO 
+	  ORDER BY A.CREAT_DT  
+    </sql>
+    
+    <!-- 신청 현황 리스트 (페이징) -->    
+    <select id="selectUserReqstSttusListPaging" parameterType="map" resultType="egovMap">
+		SELECT PL.*
+		  FROM ( SELECT PO.* 
+		  		 	   ,ROWNUM AS RSN
+		           FROM ( <include refid="selectUserReqstSttusList" /> ) PO ) PL
+		 WHERE 1 = 1 
+		 <![CDATA[ 
+		   AND RSN <= #{maxSn}
+		   AND RSN > #{minSn} 
+		 ]]>		
+    </select>
+    
+    <!-- 신청 현황 리스트 (페이징 전체 카운트) -->
+    <select id="selectUserReqstSttusListPagingCount" parameterType="map" resultType="int">
+		SELECT COUNT(*)
+		  FROM TAP_RM_REQST_MANAGE A, (SELECT REQST_NO, REQST_AT, REQST_DT FROM TAP_RM_REQST_NMPR WHERE REQST_USID = #{reqstUsid}) B
+		 WHERE 1 = 1
+		   AND A.REQST_NO = B.REQST_NO 
+    </select>
+    
+    <!-- 온라인 신청 시스템 리스트 통계 sql -->
+	<sql id="selectReqstState">
+		SELECT COUNT(*) AS CNT
+		FROM TAP_RM_REQST_MANAGE A, TAP_MM_MBER_MANAGE B
+		WHERE A.CREAT_ID = B.MBER_ID
+		AND A.SYS_ID = SM.SYS_ID
+	</sql>
+	
+	<!-- 온라인 신청 시스템 리스트 sql -->
+	<sql id="selectReqstSmList">
+		SELECT IT.INSTT_CODE
+	          ,IT.INSTT_NM
+	          ,IT.INSTT_TY
+	          ,SM.SYS_ID
+			  ,SM.SYS_NM 
+			  ,( <include refid="selectReqstState" /> ) AS TOTAL_CNT                                                                
+			  FROM TAP_IM_INSTT_MANAGE IT, TAP_SM_SYS_MANAGE SM 
+			  WHERE IT.INSTT_CODE = SM.INSTT_CODE
+			  AND SM.SYS_STTUS = 'O'
+			
+			<if test='@egovframework.MybatisUtils@isEmpty(author) || author != "master"'>
+	         AND SM.SYS_ID NOT IN ('apple')
+	        </if>
+	        
+	        <if test="@egovframework.MybatisUtils@isNotEmpty(mberId)">
+		      AND SM.SYS_ID IN (
+					SELECT SYS_ID
+					  FROM TAP_AU_AUTHOR_MBER 
+					 WHERE MBER_ID = #{mberId}
+						   AND SYS_ID != 'apple'
+					   AND AUTHOR_CODE IN (1,2)	
+	        	)
+		     </if>
+		     
+	        <if test="@egovframework.MybatisUtils@isNotEmpty(insttCode)">
+		     AND   ( IT.INSTT_CODE =  #{insttCode}
+		     
+	                    OR  IT.UPPER_INSTT_CODE = #{upperInsttCode}
+	                    OR  IT.BSIS_INSTT_CODE = #{bsisInsttCode}
+	                    
+	               	)
+	         </if>
+	         
+		     <if test="@egovframework.MybatisUtils@isNotEmpty(insttGrad)">
+		     AND   ( IT.INSTT_GRAD IS NULL
+		     
+		     		 <if test="@egovframework.MybatisUtils@isNotEmpty(dtnt)">
+		                OR IT.INSTT_GRAD = #{dtnt}
+		             </if>
+		             <if test="@egovframework.MybatisUtils@isNotEmpty(elesch)">
+		                OR IT.INSTT_GRAD = #{elesch}
+		             </if>
+		             <if test="@egovframework.MybatisUtils@isNotEmpty(mskul)">    
+		                OR IT.INSTT_GRAD = #{mskul}
+		             </if> 
+		             <if test="@egovframework.MybatisUtils@isNotEmpty(hgschl)">
+		                OR IT.INSTT_GRAD = #{hgschl}
+		             </if>
+		             <if test="@egovframework.MybatisUtils@isNotEmpty(kndrgr)">     
+		                OR IT.INSTT_GRAD = #{kndrgr}
+		             </if>
+		             <if test="@egovframework.MybatisUtils@isNotEmpty(spcl)">
+		                OR IT.INSTT_GRAD = #{spcl}
+		             </if>
+		             
+		           )
+		     </if>
+		     
+		     <if test="@egovframework.MybatisUtils@isNotEmpty(sysTy)">
+		      AND   SM.SYS_TY = #{sysTy}
+		     </if>
+		     
+		     <if test="@egovframework.MybatisUtils@isNotEmpty(srchTxt)">
+		       AND  (  		 
+       				 SM.SYS_NM like '%'||#{srchTxt}||'%'
+              	  OR SM.SYS_TY like '%'||#{srchTxt}||'%' 
+              	  OR SM.SYS_ID like '%'||#{srchTxt}||'%' 
+		              	 
+		       )
+		    </if>
+			 
+			 ORDER BY   IT.INSTT_CODE, IT.INSTT_LEVEL DESC
+	</sql>
+	
+	<!-- 온라인 신청 시스템 리스트 -->
+	<select id="selectReqstSmList" parameterType="map" resultType="egovMap">
+		<include refid="selectReqstSmList"/>
+	</select>
+	
+	<!-- 온라인 신청 시스템 페이징 -->
+	<select id="selectReqstSmListPaging" parameterType="map" resultType="egovMap">
+		SELECT
+    		PL.*
+    	FROM (
+        	SELECT 
+        		PO.*
+        		,rownum as rsn
+			FROM (
+	    		<include refid="selectReqstSmList" /> 
+				) PO
+		) PL
+		WHERE
+		<![CDATA[
+			rsn <= #{maxSn} 
+			AND rsn > #{minSn}
+		]]>
+	</select>
+	
+	<!-- 온라인 신청 시스템 페이징 카운트 -->
+	<select id="selectReqstSmListPagingCount" parameterType="map" resultType="int">
+		SELECT 
+			COUNT(*)
+			FROM TAP_IM_INSTT_MANAGE IT, TAP_SM_SYS_MANAGE SM 
+			  WHERE IT.INSTT_CODE = SM.INSTT_CODE
+			  AND SM.SYS_STTUS = 'O'
+			
+			<if test='@egovframework.MybatisUtils@isEmpty(author) || author != "master"'>
+	         AND SM.SYS_ID NOT IN ('apple')
+	        </if>
+	        
+	        <if test="@egovframework.MybatisUtils@isNotEmpty(insttCode)">
+		     AND   ( IT.INSTT_CODE =  #{insttCode}
+		     
+	                    OR  IT.UPPER_INSTT_CODE = #{upperInsttCode}
+	                    OR  IT.BSIS_INSTT_CODE = #{bsisInsttCode}
+	                    
+	               	)
+	         </if>
+	         
+		     <if test="@egovframework.MybatisUtils@isNotEmpty(insttGrad)">
+		     AND   ( IT.INSTT_GRAD IS NULL
+		     
+		     		 <if test="@egovframework.MybatisUtils@isNotEmpty(dtnt)">
+		                OR IT.INSTT_GRAD = #{dtnt}
+		             </if>
+		             <if test="@egovframework.MybatisUtils@isNotEmpty(elesch)">
+		                OR IT.INSTT_GRAD = #{elesch}
+		             </if>
+		             <if test="@egovframework.MybatisUtils@isNotEmpty(mskul)">    
+		                OR IT.INSTT_GRAD = #{mskul}
+		             </if> 
+		             <if test="@egovframework.MybatisUtils@isNotEmpty(hgschl)">
+		                OR IT.INSTT_GRAD = #{hgschl}
+		             </if>
+		             <if test="@egovframework.MybatisUtils@isNotEmpty(kndrgr)">     
+		                OR IT.INSTT_GRAD = #{kndrgr}
+		             </if>
+		             <if test="@egovframework.MybatisUtils@isNotEmpty(spcl)">
+		                OR IT.INSTT_GRAD = #{spcl}
+		             </if>
+		             
+		           )
+		     </if>
+	        
+	        <if test="@egovframework.MybatisUtils@isNotEmpty(mberId)">
+		      AND SM.SYS_ID IN (
+					SELECT SYS_ID
+					  FROM TAP_AU_AUTHOR_MBER 
+					 WHERE MBER_ID = #{mberId}
+						   AND SYS_ID != 'apple'
+					   AND AUTHOR_CODE IN (1,2)	
+	        	)
+		     </if>
+		     
+		     <if test="@egovframework.MybatisUtils@isNotEmpty(sysTy)">
+		      AND   SM.SYS_TY = #{sysTy}
+		     </if>
+		     
+		     <if test="@egovframework.MybatisUtils@isNotEmpty(srchTxt)">
+		       AND  (  		 
+       				 SM.SYS_NM like '%'||#{srchTxt}||'%'
+              	  OR SM.SYS_TY like '%'||#{srchTxt}||'%' 
+              	  OR SM.SYS_ID like '%'||#{srchTxt}||'%' 
+		       )
+		    </if>
+			 
+			 ORDER BY   IT.INSTT_CODE, IT.INSTT_LEVEL DESC
+	</select>
+    <!-- 온라인 신청 총관리자 리스트-->
+	
+</mapper>

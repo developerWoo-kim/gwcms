@@ -1,0 +1,163 @@
+﻿@charset "utf-8";
+@import url(common.css);
+
+/* 버튼 관련 */
+.btn_st1 {text-align:center;}
+.btn_st1 button {width:160px; margin:1px;}
+
+.btn_black { display:inline-block; background-color:#404040; border-radius:3px; font-family:"NotoR"; font-size:16px; color:#fff; padding:0 10px; height:52px; line-height:52px; text-align:center}
+.btn_white{ display:inline-block; background-color:#fff; border:1px solid #b8b8b8; border-radius:3px; font-family:"NotoR"; font-size:16px; color:#404040; padding:0 10px; height:52px; line-height:52px; text-align:center}
+.btn_gray { display:inline-block; background-color:#686868; border-radius:3px; font-family:"NotoR"; font-size:16px; color:#fff; padding:0 10px; height:52px; line-height:52px; text-align:center}
+.btn_oran { display:inline-block; background-color:#f05000; border-radius:3px; font-family:"NotoR"; font-size:16px; color:#fff; padding:0 10px; height:52px; line-height:52px; text-align:center}
+.login_wrap_main .login_box_01 .inner .btn_black {width:200px; margin:0 0 24px}
+.btn_join {width:140px; display:inline-block; background-color:#404040; border-radius:3px; font-family:"NotoR"; font-size:14px; color:#fff; padding:0 10px; height:40px; line-height:40px; margin:1px; text-align:center}
+
+/* 회원가입 */
+.join_wrap_main{position:relative; width:100%; overflow:hidden}
+.join_wrap_main .step{ margin: 0 0 25px}
+.join_wrap_main .step ul{ overflow:hidden}
+.join_wrap_main .step ul li{ float:left; margin-left:2%; width:32%; font-family:"NotoR"; font-size:16px; color:#606060}
+.join_wrap_main .step ul li:first-child{margin-left:0; width:32%}
+.join_wrap_main .step ul li span.bar{ display:block; height:8px; border:1px solid #b8b8b8; border-radius:5px; margin-top:9px}
+.join_wrap_main .step ul li.on{font-family:"NotoM"; color:#111}
+.join_wrap_main .step ul li.on span.bar{border:1px solid #fff; background:url(/images/co/sb/step_bg.gif) repeat-x}
+
+.join_wrap_main .step ul.othinst li{ float:left; margin-left:2%; width:48%; font-family:"NotoR"; font-size:16px; color:#606060}
+.join_wrap_main .step ul.othinst li.on{font-family:"NotoM"; color:#111}
+
+
+.join_wrap_main .tit{ font-size:34px; font-family:"NotoM"; color:#111; text-align:center; margin:0 0 11px; font-weight:normal;}
+.join_wrap_main .txt_con{ font-size:16px; line-height:150%; font-family:"NotoR"; color:#333; text-align:center; margin:0 0 36px}
+.join_wrap_main .boxType1{ border:1px solid #e0e0e0; overflow:hidden; padding:0 0 40px; margin:0 0 30px}
+
+.join_wrap_main .chk_all{ background:#fafafa; border-bottom:1px solid #e0e0e0; padding:14px 25px}
+.join_wrap_main .input_chk{ display:block; position:relative; }
+.join_wrap_main .input_chk label{font-size:19px; font-family:"NotoM"; color:#111; line-height:150%; no-repeat 100% 50% / 24px 24px;}
+.join_wrap_main .input_chk input {top:50%; width:22px; height:22px; right: 1px; margin-top: -11px; position:absolute; z-index:9;}
+
+.join_wrap_main .boxType1 ul.clause_ul {padding:40px 25px 0}
+.join_wrap_main .boxType1 ul.clause_ul  li label{font-size:14px; font-family:"Dotum"; font-weight:bold; no-repeat 100% 50% / 24px 24px;}
+
+.join_wrap_main .terms_box{ border:1px solid #f0f0f0; background:#f7f7f7; height:70px; overflow:hidden; overflow-y:scroll; padding:8px 10px; margin-top:10px; font-family:"Dotum"; font-size:12px; line-height:150%}
+.join_wrap_main .terms_box h3 { font-weight:bold; font-family:"Dotum";}
+
+/* 02 본인인증 탭 */
+.join_wrap_main .boxType1 .cert_type_area {width:100%; background:#fafafa; border-bottom:1px solid #e0e0e0; padding:14px 0; overflow:hidden;}
+.join_wrap_main .boxType1 ul.cert_type {width:696px; margin:0 auto; overflow:hidden;}
+.join_wrap_main .boxType1 ul.cert_type li {width:29%; line-height:30px; float:left; text-align:center;}
+.join_wrap_main .boxType1 ul.cert_type li:first-child {width:42%;}
+.join_wrap_main .boxType1 ul.cert_type li a {display:inline-block; padding-left:30px; font-family:"NotoM"; font-size:19px; color:#606060;  background:url(/images/co/sb/join_tab_off.gif) no-repeat 0 center;}
+.join_wrap_main .boxType1 ul.cert_type li a.on {color:#000; background:url(/images/co/sb/join_tab_on.gif) no-repeat 0 center;}
+
+.join_wrap_main .boxType1 .cert_info {padding:40px 25px 30px;}
+.join_wrap_main .boxType1 .cert_info li {padding:3px 0 4px 20px; font-family:"NotoR"; font-size:14px; color:#303030; line-height:20px; background:url(/images/co/sb/icon_excl.png) no-repeat 0 6px;}
+
+.join_wrap_main .boxType1 .btn_cert {padding-top:40px; border-top:1px solid #e0e0e0; text-align:center;}
+.join_wrap_main .boxType1 .btn_cert button {width:150px; margin:1px;}
+
+.join_wrap_main .boxType1 .btn_cert2 {text-align:center; padding:40px 0 30px;}
+.join_wrap_main .boxType1 .btn_cert2 .btn_gray {font-size:14px; width:150px; height:40px; line-height:40px;}
+
+/* 상세정보 입력 / 비밀번호 찾기 공통 사용 */
+.inform_tbl {margin:40px; border-top:2px solid #333;}
+.inform_tbl table {width:100%;  background-color:#fff; border-collapse:collapse; font-family:'NotoR';}
+.inform_tbl th,
+.inform_tbl td { border-bottom:1px solid #e0e0e0; vertical-align:middle; font-size:15px; color:#222; text-align:left; padding:15px 10px;} 
+.inform_tbl th {font-family:'NotoM'; font-weight:normal;}
+.inform_tbl th label {display:inline-block; *display:inline; zoom:1;}
+.inform_tbl th label.required {background:url('/images/co/sb/required.png') no-repeat 0; padding-left:10px;}/*필수입력항목*/
+.frm_input {width:90%; height:28px; line-height:28px; background-color:#f7f7f7; font-family:'NotoR'; border:1px solid #b8b8b8; border-radius:2px; vertical-align:middle; margin-right:5px; color:#606262; font-size:13px;}
+
+/* 가입완료 */
+.join_wrap_main .boxType2 { border:1px solid #d0d0d0; overflow:hidden; padding:40px 30px; text-align:center; border-radius:10px; background:#f4f4f4;}
+.join_wrap_main .boxType2 h2 {font-size:34px; color:#000; padding-top:130px; background:url(/images/co/sb/bg_join_finish.gif) no-repeat center top;}
+.join_wrap_main .boxType2 p {margin-top:15px; ont-size:16px; line-height:20px; color:#303030; font-family:"NotoR"; }
+
+/* 아이디 비밀번호 찾기 */
+.idpw_wrap_main{position:relative; overflow:hidden}
+.idpw_wrap_main .tit{ font-size:34px; font-family:"NotoM"; color:#111; text-align:center; margin:0 0 11px; font-weight:normal;}
+.idpw_wrap_main .txt_con{ font-size:16px; line-height:150%; font-family:"NotoR"; color:#333; text-align:center; margin:0 0 36px}
+.idpw_wrap_main .boxType2{position:relative; padding:0 0 40px;  border:1px solid #e0e0e0; overflow:hidden; background:#fff;}
+
+
+/* 비밀번호 변경 알림 */
+.pw_message {padding:5px; background:url('/images/co/sb/pt_diagonal.png') repeat}
+.pw_message .pw_mess_box {padding:40px; background:#fff;}
+.pw_message .pw_mess_box dl {text-align:center; font-family:'NotoR';}
+.pw_message .pw_mess_box dl dt {padding-top:80px; font-size:34px; font-family:'NotoM'; color:#000; background:url('/images/co/sb/icon_pw_message.png') no-repeat center top;}
+.pw_message .pw_mess_box dl dd {margin-top:20px; font-size:16px; color:#333;}
+
+@media screen and (max-width :1024px) {
+	
+	
+
+}
+	
+@media screen and (max-width :992px) {
+
+	/* 버튼 관련 */
+	.btn_st1 button {width:150px;}
+	
+	/* 회원가입 */
+	.join_wrap_main .boxType1 ul.clause_ul { width:auto; padding:40px 25px 0}
+	.join_wrap_main .boxType1 ul.clause_ul .input_chk {width:100%; }
+	.join_wrap_main .chk_all .input_chk label, .join_wrap_main .boxType1 ul.clause_ul label {display:block; padding-right:40px;}
+
+	/*상세정보 입력*/
+	.inform_tbl {margin:20px;}
+	.inform_tbl th,
+	.inform_tbl td { font-size:14px; -webkit-box-sizing:border-box; , -moz-box-sizing:border-box; box-sizing:border-box;} 
+	.frm_input { width:90%; }
+
+	/* 타입별 탭 */
+	.join_wrap_main .boxType1 ul.cert_type {width:90%;}
+	.join_wrap_main .boxType1 ul.cert_type li a {font-size:16px;}
+
+	.join_wrap_main .boxType1 .cert_info {width:100%; padding:25px; -webkit-box-sizing:border-box; , -moz-box-sizing:border-box; box-sizing:border-box;}
+
+	.join_wrap_main .boxType1 .btn_cert2 .btn_gray {font-size:14px; width:150px; height:40px; line-height:40px;}
+
+	/* 아이디 비밀번호 찾기 */
+	.idpw_wrap_main .boxType2{padding:0 0 20px;}
+
+	/* 비밀번호 변경 알림 */
+	.pw_message .pw_mess_box {padding:30px 20px;}
+
+	
+}
+	
+@media screen and (max-width :640px) {
+
+	/* 회원가입 */
+	/* 타입별 탭 */
+	.join_wrap_main .boxType1 ul.cert_type li {width:33%;}
+	.join_wrap_main .boxType1 ul.cert_type li:first-child {width:34%;}
+	.join_wrap_main .boxType1 ul.cert_type li a {padding:30px 0 0; line-height:22px; font-size:16px; background-position:center top;}
+	.join_wrap_main .boxType1 ul.cert_type li a span {display:block;}
+	.join_wrap_main .boxType1 ul.cert_type li a.on {background-position:center top;}
+
+	/* 가입완료 */
+	.join_wrap_main .boxType2 p span {display:block;}
+
+
+}
+		
+@media screen and (max-width :530px) {
+
+	/* 버튼 관련 */
+	.btn_st1 button {width:45%;}
+	
+	/* 회원가입 */
+	.join_wrap_main .step ul li{ font-size:13px; letter-spacing:-1px;}
+	.btn_join {width:100%; padding:0;}
+	/* 타입별 탭 */
+	.join_wrap_main .boxType1 ul.cert_type li a {line-height:20px; font-size:13px;letter-spacing:-1px;}
+
+	/*상세정보 입력*/
+	.inform_tbl th {display:block; text-align:center;  padding:10px; border-bottom:1px dashed #e0e0e0;} 
+	.inform_tbl td {display:block; text-align:center; padding:10px; } 
+	.join_wrap_main .boxType1 .btn_cert button {width:45%;}
+
+
+
+}

@@ -1,0 +1,204 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+ 
+<mapper namespace="qm_qr">
+
+<!-- QR코드관리 시스템  리스트 sql-->
+	<sql id ="selectQrCodeSmList">
+	  SELECT   IT.INSTT_CODE
+	          ,IT.INSTT_NM
+	          ,IT.INSTT_TY
+	          ,SM.SYS_ID
+	          ,SM.SYS_NM
+	          ,SM.SYS_TY
+              ,( <include refid="selectQrCodeStats" />  ) AS TOTAL_CNT
+	    FROM   TAP_IM_INSTT_MANAGE IT, TAP_SM_SYS_MANAGE SM
+	   WHERE   IT.INSTT_CODE = SM.INSTT_CODE
+         AND   SM.SYS_STTUS = 'O'
+	   <include refid="srchQrCodeSmList" /> 
+	ORDER BY   IT.INSTT_CODE, IT.INSTT_LEVEL DESC
+	</sql>
+	
+	<!--  QR코드관리 시스템  리스트 팝업 통계 sql-->
+	<sql id ="selectQrCodeStats">
+		SELECT COUNT(*)
+          FROM TAP_QM_QR_MANAGE QR
+         WHERE 1=1
+           AND QR.SYS_ID = SM.SYS_ID
+	</sql>
+	
+	 <!--  QR코드관리 시스템  리스트 검색조건 sql-->
+	<sql id ="srchQrCodeSmList">
+	
+        <if test='@egovframework.MybatisUtils@isEmpty(author) || author != "master"'>
+         AND SM.SYS_ID NOT IN ('apple')
+        </if>
+        
+        <if test="@egovframework.MybatisUtils@isNotEmpty(insttCode)">
+	     AND   ( IT.INSTT_CODE =  #{insttCode}
+	     
+                    OR  IT.UPPER_INSTT_CODE = #{upperInsttCode}
+                    OR  IT.BSIS_INSTT_CODE = #{bsisInsttCode}
+                    
+               	)
+         </if>
+	    
+	     <if test="@egovframework.MybatisUtils@isNotEmpty(srchQrSmTxt)">
+	       AND  (  		 
+	       				 SM.SYS_NM like '%'||#{srchQrSmTxt}||'%'
+	              	  OR SM.SYS_TY like '%'||#{srchQrSmTxt}||'%' 
+	              	 
+	            )
+	    </if>
+	    
+	</sql>
+	
+	<!--  QR코드관리 시스템  리스트  -->
+    <select id="selectQrCodeSmList" parameterType="egovMap" resultType="egovMap">
+	 	<include refid="selectQrCodeSmList" /> 
+	 </select>
+	 	
+	<!-- QR코드관리 시스템  리스트(페이징) -->
+    <select id="selectQrCodeSmListPaging" parameterType="map" resultType="egovMap">
+    	SELECT
+    		PL.*
+    	FROM (
+        	SELECT 
+        		PO.*
+        		,rownum as rsn
+			FROM (
+	    		<include refid="selectQrCodeSmList" /> 
+				) PO
+		) PL
+		WHERE
+		<![CDATA[
+			rsn <= #{maxSn} 
+			AND rsn > #{minSn}
+		]]>
+    </select>
+    
+    <!-- QR코드관리 시스템  리스트 (페이징 전체 카운트) -->
+    <select id="selectQrCodeSmListPagingCount" parameterType="map" resultType="int">
+    	SELECT   COUNT(*)
+	      FROM   TAP_IM_INSTT_MANAGE IT, TAP_SM_SYS_MANAGE SM
+	     WHERE   IT.INSTT_CODE = SM.INSTT_CODE
+           AND   SM.SYS_STTUS = 'O'
+	   <include refid="srchQrCodeSmList" /> 
+	  ORDER BY   IT.INSTT_CODE, IT.INSTT_LEVEL DESC
+    </select>
+    
+
+    <!-- QR코드 번호 조회 -->
+	<select id="selectSeqQrSn" resultType="string">
+		SELECT SEQ_QR_SN.NEXTVAL FROM DUAL
+	</select>
+	     
+	<!-- QR코드 리스트 (sql) -->	
+	<sql id="selectQrCodeList">
+		SELECT 
+			   QM.QR_SN,
+			   QM.QR_TITLE,
+			   QM.URL,
+			   QM.IMAGE_COURS,
+			   QM.SYS_ID,
+			   QM.CREAT_USID,
+			   QM.CREAT_USIP,
+			   QM.CREAT_DT,
+			   MM.MBER_NM,
+			   SM.SYS_NM
+		  FROM 
+		  	   TAP_QM_QR_MANAGE QM,
+               TAP_MM_MBER_MANAGE MM,
+               TAP_SM_SYS_MANAGE SM
+         WHERE 1 = 1
+           AND QM.CREAT_USID = MM.MBER_ID
+           AND QM.SYS_ID = SM.SYS_ID
+		<if test="@egovframework.MybatisUtils@isNotEmpty(sysId)">
+		   AND QM.SYS_ID = #{sysId}
+		</if>           
+    	<if test="@egovframework.MybatisUtils@isNotEmpty(srchSj)">
+    	   AND QM.QR_TITLE LIKE '%'||#{srchSj}||'%'
+    	</if>	           
+	  ORDER BY QM.CREAT_DT DESC	       
+	</sql>
+     
+    <!-- QR코드 리스트 -->
+	<select id="selectQrCodeList" parameterType="map" resultType="egovMap">
+		<include refid="selectQrCodeList" /> 
+	</select>
+    
+    <!-- QR코드 리스트 (페이징) -->
+    <select id="selectQrCodeListPaging" parameterType="map" resultType="egovMap">
+		SELECT PL.*
+		  FROM ( SELECT PO.* 
+		  		 	   ,ROWNUM AS RSN
+		           FROM ( <include refid="selectQrCodeList" /> ) PO ) PL
+		 WHERE 1 = 1 
+		 <![CDATA[ 
+		   AND RSN <= #{maxSn}
+		   AND RSN > #{minSn} 
+		 ]]>		
+    </select>
+    
+    <!-- QR코드 리스트 (페이징 전체 카운트) -->
+    <select id="selectQrCodeListPagingCount" parameterType="map" resultType="int">
+		SELECT COUNT(*)
+		  FROM TAP_QM_QR_MANAGE 
+         WHERE 1 = 1
+		<if test="@egovframework.MybatisUtils@isNotEmpty(sysId)">
+		   AND SYS_ID = #{sysId}
+		</if>           
+    	<if test="@egovframework.MybatisUtils@isNotEmpty(srchSj)">
+    	   AND QR_TITLE LIKE '%'||#{srchSj}||'%'
+    	</if>	 			  
+    </select>
+    
+    <!-- QR코드 조회 -->
+	<select id="selectQrCodeInfo" parameterType="map" resultType="egovMap">
+		SELECT 
+			   QR_SN,
+			   QR_TITLE,
+			   URL,
+			   IMAGE_COURS,
+			   SYS_ID,
+			   CREAT_USID,
+			   CREAT_USIP,
+			   CREAT_DT
+		  FROM 
+		  	   TAP_QM_QR_MANAGE
+         WHERE 1 = 1
+           AND QR_SN = #{qrSn}
+	</select>    
+    
+    <!-- QR코드 추가 -->
+    <insert id="insertQrCodeInfo" parameterType="map">
+		INSERT INTO TAP_QM_QR_MANAGE
+		 (
+			 QR_SN
+			,QR_TITLE
+			,URL
+			,IMAGE_COURS
+			,SYS_ID
+			,CREAT_USID
+			,CREAT_USIP
+			,CREAT_DT			      
+		 )
+		VALUES
+		 (
+			 #{qrSn}
+			,#{qrTitle}
+			,#{url}
+			,#{imageCours}
+			,#{sysId}
+			,#{creatUsid}
+			,#{creatUsip}
+			,SYSDATE
+		 )    	
+    </insert>    
+    
+    <!-- QR코드 삭제 -->
+	<delete id="deleteQrCodeInfo" parameterType="map">
+		DELETE FROM TAP_QM_QR_MANAGE WHERE QR_SN = #{qrSn}
+	</delete>    
+     
+</mapper>

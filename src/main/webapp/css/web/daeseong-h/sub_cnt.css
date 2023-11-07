@@ -1,0 +1,22 @@
+/* 역대교장선생님 */
+.allTime{display:flex; flex-wrap: wrap;}
+.allTime li{width: 23%; border-radius:0.5rem; border: 1px solid darkgoldenrod; margin:0.6%; padding: 1rem; border-top-width:6px;}
+.allTime li img{width:50%; max-width: 6rem; margin: 0 auto; display:block; margin-bottom:0.5rem; border-radius:0.5rem; box-shadow:0.2rem 0.2rem 0 rgb(224 213 187)}
+.allTime li .txt{line-height:1;}
+.allTime li .txt strong{ font-weight:600; text-align:center; display:block; }
+
+
+@media (max-width:1024px){
+    /* 역대교장선생님 */
+    .allTime li{width:32%}
+}
+
+@media (max-width:640px){
+    /* 역대교장선생님 */
+    .allTime li{width:48%;}
+}
+
+@media (max-width:640px){
+    /* 역대교장선생님 */
+    .allTime li{width:99%;}
+}

@@ -1,0 +1,462 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="mm_mber">
+
+	<!-- 사용자관리 시스템  리스트 sql-->
+	<sql id ="selectMberSmListSql">
+	  SELECT   IT.INSTT_CODE
+	          ,IT.INSTT_NM
+	          ,IT.INSTT_TY
+	          ,SM.SYS_ID
+	          ,SM.SYS_NM
+	          ,SM.SYS_TY
+              ,( <include refid="selectMberStats" />  ) AS TOTAL_CNT
+              ,( <include refid="selectMberStats" />  AND MT.CONFM_YN  = 'Y' ) AS CONFM_CNT 
+              ,( <include refid="selectMberStats" />  AND MT.CONFM_YN  = 'N' ) AS WAIT_CNT
+	    FROM   TAP_IM_INSTT_MANAGE IT, TAP_SM_SYS_MANAGE SM
+	   WHERE   IT.INSTT_CODE = SM.INSTT_CODE
+         AND   SM.SYS_STTUS = 'O'
+	   <include refid="srchMberSmSql" /> 
+	ORDER BY   IT.INSTT_CODE, IT.INSTT_LEVEL DESC
+	</sql>
+	
+	<!--  사용자관리 시스템  리스트 팝업 통계 sql-->
+	<sql id ="selectMberStats">
+		SELECT COUNT(*)
+          FROM TAP_MM_MBER_MANAGE MM, TAP_MM_MBER_TY MT
+         WHERE MM.MBER_ID = MT.MBER_ID
+         AND MT.INSTT_CODE = SM.INSTT_CODE
+	</sql>
+	
+	 <!--  사용자관리 시스템  리스트 검색조건 sql-->
+	<sql id ="srchMberSmSql">
+	
+		<if test='@egovframework.MybatisUtils@isEmpty(author) || author != "master"'>
+         AND SM.SYS_ID NOT IN ('apple')
+        </if>
+        
+        <if test="@egovframework.MybatisUtils@isNotEmpty(insttCode)">
+	     AND   ( IT.INSTT_CODE =  #{insttCode}
+	     
+                    OR  IT.UPPER_INSTT_CODE = #{upperInsttCode}
+                    OR  IT.BSIS_INSTT_CODE = #{bsisInsttCode}
+                    
+               	)
+         </if>
+	     
+	     <if test="@egovframework.MybatisUtils@isNotEmpty(srchSmTxt)">
+	       AND  (  		 
+	       				 SM.SYS_NM like '%'||#{srchSmTxt}||'%'
+	              	  OR SM.SYS_TY like '%'||#{srchSmTxt}||'%' 
+	              	 
+	            )
+	    </if>
+	    
+	</sql>
+	
+	<!--  사용자관리 시스템  리스트  -->
+    <select id="selectMberSmList" parameterType="egovMap" resultType="egovMap">
+	 	<include refid="selectMberSmListSql" /> 
+	 </select>
+	 	
+	<!-- 사용자관리 시스템  리스트(페이징) -->
+    <select id="selectMberSmListPaging" parameterType="map" resultType="egovMap">
+    	SELECT
+    		PL.*
+    	FROM (
+        	SELECT 
+        		PO.*
+        		,rownum as rsn
+			FROM (
+	    		<include refid="selectMberSmListSql" /> 
+				) PO
+		) PL
+		WHERE
+		<![CDATA[
+			rsn <= #{maxSn} 
+			AND rsn > #{minSn}
+		]]>
+    </select>
+    
+    <!-- 사용자관리 시스템  리스트 (페이징 전체 카운트) -->
+    <select id="selectMberSmListPagingCount" parameterType="map" resultType="int">
+    	SELECT   COUNT(*)
+	      FROM  ( <include refid="selectMberSmListSql" /> ) A 
+    </select>
+	
+	<!-- 전체 사용자 목록 조회 -->
+	<sql id ="selectAllMberListSql">
+	  SELECT MBER_SEQ
+	        ,MBER_ID
+	        ,MBER_NM
+	        ,MBER_PASSWORD
+	        ,MBTLNUM
+	        ,TELNO
+	        ,EMAIL
+	        ,CI_KEY
+	        ,CERTI_KEY
+	        ,TO_CHAR(CREAT_DT, 'YYYY/MM/DD HH:MM') AS CREAT_DT
+	        ,CREAT_USIP
+	        ,( SELECT COUNT(*) FROM TAP_MM_MBER_TY WHERE MBER_ID = MM.MBER_ID ) AS INSTT_CNT
+	   FROM  TAP_MM_MBER_MANAGE MM
+	  WHERE	 1 = 1
+	  <if test="@egovframework.MybatisUtils@isNotEmpty(srchMber)">
+		AND ( MBER_NM LIKE '%'||#{srchMber}||'%' OR MBER_ID LIKE '%'||#{srchMber}||'%' OR MBTLNUM LIKE '%'||#{srchMber}||'%' )
+	  </if>
+   ORDER BY  MBER_SEQ
+	</sql>
+	
+	<!--  전체 사용자 목록 -->
+    <select id="selectAllMberList" parameterType="egovMap" resultType="egovMap">
+	 	<include refid="selectAllMberListSql" /> 
+	</select>
+	
+	<!-- 전체 사용자 목록 (페이징) -->
+    <select id="selectAllMberListPaging" parameterType="map" resultType="egovMap">
+    	SELECT
+    		PL.*
+    	FROM (
+        	SELECT 
+        		PO.*
+        		,rownum as rsn
+			FROM (
+	    		<include refid="selectAllMberListSql" /> 
+				) PO
+		) PL
+		WHERE
+		<![CDATA[
+			rsn <= #{maxSn} 
+			AND rsn > #{minSn}
+		]]>
+    </select>
+    
+    <!-- 사용자관리 시스템  리스트 (페이징 전체 카운트) -->
+    <select id="selectAllMberListPagingCount" parameterType="map" resultType="int">
+    	SELECT   COUNT(*)
+	      FROM  ( <include refid="selectAllMberListSql" />  ) A 
+    </select>
+    
+    <!-- 사용자 기본정보 조회 -->
+	<select id ="selectMberBaseInfo" parameterType="map" resultType="egovMap">
+	  SELECT MBER_SEQ
+	        ,MBER_ID
+	        ,MBER_NM
+	        ,MBER_PASSWORD
+	        ,MBTLNUM
+	        ,TELNO
+	        ,EMAIL
+	        ,CI_KEY
+	        ,CERTI_KEY
+	        ,TO_CHAR(CREAT_DT, 'YYYY/MM/DD HH:MM') AS CREAT_DT
+	        ,CREAT_USIP
+	   FROM  TAP_MM_MBER_MANAGE
+	  WHERE	 1 = 1
+	 	AND  MBER_ID = #{mberId}
+   ORDER BY  MBER_SEQ
+   </select>
+    
+	<!-- 사용자 조회 -->
+	<sql id="selectMberListSql">
+		SELECT MM.MBER_SEQ
+		      ,MT.INSTT_NM
+		      ,MT.INSTT_CODE
+		      ,MM.MBER_ID
+		      ,MM.MBER_NM
+		      ,MM.MBER_PASSWORD
+		      ,MM.MBTLNUM
+		      ,MM.TELNO
+		      ,MM.EMAIL
+		      ,MM.CI_KEY
+		      ,MM.CERTI_KEY
+		      ,MT.MBER_TY_SEQ
+		      ,MT.MBER_TY      
+		      ,MT.INSTT_TY      
+		      ,MT.CLSF         
+		      ,MT.DEPT         
+		      ,MT.PRTCTOR_NM   
+		      ,MT.STDNT_NO     
+		      ,MT.CONFM_YN     
+		      ,MT.CONFM_MBER_NM
+		      ,MT.CONFM_MBER_ID
+		      ,TO_CHAR(MT.CONFM_DATE, 'YYYY/MM/DD HH:MM') AS CONFM_DATE
+		      ,SM.SYS_ID
+		      ,SM.SYS_NM
+		FROM TAP_MM_MBER_MANAGE MM, TAP_MM_MBER_TY MT, TAP_SM_SYS_MANAGE SM	
+	   WHERE MM.MBER_ID = MT.MBER_ID
+	   	 AND MT.INSTT_CODE = SM.INSTT_CODE
+	   	 <if test="@egovframework.MybatisUtils@isNotEmpty(sysId)"> 
+	   	 AND SM.SYS_ID = #{sysId}
+	   	 </if>
+	   	 <if test="@egovframework.MybatisUtils@isNotEmpty(srchMberId)"> 
+	   	 AND MM.MBER_ID = #{srchMberId}
+	   	 </if>
+		<if test="@egovframework.MybatisUtils@isNotEmpty(confmYn)">
+		 AND MT.CONFM_YN = #{confmYn}
+		</if>
+		<if test="@egovframework.MybatisUtils@isNotEmpty(mberTy)">
+	  	 AND MT.MBER_TY = #{mberTy}
+		</if>
+		<if test="@egovframework.MybatisUtils@isNotEmpty(clsf)">
+		 AND MT.CLSF = #{clsf}
+		</if>
+		<if test="@egovframework.MybatisUtils@isNotEmpty(inpSrchwrd)">
+		 AND (MM.MBER_NM LIKE '%'||#{inpSrchwrd}||'%' OR MM.MBER_ID LIKE '%'||#{inpSrchwrd}||'%' OR SM.SYS_NM LIKE '%'||#{inpSrchwrd}||'%')
+		</if>
+    ORDER BY MM.MBER_SEQ DESC
+	</sql>
+	
+	<!-- 사용자 리스트 조회 -->
+    <select id="selectMberList" parameterType="egovMap" resultType="egovMap">
+		<include refid="selectMberListSql" />
+    </select>
+    
+    
+    <!-- 사용자 리스트 조회(페이징) -->
+    <select id="selectMberListPaging" parameterType="map" resultType="egovMap">
+    	SELECT
+    		PL.*
+    	FROM (
+        	SELECT 
+        		PO.*
+        		,rownum as rsn
+			FROM (
+	    		<include refid="selectMberListSql" /> 
+				) PO
+		) PL
+		WHERE
+		<![CDATA[
+			rsn <= #{maxSn} 
+			AND rsn > #{minSn}
+		]]>
+    </select>
+    
+    <!-- 사용자 리스트 조회 (페이징 전체 카운트) -->
+    <select id="selectMberListPagingCount" parameterType="map" resultType="int">
+    	SELECT COUNT(*)
+	      FROM ( <include refid="selectMberListSql" /> ) A  
+    </select>
+    
+    <!-- 사용자 정보 조회 -->
+    <select id="selectMberInfo" parameterType="egovMap" resultType="egovMap">
+		SELECT MM.MBER_SEQ
+		      ,MT.INSTT_NM
+		      ,MT.INSTT_CODE
+		      ,SM.SYS_ID
+		      ,SM.SYS_NM
+		      ,MM.MBER_ID
+		      ,MM.MBER_NM
+		      ,MM.MBER_PASSWORD
+		      ,MM.MBTLNUM
+		      ,MM.TELNO
+		      ,MM.EMAIL
+		      ,MM.CI_KEY
+		      ,MM.CERTI_KEY
+		      ,MT.MBER_TY_SEQ
+		      ,MT.MBER_TY      
+		      ,MT.INSTT_TY      
+		      ,MT.CLSF         
+		      ,MT.DEPT         
+		      ,MT.PRTCTOR_NM   
+		      ,MT.STDNT_NO     
+		      ,MT.CONFM_YN     
+		      ,MT.CONFM_MBER_NM
+		      ,MT.CONFM_MBER_ID
+		      ,MT.CONFM_DATE
+		 FROM TAP_MM_MBER_MANAGE MM ,TAP_MM_MBER_TY MT, TAP_SM_SYS_MANAGE SM
+	    WHERE MM.MBER_ID = MT.MBER_ID
+	      AND MT.INSTT_CODE = SM.INSTT_CODE
+		  AND MM.MBER_ID = #{mberId}
+		  AND SM.SYS_ID = #{sysId} 		 
+    </select>
+    
+	<!-- 사용자 승인 -->
+    <update id="updateMberConfm" parameterType="egovMap">
+		UPDATE TAP_MM_MBER_TY
+		   SET CONFM_YN = #{confmYn}
+		      ,CONFM_MBER_NM = #{confmMberNm}
+		      ,CONFM_MBER_ID = #{confmMberId}
+		      ,CONFM_DATE = SYSDATE
+		 WHERE MBER_ID = #{mberId}
+		 AND INSTT_CODE = (SELECT INSTT_CODE FROM TAP_SM_SYS_MANAGE WHERE SYS_ID = #{sysId} AND ROWNUM = 1)
+    </update>
+    
+	<!-- 비밀번호 변경, 초기화 -->
+    <update id="updatePasswordInfo" parameterType="egovMap">
+		UPDATE TAP_MM_MBER_MANAGE
+		   SET MBER_PASSWORD = #{newPassword}
+		 WHERE MBER_ID = #{mberId}
+    </update>
+    
+    
+    <!-- 사용자 정보 삭제 -->
+    <delete id="deleteMberInfo" parameterType="egovMap">
+    	DELETE FROM TAP_MM_MBER_MANAGE
+    	 WHERE MBER_ID = #{mberId} 
+    </delete>
+    <!-- 사용자 구분 정보 삭제 -->
+    <delete id="deleteMberTyInfo" parameterType="egovMap">
+    	DELETE FROM TAP_MM_MBER_TY
+    	 WHERE MBER_ID = #{mberId} 
+    	 <if test="@egovframework.MybatisUtils@isNotEmpty(insttCode)">
+    	   AND INSTT_CODE = #{insttCode} 
+    	  </if>
+    </delete>
+	
+	<!-- 회원승인목록 조회 -->
+	<select id="selectMberConfmInfo" parameterType="egovMap" resultType="egovMap">
+		SELECT 
+			Q.*
+			,Q.CMMN_CODE_NM
+			,W.ATMC_CONFM_AT
+		FROM DUAL,
+		(
+			SELECT
+			    A.*
+			    ,B.CMMN_CODE_NM
+			FROM
+			    TAP_CD_CMMNCODE_DETAIL A,
+			    TAP_CD_CMMNCODE_MANAGE B
+			WHERE
+			    A.CMMN_CODE = B.CMMN_CODE
+			    AND A.USE_AT = 'Y'
+			    AND B.USE_AT = 'Y'
+			    AND A.CMMN_CODE = 'memberType'
+			ORDER BY
+			    A.CMMN_DETAIL_CODE_ORDR
+			
+		) Q LEFT OUTER JOIN
+		(
+		    SELECT * FROM TAP_MC_MBER_CONFM WHERE SYS_ID = #{sysId}
+		) W ON Q.CMMN_DETAIL_CODE = W.MBER_TY	 
+	</select>
+	
+	<!-- 회원대상승인조회(한건) -->
+	<select  id="selectMberConfm" parameterType="egovMap" resultType="egovMap">
+		SELECT * 
+		FROM TAP_MC_MBER_CONFM 
+		WHERE SYS_ID = #{sysId}
+		AND MBER_TY = #{mberConfmTy}
+	</select>
+	
+	<!-- 회원승인목록 삭제 -->
+	<delete id="deleteMberConfm" parameterType="egovMap">
+		DELETE FROM TAP_MC_MBER_CONFM
+		WHERE SYS_ID = #{sysId}
+	</delete>
+	
+	<insert id="insertMberConfm" parameterType="egovMap">
+		INSERT INTO TAP_MC_MBER_CONFM(
+		    SYS_ID
+		    ,MBER_TY
+		    ,ATMC_CONFM_AT
+		)VALUES(
+		    #{sysId}
+		    ,#{cmmnDetailCode}
+		    ,'Y'
+		)
+	</insert>
+	
+	 <!-- 사용자 자녀 조회 -->
+    <select id="selectChldrnList" parameterType="egovMap" resultType="egovMap">
+		SELECT SYS_ID
+			  ,STDNPRNT_SN
+			  ,MBER_ID
+			  ,CHLDRN_GRADE
+			  ,CHLDRN_CLAS
+			  ,CHLDRN_NM
+			  ,CREAT_USID
+			  ,CREAT_USNM
+			  ,CREAT_USIP
+		  	  ,CREAT_DT
+		 FROM TAP_MM_STDNPRNT_CHLDRN
+	    WHERE MBER_ID = #{mberId}
+		  AND SYS_ID = #{sysId} 		 
+    </select>
+    
+<!-- 총관리자 회원 조회 쿼리 -->
+    <!-- 사용자 조회 (총관리자) -->
+	<sql id="selectMasterMberListSql">
+		SELECT MM.MBER_SEQ
+		      ,MT.INSTT_NM
+		      ,MT.INSTT_CODE
+		      ,MM.MBER_ID
+		      ,MM.MBER_NM
+		      ,MM.MBER_PASSWORD
+		      ,MM.MBTLNUM
+		      ,MM.TELNO
+		      ,MM.EMAIL
+		      ,MM.CI_KEY
+		      ,MM.CERTI_KEY
+		      ,MM.LOGIN_CNT 
+		      ,MT.MBER_TY_SEQ
+		      ,MT.MBER_TY      
+		      ,MT.INSTT_TY      
+		      ,MT.CLSF         
+		      ,MT.DEPT         
+		      ,MT.PRTCTOR_NM   
+		      ,MT.STDNT_NO     
+		      ,MT.CONFM_YN     
+		      ,MT.CONFM_MBER_NM
+		      ,MT.CONFM_MBER_ID
+		      ,TO_CHAR(MT.CONFM_DATE, 'YYYY/MM/DD HH24:MI') AS CONFM_DATE
+		      ,SM.SYS_ID
+		      ,SM.SYS_NM
+		      ,ROW_NUMBER() OVER(ORDER BY MM.MBER_SEQ DESC) AS RSN
+		FROM TAP_MM_MBER_MANAGE MM, TAP_MM_MBER_TY MT, TAP_SM_SYS_MANAGE SM	
+	   WHERE MM.MBER_ID = MT.MBER_ID
+	   	 AND MT.INSTT_CODE = SM.INSTT_CODE
+	   	 <if test="@egovframework.MybatisUtils@isNotEmpty(srchMberId)"> 
+	   	 AND MM.MBER_ID = #{srchMberId}
+	   	 </if>
+		<if test="@egovframework.MybatisUtils@isNotEmpty(confmYn)">
+		 AND MT.CONFM_YN = #{confmYn}
+		</if>
+		<if test="@egovframework.MybatisUtils@isNotEmpty(mberTy)">
+	  	 AND MT.MBER_TY = #{mberTy}
+		</if>
+		<if test="@egovframework.MybatisUtils@isNotEmpty(clsf)">
+		 AND MT.CLSF = #{clsf}
+		</if>
+	   	<if test="@egovframework.MybatisUtils@isNotEmpty(mberSysId)">
+	   	 AND SM.SYS_ID = #{mberSysId}
+	   	</if> 
+		<if test="@egovframework.MybatisUtils@isNotEmpty(inpSrchwrd)">
+		 AND (MM.MBER_NM LIKE '%'||#{inpSrchwrd}||'%' OR MM.MBER_ID LIKE '%'||#{inpSrchwrd}||'%' OR SM.SYS_NM LIKE '%'||#{inpSrchwrd}||'%')
+		</if>
+<!--     ORDER BY MM.MBER_SEQ DESC -->
+	</sql>
+	
+	<!-- 사용자 리스트 조회 -->
+    <select id="selectMasterMberList" parameterType="egovMap" resultType="egovMap">
+		<include refid="selectMasterMberListSql" />
+    </select>
+    
+    
+    <!-- 사용자 리스트 조회(페이징) -->
+    <select id="selectMasterMberListPaging" parameterType="map" resultType="egovMap">
+    	SELECT
+    		PL.*
+    	FROM (
+        	SELECT 
+        		PO.*
+        		
+			FROM (
+	    		<include refid="selectMasterMberListSql" /> 
+				) PO
+		) PL
+		WHERE
+		<![CDATA[
+			rsn <= #{maxSn} 
+			AND rsn > #{minSn}
+		]]>
+    </select>
+    
+    <!-- 사용자 리스트 조회 (페이징 전체 카운트) -->
+    <select id="selectMasterMberListPagingCount" parameterType="map" resultType="int">
+    	SELECT COUNT(*)
+	      FROM ( <include refid="selectMasterMberListSql" /> ) A  
+    </select>    
+<!-- //총관리자 회원 조회 쿼리 -->    
+	
+</mapper>

@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="si_sub">
+
+    <!-- 서브페이지 이미지조회 -->
+    <select id="selectSubImgInfo" parameterType="map" resultType="egovMap">
+    	SELECT SUB_IMG_ID
+    	  FROM TAP_SM_SYS_MANAGE SM
+    	 WHERE 1=1
+    	   AND SYS_ID = #{sysId}
+    </select>
+    
+	<!-- 서브페이지 이미지 '등록' 및 '변경' -->
+	<update id="updateSubImgInfo" parameterType="map" >
+    	UPDATE TAP_SM_SYS_MANAGE
+    	   SET SUB_IMG_ID = #{subImgId}
+    	 WHERE 1=1
+    	   AND SYS_ID = #{sysId}
+    </update>
+    
+    <!-- 서브페이지 이미지삭제 -->
+    <update id="deleteSubImgInfo" parameterType="map" >
+    	UPDATE TAP_SM_SYS_MANAGE
+    	   SET SUB_IMG_ID = ''
+    	 WHERE 1=1
+    	   AND SYS_ID = #{sysId}
+    </update>
+    
+    <!-- 로고 관리  -->
+    
+    <!-- 로고 조회 -->
+    <select id="selectLogoInfo" parameterType="map" resultType="egovMap">
+    	SELECT LOGO_ID
+    	FROM TAP_SM_SYS_MANAGE
+    	WHERE 1=1
+    	  AND SYS_ID = #{sysId}
+    </select>
+    
+    <!-- 로고 '등록' 및 '변경' -->
+    <update id="updateLogoInfo" parameterType="map" >
+    	UPDATE TAP_SM_SYS_MANAGE
+    	   SET LOGO_ID = #{logoId}
+    	 WHERE 1=1
+    	   AND SYS_ID = #{sysId}
+    </update>
+    
+    <!-- 로고 삭제 -->
+    <update id="deleteLogoInfo" parameterType="map" >
+    	UPDATE TAP_SM_SYS_MANAGE
+    	   SET LOGO_ID = ''
+    	 WHERE 1=1
+    	   AND SYS_ID = #{sysId}
+    </update>
+    
+</mapper>

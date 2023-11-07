@@ -1,0 +1,64 @@
+@charset "utf-8";
+
+.poplistWrap{width:294px; padding:2px; border:1px solid #c5c5c5; position:absolute; left:0; top:0; /* 위치값 */}
+.poplistWrap .inner{ position:relative; width:100%}
+.poplistWrap .inner > h1{ background: url('/images/tempDisp/common/tit_icon.png') no-repeat 14px 7px #4a77d3; padding-left:48px; height:41px; line-height:41px; overflow:hidden; color:#fff; font-family:'NanumBold'; font-size:17px;}
+.poplistWrap .inner .btnClose{ position:absolute; right:0; top:0; font-size:0; line-height:0; text-indent:-9999em; width:41px; height:41px; background:url(/images/tempDisp/common/btnClose.png) no-repeat}
+
+.poplistWrap .popupList{height:301px; overflow:hidden; overflow-y:auto}
+.poplistWrap .popupList ul{ font-family:'Nanum'; font-size:13px; line-height:25px; padding:3% 5% 4%}
+.poplistWrap .popupList ul li { line-height:20px; margin:4% 0}
+.poplistWrap .popupList ul li a{ display:block; color:#666; background:url(/images/tempDisp/common/icon_dot.gif) no-repeat 0 9px; padding-left:10px}
+.poplistWrap .popupList ul li a:hover{ color:#4a77d3}
+
+/* (리스트팝업) 통합팝업공지 */
+div.pop_header {width:100%; height:65px; background:#0a7fd2 url("/images/web/common/sub/pop_bg.png") no-repeat 50% 50%;}
+div.pop_wrap {position:relative; width:980px; padding:15px 0; margin:0 auto; }
+
+.p_txt_1{line-height:30px; text-align:center; font-family:"맑은 고딕"; font-size:18px; font-weight:bold; letter-spacing:-1px; color:#fff;}
+.p_txt_2{margin:3px auto; width:98%;  border:1px solid #ccc; border-radius:5px; line-height:35px; font-family:"맑은 고딕"; font-size:14px; font-weight:bold; text-indent:20px; color:#000;background:#f4f4f4;}
+
+ul.notice_btn {position:absolute; top:20px; right:10px; font-family:"맑은 고딕";}
+ul.notice_btn li {float:left; width:80px; height:26px; margin-right:5px; text-align:center; background:url("/images/web/common/sub/btn.png") no-repeat;}
+ul.notice_btn li a {display:block; text-decoration:none; color:#fff; font-size:14px; padding:3px;}
+ul.notice_btn li.btn_close {width:30px; height:30px; background:url("/images/web/common/sub/btn_close.png") no-repeat; text-indent:-5000px;}
+
+/*(리스트팝업) 팝업 리스트*/
+.listPopup {position:relative; width:380px; height:300px; border:1px solid #ccc; border-radius:5px; background:#fff; }
+.listPopup .list_box{ padding:3% 5% 21%; background:#fff url('/images/web/common/sub/list_bg.png')no-repeat 93% 100%;}
+.listPopup .list_box ul{width:340px; height:150px; font-family:'맑은 고딕'; font-size:13px; line-height:25px;  overflow:hidden; overflow-y:auto;}
+.listPopup .list_box ul li {display:block; line-height:20px; margin:3.5% 0; overflow:hidden;}
+.listPopup .list_box ul li a{ display:block; color:#666; background:url('/images/web/common/sub/icon_dot.gif') no-repeat 0 9px; padding-left:10px; text-overflow: ellipsis;  white-space: nowrap;   overflow: hidden;}
+.listPopup .list_box ul li a:hover{ color:#4a77d3}
+.listPopup .btn_close{position:absolute; top:10px; right:10px; width:20px; height:20px; background:url('/images/web/common/sub/btn_close.png')no-repeat;}
+
+/* 20190424 기본table */
+.basic_tb {width:100%; border:1px solid #cdd2d9; border-top:3px solid #405467; font-family:"Nanum"; font-size:13px; letter-spacing:-1px;}
+.basic_tb th { font-size:14px; background:#95cfb32b; font-family:"NanumBold"}
+.basic_tb th, 
+.basic_tb td { color:#222; padding:10px 15px; border:1px solid #cdd2d9}
+.basic_tb td { font-size:13px; font-family:"Nanum";}
+
+/* 20190424 버튼 */
+.btn { display:inline-block; *display:inline; zoom:1; margin:0 5px 5px 0; font-family:"NanumBold"; font-size:14px; color:#fff; line-height:20px; text-align:center; border-radius:3px; vertical-align:middle; -ms-touch-action:manipulation; touch-action:manipulation; border:1px solid transparent; white-space:nowrap; padding:6px 12px}
+.btn span { color: #ffff;}
+.btn_S {display:inline-block; *display:inline; zoom:1; margin:0; font-family:"NanumBold"; font-size:12px; color:#fff; line-height:20px; text-align:center; border-radius:3px; vertical-align:middle; -ms-touch-action:manipulation; touch-action:manipulation; border:1px solid transparent; white-space:nowrap; padding:0 8px}
+.btn_default {background-color:#fff; border-color:#ccc; color:#364c60 !important}
+.btn_blue { background-color:#1A82C3; border-color:#1A82C3}
+.btn_blue2 { background-color:#5d61ea; border-color:#5d61ea}
+.btn_green { background-color:#26B99A; border-color:#4cae4c}
+.btn_green2 {background-color: #27d02d;border-color: #fff8f8de;color: #f3f4f5 !important;}
+.btn_green3 {background-color: #11a216;border-color: #fff8f8de;color: #f3f4f5 !important;}
+.btn_sky {background-color:#5bc0de; border-color:#46b8da}
+.btn_yellow {background-color:#f0ad4e; border-color:#f0ad4e}
+.btn_orange {background-color:#f59307; border-color:#f0ad4e}
+.btn_white {background-color:#fff; border-color:#000; color:#000;}
+.btn_red {background-color:#d9534f; border-color:#d9534f}
+.btn_pink {background-color: #d027c7;border-color: #d027c7;color: #f3f4f5 !important;}
+.btn_dark {background-color:#4b5e70; border-color:#364c60; color:#e9edef !important}
+.btn:hover, .btn_S:hover { opacity:0.9}
+
+ @media screen and (max-width : 480px) {
+
+}
+

@@ -1,0 +1,24 @@
+@charset "utf-8";
+/* CSS Document */
+
+@-webkit-keyframes circle { 	
+	0% {border-radius:0 0 0 0; opacity:0.8; -webkit-transform:rotate(0deg);}	
+	25% {border-radius:50% 0 0 0; opacity:0.9; -webkit-transform:rotate(45deg);}	
+	50% {border-radius:50% 50% 0 0; -webkit-transform:rotate(90deg);}	
+	75% {border-radius:50% 50% 50% 0; opacity:0.8; -webkit-transform:rotate(135deg);}	
+	100% {border-radius:50%; opacity:0.9; -webkit-transform:rotate(180deg);}/*박스 회전*/
+}
+
+@keyframes circle { 	
+	0% {border-radius:0 0 0 0; opacity:0.8; transform:rotate(0deg);}	
+	25% {border-radius:50% 0 0 0; opacity:0.9; transform:rotate(45deg);}	
+	50% {border-radius:50% 50% 0 0; transform:rotate(90deg);}	
+	75% {border-radius:50% 50% 50% 0; opacity:0.8; transform:rotate(135deg);}	
+	100% {border-radius:50%; opacity:0.9; transform:rotate(180deg);}/*박스 회전*/
+}
+
+
+
+
+
+

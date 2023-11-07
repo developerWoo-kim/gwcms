@@ -1,0 +1,206 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="sc_schdul">
+
+	<!-- 일정관리 시스템  리스트 sql-->
+	<sql id ="selectSchdulSmList">
+	  SELECT   IT.INSTT_CODE
+	          ,IT.INSTT_NM
+	          ,IT.INSTT_TY
+	          ,SM.SYS_ID
+	          ,SM.SYS_NM
+	          ,SM.SYS_TY
+              ,( <include refid="selectSchdulStats" /> AND SC.SYS_ID = SM.SYS_ID ) AS TOTAL_CNT
+	    FROM   TAP_IM_INSTT_MANAGE IT, TAP_SM_SYS_MANAGE SM
+	   WHERE   IT.INSTT_CODE = SM.INSTT_CODE
+         AND   SM.SYS_STTUS = 'O'
+	   <include refid="srchSchdulSmList" /> 
+	ORDER BY   IT.INSTT_CODE, IT.INSTT_LEVEL DESC
+	</sql>
+	
+	<!--  일정관리 시스템  리스트 통계 sql-->
+	<sql id ="selectSchdulStats">
+		SELECT COUNT(*)
+          FROM TAP_SC_SCHDUL_MANAGE SC
+         WHERE 1=1 
+	</sql>
+	
+	 <!--  일정관리 시스템  리스트 검색조건 sql-->
+	<sql id ="srchSchdulSmList">
+	
+        <if test='@egovframework.MybatisUtils@isEmpty(author) || author != "master"'>
+         AND SM.SYS_ID NOT IN ('apple')
+        </if>
+        
+        <if test="@egovframework.MybatisUtils@isNotEmpty(insttCode)">
+	     AND   ( IT.INSTT_CODE =  #{insttCode}
+	     
+                    OR  IT.UPPER_INSTT_CODE = #{upperInsttCode}
+                    OR  IT.BSIS_INSTT_CODE = #{bsisInsttCode}
+                    
+               	)
+         </if>
+	    
+	     <if test="@egovframework.MybatisUtils@isNotEmpty(srchSmTxt)">
+	       AND  (  		 
+	       				 SM.SYS_NM like '%'||#{srchSmTxt}||'%'
+	              	  OR SM.SYS_TY like '%'||#{srchSmTxt}||'%' 
+	              	 
+	            )
+	    </if>
+	    
+	</sql>
+	
+	<!--  일정관리 시스템  리스트  -->
+    <select id="selectSchdulSmList" parameterType="egovMap" resultType="egovMap">
+	 	<include refid="selectSchdulSmList" /> 
+	 </select>
+	 	
+	<!-- 일정관리 시스템  리스트(페이징) -->
+    <select id="selectSchdulSmListPaging" parameterType="map" resultType="egovMap">
+    	SELECT
+    		PL.*
+    	FROM (
+        	SELECT 
+        		PO.*
+        		,rownum as rsn
+			FROM (
+	    		<include refid="selectSchdulSmList" /> 
+				) PO
+		) PL
+		WHERE
+		<![CDATA[
+			rsn <= #{maxSn} 
+			AND rsn > #{minSn}
+		]]>
+    </select>
+    
+    <!-- 일정관리 시스템  리스트 (페이징 전체 카운트) -->
+    <select id="selectSchdulSmListPagingCount" parameterType="map" resultType="int">
+    	SELECT   COUNT(*)
+	      FROM  ( <include refid="selectSchdulSmList" /> ) A
+    </select>
+    
+<!--일정 리스트 -->
+    <select id="selectSchduList" parameterType="map" resultType="egovMap">
+        SELECT BGNDE,
+        	   ENDDE,
+        	   BGNDE_TIME,
+        	   ENDDE_TIME,
+        	   SCHDUL_CN,
+        	   SCHDUL_TITLE,
+        	   SYS_ID,
+        	   SCHDUL_SEQ,
+        	   ALLDAY_AT,
+        	   COLOR	
+         FROM  TAP_SC_SCHDUL_MANAGE
+        WHERE  SYS_ID = #{sysId}
+        <if test="@egovframework.MybatisUtils@isNotEmpty(srchDate)">
+          AND  (BGNDE like #{srchDate}||'%' OR ENDDE like #{srchDate}||'%')
+        </if>
+        <if test="@egovframework.MybatisUtils@isNotEmpty(paraDate)">
+          AND  #{paraDate} BETWEEN BGNDE AND ENDDE
+        </if>
+        
+        <if test="@egovframework.MybatisUtils@isNotEmpty(dateFirst)">
+        
+        <!-- <![CDATA[
+          AND  (  
+          			( BGNDE >= #{dateFirst} AND  BGNDE <= #{dateEnmt} )
+          				 OR ( ENDDE >= #{dateFirst} AND ENDDE <= #{dateEnmt} )
+          	   )
+         ]]> -->
+         <![CDATA[
+		  AND (  
+				(BGNDE <= #{dateFirst} AND #{dateFirst} <= ENDDE)
+			 OR (BGNDE <= #{dateEnmt} AND #{dateEnmt} <= ENDDE)
+			 OR (BGNDE BETWEEN #{dateFirst} AND #{dateEnmt} ) 
+			 OR (ENDDE BETWEEN #{dateFirst} AND #{dateEnmt} ) 
+		    )
+        ]]>
+        
+        </if>
+        
+        
+    </select>
+    
+    <!-- 추가 대체 휴일일정 리스트 -->
+    <select id="selectAddHldyist" parameterType="map" resultType="egovMap">
+        SELECT  HLDY_SEQ
+			   ,HLDY_DATE
+			   ,HLDY_CN
+			   ,HLDY_TITLE
+         FROM   TAP_SC_SCHDUL_HLDY
+     ORDER BY   HLDY_DATE
+    </select>
+    
+<!--일정 상세 보기 -->
+    <select id="selectSchdulInfo" parameterType="map" resultType="egovMap">
+        SELECT BGNDE,
+        	   ENDDE,
+        	   BGNDE_TIME,
+        	   ENDDE_TIME,
+        	   SCHDUL_CN,
+        	   SCHDUL_TITLE,
+        	   SYS_ID,
+        	   SCHDUL_SEQ,
+        	   ALLDAY_AT,
+        	   COLOR	
+         FROM  TAP_SC_SCHDUL_MANAGE
+        WHERE  SCHDUL_SEQ = #{schdulSeq}
+    </select>
+    
+<!--일정 입력 -->
+	 <insert id="insertSchdulInfo" parameterType="map" >
+		INSERT INTO TAP_SC_SCHDUL_MANAGE (
+		   SCHDUL_SEQ  
+	      ,BGNDE
+		  ,ENDDE
+		  ,BGNDE_TIME
+		  ,ENDDE_TIME
+		  ,SCHDUL_CN
+		  ,SCHDUL_TITLE
+		  ,SYS_ID
+		  ,ALLDAY_AT
+		  ,COLOR
+		) VALUES (
+		   SEQ_SCHDUL_SN.NEXTVAL
+		  ,#{bgnde} 
+		  ,#{endde} 
+		  ,#{bgndeTime} 
+		  ,#{enddeTime} 
+		  ,#{schdulCn}
+		  ,#{schdulTitle}
+		  ,#{sysId}
+		  ,#{allday}
+		  ,#{color}
+		)
+	</insert>
+	
+ <!--일정 수정 -->
+    <update id="updateSchdulInfo" parameterType ="map">
+			UPDATE TAP_SC_SCHDUL_MANAGE	
+			   SET 
+			        BGNDE	 	  = #{bgnde}
+			       ,ENDDE      	  = #{endde}
+			       ,SCHDUL_CN     = #{schdulCn}
+			       ,SCHDUL_TITLE  = #{schdulTitle}
+			       ,BGNDE_TIME	  = #{bgndeTime}
+			       ,ENDDE_TIME    = #{enddeTime}
+			       ,ALLDAY_AT	  = #{allday}
+			       ,COLOR		  = #{color}
+			 WHERE  SCHDUL_SEQ    = #{schdulSeq}
+			   AND  SYS_ID        = #{sysId} 
+	</update>
+	
+<!-- 일정 삭제-->
+       <delete id="deleteSchdulInfo" parameterType="map" >
+     <![CDATA[
+           DELETE 
+             FROM  TAP_SC_SCHDUL_MANAGE
+            WHERE  SCHDUL_SEQ = #{schdulSeq}
+              AND  SYS_ID = #{sysId}         	      
+    ]]>       	   
+     </delete>
+</mapper>

@@ -1,0 +1,258 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="qs_qestnr">
+
+	<resultMap id="clobMap" type="egovMap">
+        <result property="QESTNR_CN" column="QESTNR_CN" jdbcType="CLOB" javaType="java.lang.String"/>
+    </resultMap>
+    
+    <!-- 설문지 리스트 조회 SQL -->
+	<sql id ="selectQestnrList">
+		SELECT QESTNR_SN
+			  ,QESTNR_TITLE
+			  ,QESTNR_USID
+			  ,QESTNR_USNM
+			  ,QESTNR_USIP
+			  ,QESTNR_USDT
+			  ,QESTNR_CN
+			  ,SYS_ID
+		 FROM TAP_QS_QESTNR_MANAGE 
+	 <if test="@egovframework.MybatisUtils@isNotEmpty(sysId)">
+        WHERE SYS_ID = #{sysId}  
+	 </if>
+	 <if test="@egovframework.MybatisUtils@isNotEmpty(srchQeTxt)">
+	      AND QESTNR_TITLE like '%'||#{srchQeTxt}||'%'  
+	 </if>
+	 ORDER BY QESTNR_SN DESC
+	</sql>
+	
+	<!-- 설문지 시퀀스 획득 -->
+	<select id="selectSeqQestnrSn" resultType="String">
+        SELECT SEQ_QESTNR_SN.NEXTVAL FROM DUAL
+    </select>
+    
+	<!-- 설문지 문항 시퀀스 획득 -->
+	<select id="selectSeqQesitmSn" resultType="String">
+        SELECT SEQ_QESITM_SN.NEXTVAL FROM DUAL
+    </select>
+    
+	<!-- 설문지 리스트 조회 -->
+    <select id="selectQestnrList" parameterType="map" resultType="egovMap">
+	 	<include refid="selectQestnrList" /> 
+    </select>
+    
+	<!-- 설문지 정보 조회 -->
+    <select id="selectQestnrInfo" parameterType="map" resultMap="clobMap">
+    	SELECT  QESTNR_SN
+	           ,QESTNR_TITLE
+	           ,QESTNR_CN
+	           ,QESTNR_USID
+	           ,QESTNR_USNM
+	           ,QESTNR_USIP
+	           ,QESTNR_USDT
+	           ,SYS_ID
+	    FROM  TAP_QS_QESTNR_MANAGE
+       	WHERE  SYS_ID = #{sysId}
+         	AND  QESTNR_SN = #{qestnrSn}
+       	ORDER BY
+       		QESTNR_SN
+    </select>
+    
+	<!-- 설문지 문항 조회 (설문지 조회 시 )-->
+    <select id="selectQesitmList" parameterType="egovMap" resultType="egovMap">
+         SELECT   ROWNUM AS QESITM_RSN      
+                 ,QESTNR_SN
+                 ,QESITM_SN
+                 ,QESITM_TITLE
+                 ,QESITM_ORDR
+           FROM  TAP_QS_QESITM_MANAGE
+	      WHERE  QESTNR_SN = #{qestnrSn}
+	      ORDER  BY QESITM_ORDR
+    </select>
+    
+	<!-- 설문지 문항 조회 -->
+    <select id="selectAllQesitmList" parameterType="egovMap" resultType="egovMap">
+      SELECT  ROWNUM AS QESITM_RSN      
+             ,QESTNR_SN
+             ,QESITM_SN
+             ,QESITM_TITLE
+             ,QESITM_ORDR
+             ,QRSPNS_TY
+             ,QESITM_SCORE
+             ,QESSNTL_AT       
+       FROM  TAP_QS_QESITM_MANAGE
+	  WHERE  QESTNR_SN = #{qestnrSn}
+	  ORDER  BY QESITM_ORDR
+    </select>
+    
+	<!-- 설문지 항목 조회 -->
+    <select id="selectQiemList" parameterType="egovMap" resultType="egovMap">
+  		 SELECT  ROWNUM AS QIEM_RSN 
+                ,QM.QESTNR_SN
+                ,QM.QESITM_SN
+                ,QM.QRSPNS_TY
+                ,QM.QESITM_ORDR
+                ,QM.QESSNTL_AT
+                ,QM.QESITM_SCORE
+                ,QI.QIEM_SN
+                ,QI.QIEM_TITLE
+                ,QI.QETC_AT
+		   FROM TAP_QS_QESITM_MANAGE QM, TAP_QS_QESITM_IEM QI
+	      WHERE QM.QESITM_SN = QI.QESITM_SN 
+            AND QM.QESITM_SN = #{qesitmSn} 
+       ORDER BY QM.QESITM_ORDR, QI.QIEM_SN
+    </select>
+    
+     <!-- 설문지 리스트  조회(페이징) -->
+    <select id="selectQestnrListPaging" parameterType="map" resultType="egovMap">
+    	SELECT
+    		PL.*
+    	FROM (
+        	SELECT 
+        		PO.*
+        			,rownum as rsn
+			FROM (
+	    		<include refid="selectQestnrList" /> 
+				) PO 
+		) PL
+		WHERE
+		<![CDATA[
+			rsn <= #{maxSn} 
+			AND rsn > #{minSn}
+		]]>
+    </select>
+    
+     <!--설문지 리스트 조회(페이징 전체 카운트) -->
+    <select id="selectQestnrListPagingCount" parameterType="map" resultType="int">
+    	SELECT COUNT(*)
+	      FROM  TAP_QS_QESTNR_MANAGE 
+	    <if test="@egovframework.MybatisUtils@isNotEmpty(sysId)">
+	     WHERE SYS_ID = #{sysId}  
+		</if>
+		<if test="@egovframework.MybatisUtils@isNotEmpty(srchQeTxt)">
+		   AND QESTNR_TITLE like '%'||#{srchQeTxt}||'%'  
+		</if>
+	  ORDER BY QESTNR_SN DESC
+    </select>
+    
+    <!-- 설문지 추가 -->
+    <insert id="insertQestnrInfo" parameterType="egovMap">
+		INSERT INTO TAP_QS_QESTNR_MANAGE
+		 (
+		      QESTNR_SN
+		     ,QESTNR_TITLE
+		     ,QESTNR_USID
+			 ,QESTNR_USNM
+		     ,QESTNR_USIP
+		     ,QESTNR_USDT
+			 ,QESTNR_CN
+		     ,SYS_ID
+		 )
+		VALUES(
+			 #{qestnrSn}
+			,#{qestnrTitle}
+			,#{qestnrUsid}
+			,#{qestnrUsnm}
+			,#{qestnrUsip}
+			,SYSDATE
+			,#{qestnrCn}
+			,#{sysId}
+		 )    	
+    </insert>
+    
+    <!-- 설문지 문항 추가 -->
+    <insert id="insertQesitmInfo" parameterType="egovMap">
+		INSERT INTO TAP_QS_QESITM_MANAGE
+		 (
+		 	 QESTNR_SN
+			,QESITM_SN
+			,QESITM_TITLE
+			,QRSPNS_TY
+			,QESITM_SCORE
+			,QESITM_ORDR
+			,QESSNTL_AT	    
+		 )
+		VALUES
+		 (
+			 #{qestnrSn}
+			,#{qesitmSn}
+			,#{qesitmTitle}
+			,#{qrspnsTy}
+			,#{qesitmScore}
+			,#{qesitmOrdr}
+			,#{qessntlAt}
+		 )    	
+    </insert>
+    
+    <!-- 설문지 항목 추가 -->
+    <insert id="insertQiemInfo" parameterType="egovMap">
+		INSERT INTO TAP_QS_QESITM_IEM
+		 (
+		     QESITM_SN
+		    ,QIEM_SN
+			,QIEM_TITLE
+			,QETC_AT
+		 )
+		VALUES
+		 (
+			 #{qesitmSn}
+			,SEQ_QESITM_IEM_SN.NEXTVAL
+			,#{qiemTitle}
+			,#{qetcAt}
+		 )    	
+    </insert>
+    
+    <!-- 설문지  제목, 안내, 시스템, 수정 -->
+    <update id="updateQestnrInfo" parameterType="egovMap">
+     UPDATE   TAP_QS_QESTNR_MANAGE
+		SET   QESTNR_TITLE = #{qestnrTitle}   
+		     ,QESTNR_CN    = #{qestnrCn}
+		     ,SYS_ID       = #{sysId}
+      WHERE   QESTNR_SN    = #{qestnrSn}
+    </update>
+    
+    <!-- 설문지 문항 수정 -->
+    <update id="updateQesitmInfo" parameterType="egovMap">
+     UPDATE   TAP_QS_QESITM_MANAGE
+		SET   QESITM_TITLE = #{qesitmTitle}   
+		     ,QRSPNS_TY    = #{qrspnsTy}
+		     ,QESITM_ORDR  = #{qesitmOrdr}
+		     ,QESSNTL_AT   = #{qessntlAt}
+		     ,QESITM_SCORE = #{qesitmScore}   
+      WHERE   QESITM_SN    = #{qesitmSn}
+    </update>
+    
+    <!-- 설문지 항목 수정 -->
+    <update id="updateQiemInfo" parameterType="egovMap">
+     UPDATE    TAP_QS_QESITM_IEM
+		SET    QIEM_TITLE  = #{qiemTitle}
+		      ,QETC_AT     = #{qetcAt}   
+      WHERE    QIEM_SN     = #{qiemSn}
+    </update>
+    
+    <!-- 설문지 삭제 -->
+    <delete id="deleteQestnrInfo" parameterType="egovMap">
+    	DELETE FROM TAP_QS_QESTNR_MANAGE
+    	 WHERE QESTNR_SN = #{qestnrSn} 
+    </delete>
+    
+    <!-- 문항 개별 삭제 -->
+    <delete id="deleteQesitmInfo" parameterType="egovMap">
+    	DELETE FROM TAP_QS_QESITM_MANAGE
+    	 WHERE QESITM_SN = #{qesitmSn} 
+    </delete>
+    
+    <!-- 항목 개별 삭제 -->
+    <delete id="deleteSingleQiemInfo" parameterType="egovMap">
+    	DELETE FROM TAP_QS_QESITM_IEM
+    	 WHERE QIEM_SN = #{qiemSn} 
+    </delete>
+    
+    <!-- 항목 삭제(문항삭제시)-->
+    <delete id="deleteQiemInfo" parameterType="egovMap">
+    	DELETE FROM TAP_QS_QESITM_IEM
+    	 WHERE QESITM_SN = #{qesitmSn} 
+    </delete>
+
+</mapper>

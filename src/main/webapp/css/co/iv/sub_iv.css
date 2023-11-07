@@ -1,0 +1,153 @@
+﻿@charset "utf-8";
+
+/* 폰트 */
+@font-face {
+    font-family:'Nanum';
+    src:url('/font/nanum.eot');
+    src:url('/font/nanum.eot?#iefix') format('embedded-opentype'), url('/font/nanum.woff') format('woff'), url('/font/nanum.ttf') format('truetype');
+    font-weight:normal;
+    font-style:normal; 
+}
+@font-face {
+    font-family:'NanumBold';
+    src:url('/font/nanum_bold.eot');
+    src:url('/font/nanum_bold.eot?#iefix') format('embedded-opentype'), url('/font/nanum_bold.woff') format('woff'), url('/font/nanum_bold.ttf') format('truetype');
+    font-weight:bold;
+    font-style:normal; 
+}
+
+/* 웹 폰트 - 나눔고딕, 나눔고딕 볼드 */
+@font-face {
+    font-family:'NGNormal';
+    font-style:normal;
+    font-weight:400;
+    src:url('/font/NanumGothic.eot');
+    src:local(※), url('/font/NanumGothic.eot') format('embedded-opentype'), url('/font/NanumGothic.woff') format('woff');
+}
+
+@font-face {
+    font-family:'NGBold';
+    font-style:normal;
+    font-weight:700;
+    src:url('/font/NanumGothicBold.eot');
+    src:local(※), url('/font/NanumGothicBold.eot') format('embedded-opentype'), url('/font/NanumGothicBold.woff') format('woff');
+}
+
+/* 본고딕 */
+@font-face {
+    font-family: 'NotoT';
+    src: url(/font/NotoSansKR/NotoSansKR-Thin-Hestia.eot);
+    src: url(/font/NotoSansKR/NotoSansKR-Thin-Hestia.eot?#iefix) format('embedded-opentype'),
+    	 url(/font/NotoSansKR/NotoSansKR-Thin-Hestia.woff) format('woff'),
+    	 url(/font/NotoSansKR/NotoSansKR-Thin-Hestia.otf) format('opentype');
+}
+
+@font-face {
+    font-family: 'NotoL';
+    src: url(/font/NotoSansKR/NotoSansKR-Light-Hestia.eot);
+    src: url(/font/NotoSansKR/NotoSansKR-Light-Hestia.eot?#iefix) format('embedded-opentype'),
+    	 url(/font/NotoSansKR/NotoSansKR-Light-Hestia.woff) format('woff'),
+    	 url(/font/NotoSansKR/NotoSansKR-Light-Hestia.otf) format('opentype');
+}
+
+@font-face {
+    font-family: 'NotoDL';
+    src: url(/font/NotoSansKR/NotoSansKR-DemiLight-Hestia.eot); 
+    src: url(/font/NotoSansKR/NotoSansKR-DemiLight-Hestia.eot?#iefix) format('embedded-opentype'),
+		 url(/font/NotoSansKR/NotoSansKR-DemiLight-Hestia.woff) format('woff'),
+    	 url(/font/NotoSansKR/NotoSansKR-DemiLight-Hestia.otf) format('opentype');
+}
+
+@font-face {
+    font-family: 'NotoR';
+    src: url(/font/NotoSansKR/NotoSansKR-Regular-Hestia.eot);
+    src: url(/font/NotoSansKR/NotoSansKR-Regular-Hestia.eot?#iefix) format('embedded-opentype'),
+    	 url(/font/NotoSansKR/NotoSansKR-Regular-Hestia.woff) format('woff'),
+    	 url(/font/NotoSansKR/NotoSansKR-Regular-Hestia.otf) format('opentype');
+}
+
+@font-face {
+    font-family: 'NotoM';
+    src: url(/font/NotoSansKR/NotoSansKR-Medium-Hestia.eot);
+   	src: url(/font/NotoSansKR/NotoSansKR-Medium-Hestia.eot?#iefix) format('embedded-opentype'),
+    	 url(/font/NotoSansKR/NotoSansKR-Medium-Hestia.woff) format('woff'),
+    	 url(/font/NotoSansKR/NotoSansKR-Medium-Hestia.otf) format('opentype');
+}
+
+@font-face {
+    font-family: 'NotoB';
+    src: url(/font/NotoSansKR/NotoSansKR-Bold-Hestia.eot);
+    src: url(/font/NotoSansKR/NotoSansKR-Bold-Hestia.eot?#iefix) format('embedded-opentype'),
+    	 url(/font/NotoSansKR/NotoSansKR-Bold-Hestia.woff) format('woff'),
+    	 url(/font/NotoSansKR/NotoSansKR-Bold-Hestia.otf) format('opentype');
+}
+
+@font-face {
+    font-family: 'NotoBK';
+    src: url(/font/NotoSansKR/NotoSansKR-Black-Hestia.eot);
+    src: url(/font/NotoSansKR/NotoSansKR-Black-Hestia.eot?#iefix) format('embedded-opentype'),
+    	 url(/font/NotoSansKR/NotoSansKR-Black-Hestia.woff) format('woff'),
+    	 url(/font/NotoSansKR/NotoSansKR-Black-Hestia.otf) format('opentype');
+}
+
+.ff_NG {font-size:13px; line-height:1.4; font-family:'Nanum' !important;}
+
+/* 다운로드 텍스트+아이콘 */
+a.bu_link {padding-left:13px; font-size:14px; font-family:'Nanum'; color:#00539f; text-decoration:underline; background:url("/images/co/iv/bu_link.png") no-repeat left 2px; margin-left:3px;}
+
+/*타이틀*/
+.tit_01{ font-size:17px; line-height:1.4; font-family:"NanumBold"; color:#1b4ca2;  background:url("/images/co/iv/bul_01.png") no-repeat 0 7px; padding-top:15px; }
+.tit_02{ font-size:15px; line-height:1.4; font-family:"NanumBold"; color:#111;  background:url("/images/co/iv/bul_03.png") no-repeat 0 5px; padding-left:16px; }
+.tit_03{ font-size:15px; line-height:1.4; font-family:"NanumBold"; color:#111;  background:url("/images/co/iv/bul_02.png") no-repeat 0 5px; padding-left:16px; }
+
+/*블렛*/
+.bu_list_01 li{ font-size:13px; color:#444; line-height:1.4; margin:5px 0; font-family:"Nanum"; background:url("/images/co/iv/bu_dot.gif") no-repeat left 7px; padding-left:12px;}
+.bu_list_02 li{ font-size:13px; color:#444; line-height:1.4; margin:5px 0; font-family:"Nanum"; background:url("/images/co/iv/gray_dot.gif") no-repeat left 7px; padding-left:10px;}
+.bu_list_03 li{ font-size:13px; color:#444; line-height:1.4; margin:5px 0; font-family:"Nanum"; background:url("/images/co/iv/bu_minus.gif") no-repeat left 7px; padding-left:10px;}
+
+.bu_arr{ font-size:13px; color:#444; line-height:1.4; margin:5px 0; font-family:"Nanum"; background:url("/images/co/iv/blue_arrow.png") no-repeat left 6px; padding-left:12px;}
+.bu_01{ font-size:13px; color:#444; line-height:1.4; margin:5px 0; font-family:"Nanum"; background:url("/images/co/iv/bu_dot.gif") no-repeat left 7px; padding-left:12px;}
+.bu_02{ font-size:13px; color:#444; line-height:1.4; margin:5px 0; font-family:"Nanum"; background:url("/images/co/iv/gray_dot.gif") no-repeat left 7px; padding-left:10px;}
+.bu_03{ font-size:13px; color:#444; line-height:1.4; margin:5px 0; font-family:"Nanum"; background:url("/images/co/iv/bu_minus.gif") no-repeat left 7px; padding-left:10px;}
+
+/* 폰트 사이즈 */
+.fs13 {font-size:13px; font-family:"Nanum";  color:#444; line-height:20px;}
+.fs14 {font-size:14px; font-family:"Nanum";  color:#444; line-height:21px;}
+.fs16 {font-size:16px; font-family:"NanumBold";  color:#444; line-height:24px;}
+
+/* 박스 */
+.gry_box {font-family:"Nanum";  font-size:13px; line-height:1.4; padding:15px; border:1px solid #c8d1db; background:#f7f7f7;}
+.txt_box {font-family:"Nanum";  font-size:13px; line-height:1.4; padding:15px; border:1px solid #c8d1db;}
+
+/* 테이블 1 내용 가운데정렬  */
+.tblTy01{width:100%; overflow:hidden; border-top:2px solid #3469c7; color:#4c4d4f; position:relative; margin-top:10px; }
+.tblTy01 table{ width:100%; margin-left:-1px;}
+.tblTy01 th, 
+.tblTy01 td { padding:7px 4px; border-left:1px solid #ddd; border-bottom:1px solid #ddd; line-height:18px; text-align:center;}
+.tblTy01 th {background:#f9f9f9; color:#111; font-family:"NanumBold"; font-size:13px; }
+.tblTy01 td { background:#fff; word-break:keep-all; font-family:"돋움",Dotum !important; font-size:12px;}
+
+/* 테이블 2 내용 왼쪽정렬 */
+.tblTy02{width:100%; overflow:hidden; border-top:2px solid #3469c7; color:#4c4d4f; position:relative; margin-top:10px; }
+.tblTy02 table{ width:100%; margin-left:-1px;}
+.tblTy02 th, 
+.tblTy02 td { padding:7px 4px; border-left:1px solid #ddd; border-bottom:1px solid #ddd; line-height:18px; text-align:center;}
+.tblTy02 th {background:#f9f9f9; color:#111; font-family:"NanumBold"; font-size:13px; }
+.tblTy02 td { background:#fff; word-break:keep-all; font-family:"돋움",Dotum !important; font-size:12px; text-align:left;}
+
+
+@media (max-width:800px) {	
+	
+}
+
+@media (max-width:690px) {
+	
+}
+
+@media (max-width:480px) {
+	
+}
+
+@media (max-width:380px) {
+	
+}

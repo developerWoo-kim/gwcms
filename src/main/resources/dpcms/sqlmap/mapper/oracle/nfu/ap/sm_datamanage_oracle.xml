@@ -1,0 +1,306 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="sm_datamanage">
+
+<!-- 데이터관리 시스템  리스트 sql-->
+	<sql id ="selectDataManageSmList">
+	  SELECT   IT.INSTT_CODE
+	          ,IT.INSTT_NM
+	          ,IT.INSTT_TY
+	          ,SM.SYS_ID
+	          ,SM.SYS_NM
+	          ,SM.SYS_TY
+              ,( <include refid="selectDataManageStats" />  ) AS TOTAL_CNT
+	    FROM   TAP_IM_INSTT_MANAGE IT, TAP_SM_SYS_MANAGE SM
+	   WHERE   IT.INSTT_CODE = SM.INSTT_CODE
+         AND   SM.SYS_STTUS = 'O'
+	   <include refid="srchDataManageSmList" /> 
+	ORDER BY   IT.INSTT_CODE, IT.INSTT_LEVEL DESC
+	</sql>
+	
+	<!--  데이터관리 시스템  리스트 팝업 통계 sql-->
+	<sql id ="selectDataManageStats">
+		SELECT COUNT(*)
+          FROM TCO_NA_NTT_HIST H, TAP_BM_BBS_MANAGE B
+         WHERE H.BBS_ID = B.BBS_ID
+           AND B.SYS_ID = SM.SYS_ID
+           
+           <if test="@egovframework.MybatisUtils@isNotEmpty(dataType)">
+				<if test='dataType == "Backup"'>
+				AND HIST_TY IN ('D','U')
+				</if>
+				<if test='dataType == "Recovry"'>
+				AND HIST_TY = 'R'
+				</if>
+				<if test='dataType == "Delete"'>
+				AND HIST_TY = 'D'
+				</if>
+		  </if>
+		  
+	</sql>
+	
+	 <!--  데이터관리 시스템  리스트 검색조건 sql-->
+	<sql id ="srchDataManageSmList">
+	
+        <if test='@egovframework.MybatisUtils@isEmpty(author) || author != "master"'>
+         AND SM.SYS_ID NOT IN ('apple')
+        </if>
+        
+        <if test="@egovframework.MybatisUtils@isNotEmpty(insttCode)">
+	     AND   ( IT.INSTT_CODE =  #{insttCode}
+	     
+                    OR  IT.UPPER_INSTT_CODE = #{upperInsttCode}
+                    OR  IT.BSIS_INSTT_CODE = #{bsisInsttCode}
+                    
+               	)
+         </if>
+	    
+	     <if test="@egovframework.MybatisUtils@isNotEmpty(srchDmSysTxt)">
+	       AND  (  		 
+	       				 SM.SYS_NM like '%'||#{srchDmSysTxt}||'%'
+	              	  OR SM.SYS_TY like '%'||#{srchDmSysTxt}||'%' 
+	              	 
+	            )
+	    </if>
+	    
+	</sql>
+	
+	<!--  데이터관리 시스템  리스트  -->
+    <select id="selectDataManageSmList" parameterType="egovMap" resultType="egovMap">
+	 	<include refid="selectDataManageSmList" /> 
+	 </select>
+	 	
+	<!-- 데이터관리 시스템  리스트(페이징) -->
+    <select id="selectDataManageSmListPaging" parameterType="map" resultType="egovMap">
+    	SELECT
+    		PL.*
+    	FROM (
+        	SELECT 
+        		PO.*
+        		,rownum as rsn
+			FROM (
+	    		<include refid="selectDataManageSmList" /> 
+				) PO
+		) PL
+		WHERE
+		<![CDATA[
+			rsn <= #{maxSn} 
+			AND rsn > #{minSn}
+		]]>
+    </select>
+    
+    <!-- 데이터관리 시스템  리스트 (페이징 전체 카운트) -->
+    <select id="selectDataManageSmListPagingCount" parameterType="map" resultType="int">
+    	SELECT   COUNT(*)
+	      FROM   TAP_IM_INSTT_MANAGE IT, TAP_SM_SYS_MANAGE SM
+	     WHERE   IT.INSTT_CODE = SM.INSTT_CODE
+           AND   SM.SYS_STTUS = 'O'
+	   <include refid="srchDataManageSmList" /> 
+	  ORDER BY   IT.INSTT_CODE, IT.INSTT_LEVEL DESC
+    </select>
+    
+
+	<resultMap id="clobMap" type="egovMap">
+        <result property="NTT_CN" column="NTT_CN" jdbcType="CLOB" javaType="java.lang.String"/>
+    </resultMap>
+	
+	<!-- 데이터 관리 대상 리스트 SQL -->
+	<sql id="selectDataManageListSql">
+		SELECT H.*
+			,B.BBS_TY
+			,B.BBS_SJ
+			,B.BBS_USE_AT
+		FROM TCO_NA_NTT_HIST H
+			,TAP_BM_BBS_MANAGE B
+		WHERE H.BBS_ID = B.BBS_ID
+			AND SYS_ID = #{sysId}
+		<if test="@egovframework.MybatisUtils@isNotEmpty(dataType)">
+			<if test='dataType == "Backup"'>
+			AND HIST_TY IN ('D','U')
+			</if>
+			<if test='dataType == "Recovry"'>
+			AND HIST_TY = 'R'
+			</if>
+			<if test='dataType == "Delete"'>
+			AND HIST_TY = 'D'
+			</if>
+		</if>
+			
+		<if test="@egovframework.MybatisUtils@isNotEmpty(srchDmTxt)">
+			AND (  B.BBS_SJ LIKE '%'||#{srchDmTxt}||'%' OR  B.BBS_ID LIKE '%'||#{srchDmTxt}||'%' )
+		</if>
+		
+	</sql>
+	
+	<!-- 데이터 관리 대상 상세조회 -->
+    <select id="selectDataManageInfo" parameterType="map" resultMap="clobMap">
+        SELECT BBS_ID
+			,NTT_SN
+			,UPPER_NTT_SN
+			,NTT_SJ
+			,NTT_CN
+			,REG_ID
+			,REG_NM
+			,REG_IP
+			,TO_CHAR(REG_DT,'YYYY/MM/DD') AS REG_DT
+			,NTT_RDCNT
+			,NTT_OPPS_CO
+			,NTT_APPRVL_CO
+			,NTT_STTUS
+			,NTT_USE_AT
+			,SECRET_AT
+			,SMS_AT
+			,EMAIL_AT
+			,NOTICE_AT
+			,NOTICE_BEGIN_DT
+			,NOTICE_END_DT
+			,ADIT_COL1
+			,ADIT_COL2
+			,ADIT_COL3
+			,ADIT_COL4
+			,ADIT_COL5
+			,ADIT_COL6
+			,ADIT_COL7
+			,ADIT_COL8
+			,ADIT_COL9
+			,ADIT_COL10
+			,HIST_SEQ
+			,HIST_GROUP_SEQ
+			,HIST_USER_ID
+			,HIST_USER_NM
+			,HIST_USER_IP
+			,TO_CHAR(HIST_DATE,'YYYY/MM/DD HH24:MI:SS') AS HIST_DATE
+			,HIST_TY
+		FROM TCO_NA_NTT_HIST
+		WHERE HIST_SEQ = #{histSeq}
+    </select>
+	
+	<!-- 데이터 관리 대상 리스트 -->
+    <select id="selectDataManageList" parameterType="map" resultType="egovMap">
+        <include refid="selectDataManageListSql" />
+        ORDER BY HIST_GROUP_SEQ DESC, HIST_SEQ DESC
+    </select>
+    
+    <!-- 데이터 관리 대상 리스트 페이징 -->
+    <select id="selectDataManageListPaging" parameterType="map" resultType="egovMap">
+    	SELECT
+    		PL.*
+    	FROM (
+        	SELECT 
+        		PO.*
+        		,rownum as rsn
+			FROM (
+	    		<include refid="selectDataManageListSql" />
+	    		ORDER BY HIST_GROUP_SEQ DESC, HIST_SEQ DESC
+				) PO
+		) PL
+		WHERE
+		<![CDATA[
+			rsn <= #{maxSn} 
+			AND rsn > #{minSn}
+		]]>
+    </select>
+    
+    <!-- 데이터 관리 대상 리스트 페이징 카운트 -->
+    <select id="selectDataManageListPagingCount" parameterType="map" resultType="int">
+    	SELECT COUNT(*)
+		FROM TCO_NA_NTT_HIST H
+			,TAP_BM_BBS_MANAGE B
+		WHERE H.BBS_ID = B.BBS_ID
+			AND SYS_ID = #{sysId}
+		<if test="@egovframework.MybatisUtils@isNotEmpty(dataType)">
+			<if test='dataType == "Backup"'>
+			AND HIST_TY IN ('D','U')
+			</if>
+			<if test='dataType == "Recovry"'>
+			AND HIST_TY = 'R'
+			</if>
+			<if test='dataType == "Delete"'>
+			AND HIST_TY = 'D'
+			</if>
+		</if>	
+		
+		<if test="@egovframework.MybatisUtils@isNotEmpty(srchDmTxt)">
+			AND (  B.BBS_SJ LIKE '%'||#{srchDmTxt}||'%' OR  H.BBS_ID LIKE '%'||#{srchDmTxt}||'%' )
+		</if>
+		
+    </select>
+    
+	<!-- 데이터 복구 전 백업 -->
+	<select id="insertDataManageInfoBackup" parameterType="map">
+		INSERT INTO TCO_NA_NTT_HIST
+		SELECT A.*
+			,SEQ_HIST_SEQ.NEXTVAL
+			,SEQ_HIST_GROUP_SEQ.NEXTVAL
+			,#{histUserId}
+			,#{histUserNm}
+			,#{histUserIp}
+			,SYSDATE
+			,'B'
+  		FROM TCO_NA_NTT_MANAGE A
+  		WHERE NTT_SN = #{nttSn}
+	</select>
+	
+	<!-- 데이터 복구 전 복구대상 데이터 삭제 -->
+	<delete id="deleteDataManageInfoDelete" parameterType="map">
+  		DELETE TCO_NA_NTT_MANAGE
+  		WHERE NTT_SN = #{nttSn}
+	</delete>
+	
+	<!-- 데이터 복구 -->
+	<select id="insertDataManageInfoRecovry" parameterType="map">
+		INSERT INTO TCO_NA_NTT_MANAGE
+		SELECT BBS_ID
+			,NTT_SN
+			,UPPER_NTT_SN
+			,NTT_SJ
+			,NTT_CN
+			,REG_ID
+			,REG_NM
+			,REG_IP
+			,REG_DT
+			,NTT_RDCNT
+			,NTT_OPPS_CO
+			,NTT_APPRVL_CO
+			,NTT_STTUS
+			,'Y'
+			,SECRET_AT
+			,SMS_AT
+			,EMAIL_AT
+			,NOTICE_AT
+			,NOTICE_BEGIN_DT
+			,NOTICE_END_DT
+			,ADIT_COL1
+			,ADIT_COL2
+			,ADIT_COL3
+			,ADIT_COL4
+			,ADIT_COL5
+			,ADIT_COL6
+			,ADIT_COL7
+			,ADIT_COL8
+			,ADIT_COL9
+			,ADIT_COL10
+			,CLSDR_AT
+			,BEFORE_ID
+			,CONFM_AT
+			,CONFM_BEGIN_DT
+			,CONFM_END_DT
+			,CONFM_MBER_ID
+			,CONFM_MBER_NM
+			,CONFM_DT
+  		FROM TCO_NA_NTT_HIST A
+  		WHERE HIST_SEQ = #{histSeq}
+	</select>
+	
+	<!-- 데이터 복구 상태 변경 -->
+	<update id="updateDataManageInfoRecovry" parameterType="map">
+		UPDATE TCO_NA_NTT_HIST
+		SET HIST_TY = 'R'
+			,HIST_USER_ID = #{histUserId}
+			,HIST_USER_NM = #{histUserNm}
+			,HIST_USER_IP = #{histUserIp}
+			,HIST_DATE = SYSDATE
+  		WHERE HIST_SEQ = #{histSeq}
+	</update>
+</mapper>

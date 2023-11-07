@@ -1,0 +1,258 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="qs_qustnr">
+
+<!-- 설문관리 시스템  리스트 sql-->
+	<sql id ="selectQustnrSmList">
+	  SELECT   IT.INSTT_CODE
+	          ,IT.INSTT_NM
+	          ,IT.INSTT_TY
+	          ,SM.SYS_ID
+	          ,SM.SYS_NM
+	          ,SM.SYS_TY
+              ,( <include refid="selectQustnrStats" /> AND QM.SYS_ID = SM.SYS_ID ) AS TOTAL_CNT
+	    FROM   TAP_IM_INSTT_MANAGE IT, TAP_SM_SYS_MANAGE SM
+	   WHERE   IT.INSTT_CODE = SM.INSTT_CODE
+         AND   SM.SYS_STTUS = 'O'
+	   <include refid="srchQustnrlSmList" />
+	ORDER BY   IT.INSTT_CODE, IT.INSTT_LEVEL DESC
+	</sql>
+
+	<!--  설문관리 시스템  리스트 통계 sql-->
+	<sql id ="selectQustnrStats">
+		SELECT COUNT(*)
+          FROM TAP_QS_QUSTNR_MANAGE QM
+         WHERE 1=1
+	</sql>
+
+	 <!--  설문관리 시스템  리스트 검색조건 sql-->
+	<sql id ="srchQustnrlSmList">
+
+        <if test='@egovframework.MybatisUtils@isEmpty(author) || author != "master"'>
+         AND SM.SYS_ID NOT IN ('apple')
+        </if>
+
+        <if test="@egovframework.MybatisUtils@isNotEmpty(insttCode)">
+	     AND   ( IT.INSTT_CODE =  #{insttCode}
+
+                    OR  IT.UPPER_INSTT_CODE = #{upperInsttCode}
+                    OR  IT.BSIS_INSTT_CODE = #{bsisInsttCode}
+
+               	)
+         </if>
+
+	     <if test="@egovframework.MybatisUtils@isNotEmpty(srchSmTxt)">
+	       AND  (
+	       				 SM.SYS_NM like '%'||#{srchSmTxt}||'%'
+	              	  OR SM.SYS_TY like '%'||#{srchSmTxt}||'%'
+
+	            )
+	    </if>
+
+	</sql>
+
+	<!--  설문관리 시스템  리스트  -->
+    <select id="selectQustnrSmList" parameterType="egovMap" resultType="egovMap">
+	 	<include refid="selectQustnrSmList" />
+	 </select>
+
+	<!-- 설문관리 시스템  리스트(페이징) -->
+    <select id="selectQustnrSmListPaging" parameterType="map" resultType="egovMap">
+    	SELECT
+    		PL.*
+    	FROM (
+        	SELECT
+        		PO.*
+        		,rownum as rsn
+			FROM (
+	    		<include refid="selectQustnrSmList" />
+				) PO
+		) PL
+		WHERE
+		<![CDATA[
+			rsn <= #{maxSn}
+			AND rsn > #{minSn}
+		]]>
+    </select>
+
+    <!-- 설문관리 시스템  리스트 (페이징 전체 카운트) -->
+    <select id="selectQustnrSmListPagingCount" parameterType="map" resultType="int">
+    	SELECT   COUNT(*)
+	      FROM  ( <include refid="selectQustnrSmList" /> ) A
+    </select>
+
+
+	<resultMap id="clobMap" type="egovMap">
+        <result property="QUSTNR_CN" column="QUSTNR_CN" jdbcType="CLOB" javaType="java.lang.String"/>
+    </resultMap>
+
+	<sql id ="selectQustnrList">
+		SELECT   QUSTNR_SN
+				,QESTNR_SN
+				,SYS_ID
+				,QUSTNR_TITLE
+				,TO_CHAR(QUSTNR_BGNDE, 'YYYY/MM/DD') AS QUSTNR_BGNDE
+				,TO_CHAR(QUSTNR_ENDDE, 'YYYY/MM/DD') AS QUSTNR_ENDDE
+				,QRSPNS_AUTH
+				,QUSTNR_USID
+				,QUSTNR_USNM
+				,QUSTNR_USIP
+				,QUSTNR_USDT
+				,TO_CHAR(QUSTNR_USDT, 'YYYY/MM/DD HH24:MI:SS') AS QUSTNR_USDT_F
+				,QUSTNR_CN
+				,QUSTNR_FLAG
+		 FROM   TAP_QS_QUSTNR_MANAGE
+	 <if test="@egovframework.MybatisUtils@isNotEmpty(sysId)">
+		WHERE  SYS_ID = #{sysId}
+     </if>
+     <if test="@egovframework.MybatisUtils@isNotEmpty(srchQuTxt)">
+		  AND  ( QUSTNR_TITLE like '%'||#{srchQuTxt}||'%' or QUSTNR_USNM like '%'||#{srchQuTxt}||'%' or QUSTNR_USID like '%'||#{srchQuTxt}||'%'  )
+     </if>
+     <if test="@egovframework.MybatisUtils@isNotEmpty(beginDt)">
+	  <![CDATA[
+		  AND (TO_CHAR(QUSTNR_BGNDE,'YYYY/MM/DD') BETWEEN TO_DATE(#{beginDt},'YYYY/MM/DD') and TO_DATE(#{endDt},'YYYY/MM/DD')
+		    OR TO_CHAR(QUSTNR_ENDDE,'YYYY/MM/DD') BETWEEN TO_DATE(#{beginDt},'YYYY/MM/DD') and TO_DATE(#{endDt},'YYYY/MM/DD'))
+	  ]]>
+     </if>
+     ORDER BY QUSTNR_USDT DESC
+	</sql>
+
+	<!-- 설문 리스트 조회 -->
+    <select id="selectQustnrList" parameterType="egovMap" resultType="egovMap">
+	 	<include refid="selectQustnrList" />
+<!-- 	 	ORDER BY QUSTNR_BGNDE -->
+    </select>
+
+	<!-- 설문 정보 조회 -->
+    <select id="selectQustnrInfo" parameterType="map" resultMap="clobMap">
+        SELECT   QU.QUSTNR_SN
+				,QU.QESTNR_SN
+				,QU.SYS_ID
+				,QU.QUSTNR_TITLE
+				,TO_CHAR(QU.QUSTNR_BGNDE, 'YYYY/MM/DD') AS QUSTNR_BGNDE
+				,TO_CHAR(QU.QUSTNR_ENDDE, 'YYYY/MM/DD') AS QUSTNR_ENDDE
+				,QU.QRSPNS_AUTH
+				,QU.QUSTNR_USID
+				,QU.QUSTNR_USNM
+				,QU.QUSTNR_USIP
+				,QU.QUSTNR_USDT
+				,QU.QUSTNR_CN
+                ,QE.QESTNR_TITLE
+                ,CD.CMMN_DETAIL_CODE
+                ,CD.CMMN_DETAIL_CODE_NM
+                ,QU.QUSTNR_FLAG
+		  FROM  TAP_QS_QUSTNR_MANAGE QU, TAP_QS_QESTNR_MANAGE QE, TAP_CD_CMMNCODE_DETAIL CD
+         WHERE  QU.QESTNR_SN = QE.QESTNR_SN
+           AND  QU.QRSPNS_AUTH = CD.CMMN_DETAIL_CODE
+           AND  CD.CMMN_CODE = 'qrspnsAuth'
+           AND  CD.USE_AT = 'Y'
+           AND  QU.QUSTNR_SN = #{qustnrSn}
+    </select>
+
+     <!-- 설문 리스트  조회(페이징) -->
+    <select id="selectQustnrListPaging" parameterType="map" resultType="egovMap">
+    	SELECT
+    		PL.*
+    	FROM (
+        	SELECT
+        		PO.*
+        			,rownum as rsn
+			FROM (
+	    		<include refid="selectQustnrList" />
+				) PO
+		) PL
+		WHERE
+		<![CDATA[
+			rsn <= #{maxSn}
+			AND rsn > #{minSn}
+		]]>
+    </select>
+
+     <!--설문 리스트 조회(페이징 전체 카운트) -->
+    <select id="selectQustnrListPagingCount" parameterType="map" resultType="int">
+    	SELECT COUNT(*)
+
+	     FROM  TAP_QS_QUSTNR_MANAGE
+	 <if test="@egovframework.MybatisUtils@isNotEmpty(sysId)">
+		WHERE  SYS_ID = #{sysId}
+     </if>
+     <if test="@egovframework.MybatisUtils@isNotEmpty(srchQuTxt)">
+		  AND  ( QUSTNR_TITLE like '%'||#{srchQuTxt}||'%' or QUSTNR_USNM like '%'||#{srchQuTxt}||'%' or QUSTNR_USID like '%'||#{srchQuTxt}||'%'  )
+     </if>
+     <if test="@egovframework.MybatisUtils@isNotEmpty(beginDt)">
+	  <![CDATA[
+	      AND  TO_CHAR(QUSTNR_BGNDE, 'YYYY/MM/DD') >= #{beginDt}
+		  AND  TO_CHAR(QUSTNR_BGNDE, 'YYYY/MM/DD') <=  #{endDt}
+	  ]]>
+     </if>
+    </select>
+
+    <!-- 설문 추가 -->
+    <insert id="insertQustnrInfo" parameterType="egovMap">
+		INSERT INTO TAP_QS_QUSTNR_MANAGE
+		 (
+			 QUSTNR_SN
+		    ,QESTNR_SN
+			,SYS_ID
+			,QUSTNR_TITLE
+			,QUSTNR_BGNDE
+			,QUSTNR_ENDDE
+			,QRSPNS_AUTH
+			,QUSTNR_CN
+			,QUSTNR_USID
+			,QUSTNR_USNM
+			,QUSTNR_USIP
+			,QUSTNR_USDT
+			,QUSTNR_FLAG
+		 )
+		VALUES
+		 (
+			 SEQ_QUSTNR_SN.NEXTVAL
+			,#{qestnrSn}
+			,#{sysId}
+			,#{qustnrTitle}
+			,TO_DATE(#{beginDt}, 'YYYY/MM/DD')
+			,TO_DATE(#{endDt}, 'YYYY/MM/DD')
+			,#{qrspnsAuth}
+			,#{qustnrCn}
+			,#{qustnrUsid}
+			,#{qustnrUsnm}
+			,#{qustnrUsip}
+			,SYSDATE
+			,#{qustnrFlag}
+		 )
+    </insert>
+
+    <!-- 설문 문항 수정 -->
+    <update id="updateQustnrInfo" parameterType="egovMap">
+     UPDATE  TAP_QS_QUSTNR_MANAGE
+		SET  SYS_ID        =  #{sysId}
+			,QUSTNR_TITLE  =  #{qustnrTitle}
+			,QUSTNR_BGNDE  =  #{beginDt}
+			,QUSTNR_ENDDE  =  #{endDt}
+			,QRSPNS_AUTH   =  #{qrspnsAuth}
+			,QUSTNR_CN     =  #{qustnrCn}
+			,QESTNR_SN     =  #{qestnrSn}
+			,QUSTNR_FLAG   =  #{qustnrFlag}
+      WHERE  QUSTNR_SN = #{qustnrSn}
+    </update>
+
+    <!-- 설문 삭제 -->
+    <delete id="deleteQustnrInfo" parameterType="egovMap">
+    	DELETE FROM TAP_QS_QUSTNR_MANAGE
+    	 WHERE QUSTNR_SN = #{qustnrSn}
+    </delete>
+
+    <!-- 설문 응답자, 응답 삭제 -->
+    <delete id="deleteQrspnsInfo" parameterType="egovMap">
+    	DELETE FROM (
+			SELECT *
+			FROM TAP_QR_QRSPNS_RESULT A, TAP_QR_QRSPNS_MBER B
+			WHERE A.QRT_SN = B.QRT_SN
+			AND A.QUSTNR_SN = #{qustnrSn}
+		)
+    </delete>
+
+
+</mapper>

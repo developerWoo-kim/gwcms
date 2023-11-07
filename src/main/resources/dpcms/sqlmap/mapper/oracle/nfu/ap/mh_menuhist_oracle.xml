@@ -1,0 +1,422 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="mh_menuhist">
+
+	<!-- 메뉴 이력 리스트 -->
+	<sql id="selectMhList">
+		SELECT 
+			   SYS_ID
+			  ,SYS_NM
+			  ,UPPER_MENU_ID
+			  ,UPPER_MENU_NM
+			  ,MENU_ID
+			  ,MENU_NM
+			  ,MENU_LEVEL
+			  ,MENU_TY
+			  ,CNTNTS_ID
+			  ,MENU_LINK
+			  ,MENU_URL
+			  ,CNNC_MENU_ID
+			  ,USE_AT
+			  ,CONECT_AT
+			  ,CONECT_AUTHOR
+			  ,SORT_ORDR
+			  ,NEW_WIN_AT
+			  ,CNTNTS_AT
+			  ,RCLICK_AT
+			  ,LWPRT_RCLICK_AT
+			  ,HIST_SEQ
+			  ,HIST_GROUP_SEQ
+			  ,HIST_USER_ID
+			  ,HIST_USER_NM
+			  ,HIST_USER_IP
+			  ,TO_CHAR(HIST_DATE, 'YYYY/MM/DD HH24:MI:SS') AS HIST_DATE
+			  ,HIST_TY
+			  ,RECOVRY_ID
+			  ,RECOVRY_IP
+			  ,RECOVRY_NM
+			  ,RECOVRY_DT
+			  ,RECOVRY_AT			  				
+		  FROM 	
+		  	   TAP_MN_MENU_HIST
+		 WHERE 1 = 1 
+		   AND SYS_ID = #{sysId}
+		<if test="@egovframework.MybatisUtils@isNotEmpty(srchTxt)">
+		   AND (SYS_NM LIKE '%'||#{srchTxt}||'%' OR MENU_NM LIKE '%'||#{srchTxt}||'%' OR HIST_USER_ID LIKE '%'||#{srchTxt}||'%' OR HIST_USER_NM LIKE '%'||#{srchTxt}||'%')
+		</if>
+		<if test="@egovframework.MybatisUtils@isNotEmpty(menuHistTy)">
+		   AND HIST_TY = #{menuHistTy}
+		</if>
+		<if test="@egovframework.MybatisUtils@isNotEmpty(beginDt)">
+	    <![CDATA[
+		 AND   TO_CHAR(HIST_DATE, 'YYYY/MM/DD') >= #{beginDt}
+		 AND   TO_CHAR(HIST_DATE, 'YYYY/MM/DD') <=  #{endDt}
+		]]>
+	   </if>
+	  ORDER BY HIST_DATE DESC
+	</sql>
+	
+    <!-- 메뉴 이력 리스트 (페이징) -->
+    <select id="selectMhListPaging" parameterType="map" resultType="egovMap">
+		SELECT PL.*
+		  FROM ( SELECT PO.* 
+		  		 	   ,ROWNUM AS RSN
+		           FROM ( <include refid="selectMhList" /> ) PO ) PL
+		 WHERE 1 = 1 
+		 <![CDATA[ 
+		   AND RSN <= #{maxSn}
+		   AND RSN > #{minSn} 
+		 ]]>		
+    </select>
+    
+    <!-- 메뉴 이력 리스트 (페이징 전체 카운트) -->
+    <select id="selectMhListPagingCount" parameterType="map" resultType="int">
+		SELECT COUNT(*)			
+		  FROM TAP_MN_MENU_HIST	
+		 WHERE 1 = 1 
+		   AND SYS_ID = #{sysId}
+		<if test="@egovframework.MybatisUtils@isNotEmpty(srchTxt)">
+		   AND (SYS_NM LIKE '%'||#{srchTxt}||'%' OR MENU_NM LIKE '%'||#{srchTxt}||'%' OR HIST_USER_ID LIKE '%'||#{srchTxt}||'%' OR HIST_USER_NM LIKE '%'||#{srchTxt}||'%')
+		</if>
+		<if test="@egovframework.MybatisUtils@isNotEmpty(menuHistTy)">
+		   AND HIST_TY = #{menuHistTy}
+		</if>		
+		<if test="@egovframework.MybatisUtils@isNotEmpty(beginDt)">
+	    <![CDATA[
+		 AND   TO_CHAR(HIST_DATE, 'YYYY/MM/DD') >= #{beginDt}
+		 AND   TO_CHAR(HIST_DATE, 'YYYY/MM/DD') <=  #{endDt}
+		]]>
+		</if>	
+    </select>
+    
+	<!-- 메뉴 이력 수정 리스트 -->
+    <select id="selectMhUpdateList" parameterType="map" resultType="egovMap">
+		SELECT 
+			   SYS_ID
+			  ,SYS_NM
+			  ,UPPER_MENU_ID
+			  ,UPPER_MENU_NM
+			  ,MENU_ID
+			  ,MENU_NM
+			  ,MENU_LEVEL
+			  ,MENU_TY
+			  ,CNTNTS_ID
+			  ,MENU_LINK
+			  ,MENU_URL
+			  ,CNNC_MENU_ID
+			  ,USE_AT
+			  ,CONECT_AT
+			  ,CONECT_AUTHOR
+			  ,SORT_ORDR
+			  ,NEW_WIN_AT
+			  ,CNTNTS_AT
+			  ,RCLICK_AT
+			  ,LWPRT_RCLICK_AT
+			  ,TAB_AT
+			  ,HIST_SEQ
+			  ,HIST_GROUP_SEQ
+			  ,HIST_USER_ID
+			  ,HIST_USER_NM
+			  ,HIST_USER_IP
+			  ,TO_CHAR(HIST_DATE, 'YYYY/MM/DD HH24:MI:SS') AS HIST_DATE
+			  ,HIST_TY
+			  ,RECOVRY_ID
+			  ,RECOVRY_IP
+			  ,RECOVRY_NM
+			  ,RECOVRY_DT
+			  ,RECOVRY_AT			  			
+		  FROM 	
+		  	   TAP_MN_MENU_HIST
+		 WHERE 1 = 1 
+		   AND SYS_ID = #{sysId}
+		   AND MENU_ID = #{menuId}
+    </select> 
+    
+	<!-- 메뉴 이력 정보 -->
+    <select id="selectMhInfo" parameterType="map" resultType="egovMap">
+		SELECT 
+			   SYS_ID
+			  ,SYS_NM
+			  ,UPPER_MENU_ID
+			  ,UPPER_MENU_NM
+			  ,MENU_ID
+			  ,MENU_NM
+			  ,MENU_LEVEL
+			  ,MENU_TY
+			  ,CNTNTS_ID
+			  ,MENU_LINK
+			  ,MENU_URL
+			  ,CNNC_MENU_ID
+			  ,USE_AT
+			  ,CONECT_AT
+			  ,CONECT_AUTHOR
+			  ,SORT_ORDR
+			  ,NEW_WIN_AT
+			  ,CNTNTS_AT
+			  ,RCLICK_AT
+			  ,LWPRT_RCLICK_AT
+			  ,TAB_AT
+			  ,HIST_SEQ
+			  ,HIST_GROUP_SEQ
+			  ,HIST_USER_ID
+			  ,HIST_USER_NM
+			  ,HIST_USER_IP
+			  ,TO_CHAR(HIST_DATE, 'YYYY/MM/DD HH24:MI:SS') AS HIST_DATE
+			  ,HIST_TY
+			  ,RECOVRY_ID
+			  ,RECOVRY_IP
+			  ,RECOVRY_NM
+			  ,RECOVRY_DT
+			  ,RECOVRY_AT
+			  ,CLSDR_AT
+			  ,UPEND_AT
+		  FROM 	
+		  	   TAP_MN_MENU_HIST
+		 WHERE 1 = 1 
+		   AND HIST_SEQ = #{histSeq}
+    </select>
+    
+    <!-- 메뉴 복구 기록 추가 -->
+    <update id="updateMenuRecovryInfo" parameterType="egovMap">
+		UPDATE 
+			   TAP_MN_MENU_HIST
+		   SET 
+			   RECOVRY_ID = #{histUserId}
+			  ,RECOVRY_IP = #{histUserIp}
+			  ,RECOVRY_NM = #{histUserNm}
+			  ,RECOVRY_DT = SYSDATE
+			  ,RECOVRY_AT = 'Y'
+		 WHERE 1 = 1 
+		   AND HIST_SEQ = #{histSeq}
+    </update>    
+
+    <!-- 메뉴이력 시스템 리스트 통계 sql -->
+	<sql id="selectMhListState">
+		SELECT COUNT(*) 
+		FROM TAP_MN_MENU_HIST MN
+		WHERE MN.SYS_ID = SM.SYS_ID
+	</sql>
+	
+	<!-- 메뉴이력 시스템 리스트 sql -->
+	<sql id="selectMhSmList">
+		SELECT IT.INSTT_CODE
+	          ,IT.INSTT_NM
+	          ,IT.INSTT_TY
+	          ,SM.SYS_ID
+			  ,SM.SYS_NM 
+			  ,( <include refid="selectMhListState" /> ) AS TOTAL_CNT                                                                
+			  ,( <include refid="selectMhListState" /> AND TO_CHAR(HIST_DATE, 'YYYY/MM/DD') =TO_CHAR(SYSDATE, 'YYYY/MM/DD')) AS T_CNT
+			  FROM TAP_IM_INSTT_MANAGE IT, TAP_SM_SYS_MANAGE SM 
+			  WHERE IT.INSTT_CODE = SM.INSTT_CODE
+			  AND SM.SYS_STTUS = 'O'
+			
+			<if test='@egovframework.MybatisUtils@isEmpty(author) || author != "master"'>
+	         AND SM.SYS_ID NOT IN ('apple')
+	        </if>
+	        
+	        <if test="@egovframework.MybatisUtils@isNotEmpty(mberId)">
+		      AND SM.SYS_ID IN (
+					SELECT SYS_ID
+					  FROM TAP_AU_AUTHOR_MBER 
+					 WHERE MBER_ID = #{mberId}
+						   AND SYS_ID != 'apple'
+					   AND AUTHOR_CODE IN (1,2)	
+	        	)
+		     </if>
+		     
+	        <if test="@egovframework.MybatisUtils@isNotEmpty(insttCode)">
+		     AND   ( IT.INSTT_CODE =  #{insttCode}
+		     
+	                    OR  IT.UPPER_INSTT_CODE = #{upperInsttCode}
+	                    OR  IT.BSIS_INSTT_CODE = #{bsisInsttCode}
+	                    
+	               	)
+	         </if>
+	         
+		     <if test="@egovframework.MybatisUtils@isNotEmpty(insttGrad)">
+		     AND   ( IT.INSTT_GRAD IS NULL
+		     
+		     		 <if test="@egovframework.MybatisUtils@isNotEmpty(dtnt)">
+		                OR IT.INSTT_GRAD = #{dtnt}
+		             </if>
+		             <if test="@egovframework.MybatisUtils@isNotEmpty(elesch)">
+		                OR IT.INSTT_GRAD = #{elesch}
+		             </if>
+		             <if test="@egovframework.MybatisUtils@isNotEmpty(mskul)">    
+		                OR IT.INSTT_GRAD = #{mskul}
+		             </if> 
+		             <if test="@egovframework.MybatisUtils@isNotEmpty(hgschl)">
+		                OR IT.INSTT_GRAD = #{hgschl}
+		             </if>
+		             <if test="@egovframework.MybatisUtils@isNotEmpty(kndrgr)">     
+		                OR IT.INSTT_GRAD = #{kndrgr}
+		             </if>
+		             <if test="@egovframework.MybatisUtils@isNotEmpty(spcl)">
+		                OR IT.INSTT_GRAD = #{spcl}
+		             </if>
+		             
+		           )
+		     </if>
+		     
+		     <if test="@egovframework.MybatisUtils@isNotEmpty(sysTy)">
+		      AND   SM.SYS_TY = #{sysTy}
+		     </if>
+		     
+		     <if test="@egovframework.MybatisUtils@isNotEmpty(srchTxt)">
+		       AND  (  		 
+       				 SM.SYS_NM like '%'||#{srchTxt}||'%'
+              	  OR SM.SYS_TY like '%'||#{srchTxt}||'%' 
+		              	 
+		       )
+		    </if>
+			 
+			 ORDER BY   IT.INSTT_CODE, IT.INSTT_LEVEL DESC
+	</sql>
+	
+	<!-- 메뉴이력 시스템 리스트 -->
+	<select id="selectMhSmList" parameterType="map" resultType="egovMap">
+		<include refid="selectMhSmList"/>
+	</select>
+	
+	<!-- 메뉴이력 시스템 페이징 -->
+	<select id="selectMhSmListPaging" parameterType="map" resultType="egovMap">
+		SELECT
+    		PL.*
+    	FROM (
+        	SELECT 
+        		PO.*
+        		,rownum as rsn
+			FROM (
+	    		<include refid="selectMhSmList" /> 
+				) PO
+		) PL
+		WHERE
+		<![CDATA[
+			rsn <= #{maxSn} 
+			AND rsn > #{minSn}
+		]]>
+	</select>
+	
+	<!-- 메뉴이력 시스템 페이징 카운트 -->
+	<select id="selectMhSmListPagingCount" parameterType="map" resultType="int">
+		SELECT 
+			COUNT(*)
+			FROM TAP_IM_INSTT_MANAGE IT, TAP_SM_SYS_MANAGE SM 
+			  WHERE IT.INSTT_CODE = SM.INSTT_CODE
+			  AND SM.SYS_STTUS = 'O'
+			
+			<if test='@egovframework.MybatisUtils@isEmpty(author) || author != "master"'>
+	         AND SM.SYS_ID NOT IN ('apple')
+	        </if>
+	        
+	        <if test="@egovframework.MybatisUtils@isNotEmpty(insttCode)">
+		     AND   ( IT.INSTT_CODE =  #{insttCode}
+		     
+	                    OR  IT.UPPER_INSTT_CODE = #{upperInsttCode}
+	                    OR  IT.BSIS_INSTT_CODE = #{bsisInsttCode}
+	                    
+	               	)
+	         </if>
+	         
+		     <if test="@egovframework.MybatisUtils@isNotEmpty(insttGrad)">
+		     AND   ( IT.INSTT_GRAD IS NULL
+		     
+		     		 <if test="@egovframework.MybatisUtils@isNotEmpty(dtnt)">
+		                OR IT.INSTT_GRAD = #{dtnt}
+		             </if>
+		             <if test="@egovframework.MybatisUtils@isNotEmpty(elesch)">
+		                OR IT.INSTT_GRAD = #{elesch}
+		             </if>
+		             <if test="@egovframework.MybatisUtils@isNotEmpty(mskul)">    
+		                OR IT.INSTT_GRAD = #{mskul}
+		             </if> 
+		             <if test="@egovframework.MybatisUtils@isNotEmpty(hgschl)">
+		                OR IT.INSTT_GRAD = #{hgschl}
+		             </if>
+		             <if test="@egovframework.MybatisUtils@isNotEmpty(kndrgr)">     
+		                OR IT.INSTT_GRAD = #{kndrgr}
+		             </if>
+		             <if test="@egovframework.MybatisUtils@isNotEmpty(spcl)">
+		                OR IT.INSTT_GRAD = #{spcl}
+		             </if>
+		             
+		           )
+		     </if>
+	        
+	        <if test="@egovframework.MybatisUtils@isNotEmpty(mberId)">
+		      AND SM.SYS_ID IN (
+					SELECT SYS_ID
+					  FROM TAP_AU_AUTHOR_MBER 
+					 WHERE MBER_ID = #{mberId}
+						   AND SYS_ID != 'apple'
+					   AND AUTHOR_CODE IN (1,2)	
+	        	)
+		     </if>
+		     
+		     <if test="@egovframework.MybatisUtils@isNotEmpty(sysTy)">
+		      AND   SM.SYS_TY = #{sysTy}
+		     </if>
+		     
+		     <if test="@egovframework.MybatisUtils@isNotEmpty(srchTxt)">
+		       AND  (  		 
+       				 SM.SYS_NM like '%'||#{srchTxt}||'%'
+              	  OR SM.SYS_TY like '%'||#{srchTxt}||'%' 
+		              	 
+		       )
+		    </if>
+			 ORDER BY   IT.INSTT_CODE, IT.INSTT_LEVEL DESC
+	</select>
+	
+	<!-- 엑셀 다운로드(업데이트) -->
+	<select id="selectMenuUpdateHistListExcel" parameterType="map" resultType="egovMap">
+		SELECT
+			 TO_CHAR(HIST_DATE, 'YYYY/MM/DD HH24:MI:SS') AS HIST_DATE,
+			 HIST_USER_NM,
+			 HIST_USER_ID,
+			 MENU_NM,
+			 MENU_TY,
+			 RECOVRY_AT,
+			 RECOVRY_DT,
+			 RECOVRY_NM		
+		  FROM 	
+		  	   TAP_MN_MENU_HIST
+		 WHERE 1 = 1 
+			<if test="sysId != null and !sysId.equals('apple') and @egovframework.MybatisUtils@isNotEmpty(sysId) ">
+				AND SYS_ID = #{sysId}
+			</if>
+		   AND MENU_ID = #{menuId}
+	</select>
+	
+	<!-- 엑셀 다운로드(삭제 등록) -->
+	<select id="selectMenuHistListExcel" parameterType="map" resultType="egovMap">
+		SELECT
+			TO_CHAR(HIST_DATE, 'YYYY/MM/DD HH24:MI:SS') AS HIST_DATE,
+			HIST_USER_NM,
+			HIST_USER_ID,
+			MENU_NM,
+			MENU_TY,
+			RECOVRY_AT,
+			RECOVRY_DT,
+			RECOVRY_NM,
+			ROW_NUMBER() OVER(ORDER BY HIST_DATE DESC) AS RSN
+		FROM 	
+			TAP_MN_MENU_HIST
+		WHERE 1 = 1 
+			<if test="sysId != null and !sysId.equals('apple') and @egovframework.MybatisUtils@isNotEmpty(sysId) ">
+			AND   SYS_ID = #{sysId}
+			</if>
+		<if test="@egovframework.MybatisUtils@isNotEmpty(srchTxt)">
+			AND (SYS_NM LIKE LIKE '%'||#{srchTxt}||'%' OR MENU_NM LIKE '%'||#{srchTxt}||'%' OR HIST_USER_ID LIKE '%'||#{srchTxt}||'%' OR HIST_USER_NM LIKE '%'||#{srchTxt}||'%')
+		</if>
+		<if test="@egovframework.MybatisUtils@isNotEmpty(tabType)">
+			AND HIST_TY = #{tabType}
+		</if>
+		<if test="@egovframework.MybatisUtils@isNotEmpty(beginDt)">
+	    <![CDATA[
+		AND   TO_CHAR(HIST_DATE, 'YYYY/MM/DD') >= #{beginDt}
+		AND   TO_CHAR(HIST_DATE, 'YYYY/MM/DD') <=  #{endDt}
+		]]>
+	   </if>	
+	</select>
+</mapper>

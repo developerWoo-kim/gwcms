@@ -1,0 +1,467 @@
+@charset "utf-8"; 
+/* CSS Document */
+
+/* 3.0에서 옮겨온 CSS. 3.2 업데이트시 제외 */
+
+/* 3.0 버튼
+.btn { display:inline-block; *display:inline; zoom:1; margin:0 5px 5px 0; font-family:"NotoSans"; font-size:14px; color:#fff; line-height:20px; text-align:center; border-radius:3px; vertical-align:middle; -ms-touch-action:manipulation; touch-action:manipulation; border:1px solid transparent; white-space:nowrap; padding:6px 12px}
+.btn span { color:#ffff; }
+.btn_S {display:inline-block; *display:inline; zoom:1; margin:0; font-family:"NotoSans"; font-size:12px; color:#fff; line-height:20px; text-align:center; border-radius:3px; vertical-align:middle; -ms-touch-action:manipulation; touch-action:manipulation; border:1px solid transparent; white-space:nowrap; padding:0 8px}
+.commentBtn {display:inline-block; *display:inline; zoom:1; margin:0; font-family:"NotoSans"; font-size:12px; color:#fff; line-height:20px; text-align:center; border-radius:3px; vertical-align:middle; -ms-touch-action:manipulation; touch-action:manipulation; border:1px solid transparent; white-space:nowrap; padding:0 8px}
+.btn_default {background-color:#fff; border-color:#ccc; color:#364c60 !important}
+.btn_blue { background-color:#1A82C3; border-color:#1A82C3}
+.btn_blue2 { background-color:#5d61ea; border-color:#5d61ea}
+.btn_green { background-color:#26B99A; border-color:#4cae4c}
+.btn_green2 {background-color:#27d02d; border-color:#fff8f8de; color:#f3f4f5 !important; }
+.btn_green3 {background-color:#11a216; border-color:#fff8f8de; color:#f3f4f5 !important; }
+.btn_sky {background-color:#5bc0de; border-color:#46b8da}
+.btn_yellow {background-color:#f0ad4e; border-color:#f0ad4e}
+.btn_orange {background-color:#f59307; border-color:#f0ad4e}
+.btn_white {background-color:#fff; border-color:#000; color:#000; }
+.btn_red {background-color:#d9534f; border-color:#d9534f}
+.btn_pink {background-color:#d027c7; border-color:#d027c7; color:#f3f4f5 !important; }
+.btn_dark {background-color:#4b5e70; border-color:#364c60; color:#e9edef !important} 
+.btn:hover, .btn_S:hover { opacity:0.9} */
+
+/* 200529 추가 :메뉴조회에만 들어가는 버튼들 다른데서는 절대 쓰지 마세요 */
+.menuUl button.btnmnSt1 {padding:0 8px; font-family:"NotoSans"; font-size:14px; line-height:24px; color:#555 !important; font-weight:300; border:1px solid #dcdcdc; background:#f1f1f1; border-radius:0; }
+.menuUl button.btnmnSt2 {padding:0 8px; font-family:"NotoSans"; font-size:14px; line-height:24px; color:#0081dd !important; font-weight:300; border:1px solid #0081dd; background:#fff; border-radius:0; }
+/* //200529 추가 :메뉴조회에만 들어가는 버튼들 다른데서는 절대 쓰지 마세요 */ 
+
+/* 메뉴수정 */
+.menuUl {clear:both; margin-top:10px; }
+.menuUl li {padding:0 !important; margin:0 !important; border:none !important; font-family:'NotoSans' !important; }
+.menuUl li div {position:relative; padding:0 !important; background:none !important; }
+.menuUl > li {position:relative; margin-bottom:10px !important; }
+
+/* 1차메뉴 */
+.menuUl > li > div {position:relative; padding-left:45px !important; background:#fff !important; border:2px solid #e7e7e7; }
+.menuUl > li.sortableListsOpen > div {background:#f2f9fd !important; border:2px solid #0081dd; }
+.menuUl > li.sortableListsOpen > div a {color:#0081dd; text-decoration:underline; } 
+.menuUl > li > div > a {display:inline-block; padding:17px 17px 17px 5px !important; line-height:22px; font-size:0.85rem; font-family:'NotoSans' !important; font-weight:500; color:#222; }
+.menuUl > li > div > a:hover {text-decoration:underline; }
+.menuUl > li > div > a:active,
+.menuUl > li > div > a:focus {color:#0081dd; text-decoration:underline;} 
+
+/* 2차메뉴 트리구조 선 */
+.menuUl > li > ul {position:relative; margin-left:22px; }
+.menuUl > li > ul:before {content:""; display:block; position:absolute; left:0; bottom:0; width:1px; height:100%; background:#dcdcdc; }
+.menuUl > li > ul > li {position:relative; padding:10px 0 0 23px !important; }
+.menuUl > li > ul > li:before {content:""; display:block; position:absolute; left:0; top:36px; width:23px; height:1px; background:#dcdcdc; }
+.menuUl > li > ul > li:last-child:after {content:""; display:block; position:absolute; left:0; top:37px; width:23px; height:100%; background:#fff; }
+
+/* 2차메뉴 */
+.menuUl > li > ul > li > div {position:relative; padding-left:45px !important; border:1px solid #dcdcdc; background:#fff !important; }
+.menuUl > li > ul > li.sortableListsOpen > div {border:1px solid #0081dd; }
+.menuUl > li > ul > li > div > a {display:inline-block; padding:15px 15px 15px 5px !important; line-height:20px; font-size:0.8rem; font-family:'NotoSans' !important; font-weight:500; color:#444;}
+.menuUl > li > ul > li > div > a:hover {text-decoration:underline; }
+.menuUl > li > ul > li > div > a:active, 
+.menuUl > li > ul > li > div > a:focus {color:#222; text-decoration:underline;} 
+
+/* 3차메뉴 트리구조 선 */
+.menuUl > li > ul > li > ul {position:relative; margin-left:22px; }
+.menuUl > li > ul > li > ul:before {content:""; display:block; position:absolute; left:0; bottom:0; width:1px; height:100%; background:#dcdcdc; }
+.menuUl > li > ul > li > ul > li {position:relative; padding:10px 0 0 23px !important; }
+.menuUl > li > ul > li > ul > li:before {content:""; display:block; position:absolute; left:0; top:34px; width:23px; height:1px; background:#dcdcdc; }
+.menuUl > li > ul > li > ul > li:last-child:after {content:""; display:block; position:absolute; left:0; top:35px; width:23px; height:100%; background:#fff; }
+
+/* 3차메뉴 */
+.menuUl > li > ul > li > ul > li > div {position:relative; padding-left:45px !important; border:1px solid #dcdcdc !important; background:#fafafa !important; }
+.menuUl > li > ul > li > ul > li.sortableListsOpen > div {border:1px solid #53657c !important; }
+.menuUl > li > ul > li > ul > li > div > a {display:inline-block; padding:13px 13px 13px 5px !important; line-height:20px; font-size:0.75rem; font-family:'NotoSans' !important; font-weight:400; color:#555;}
+.menuUl > li > ul > li > ul > li > div > a:hover {text-decoration:underline; }
+.menuUl > li > ul > li > ul > li > div > a:active, 
+.menuUl > li > ul > li > ul > li > div > a:focus {color:#222; text-decoration:underline;} 
+
+/* 4차메뉴 트리구조 선 */
+.menuUl > li > ul > li > ul > li > ul {position:relative; margin-left:22px; }
+.menuUl > li > ul > li > ul > li > ul:before {content:""; display:block; position:absolute; left:0; bottom:0; width:1px; height:100%; background:#dcdcdc; }
+.menuUl > li > ul > li > ul > li > ul > li {position:relative; padding:5px 0 0 23px !important; }
+.menuUl > li > ul > li > ul > li > ul > li:before {content:""; display:block; position:absolute; left:0; top:28px; width:23px; height:1px; background:#dcdcdc; }
+.menuUl > li > ul > li > ul > li > ul > li:last-child:after {content:""; display:block; position:absolute; left:0; top:29px; width:23px; height:100%; background:#fff; }
+
+/* 4차메뉴 */
+.menuUl > li > ul > li > ul > li > ul > li > div {position:relative; padding-left:45px !important; border:1px dashed #b2b7c7 !important; background:#fafafa !important; }
+.menuUl > li > ul > li > ul > li > ul > li.sortableListsOpen > div {border:1px dashed #53657c !important; }
+.menuUl > li > ul > li > ul > li > ul > li > div > a {display:inline-block; padding:11px 11px 11px 5px !important; line-height:20px; font-size:0.7rem; font-family:'NotoSans' !important; color:#666;}
+.menuUl > li > ul > li > ul > li > ul > li > div > a:hover {text-decoration:underline; }
+.menuUl > li > ul > li > ul > li > ul > li > div > a:active, 
+.menuUl > li > ul > li > ul > li > ul > li > div > a:focus {color:#222; text-decoration:underline;} 
+ 
+ /* 5차메뉴 트리구조 선 */
+.menuUl > li > ul > li > ul > li > ul > li > ul {position:relative; margin-left:22px; }
+.menuUl > li > ul > li > ul > li > ul > li > ul:before {content:""; display:block; position:absolute; left:0; bottom:0; width:1px; height:100%; background:#dcdcdc; }
+.menuUl > li > ul > li > ul > li > ul > li > ul > li {position:relative; padding:5px 0 0 23px !important; }
+.menuUl > li > ul > li > ul > li > ul > li > ul > li:before {content:""; display:block; position:absolute; left:0; top:26px; width:23px; height:1px; background:#dcdcdc; }
+.menuUl > li > ul > li > ul > li > ul > li > ul > li:last-child:after {content:""; display:block; position:absolute; left:0; top:27px; width:23px; height:100%; background:#fff; }
+
+/* 5차메뉴 */
+.menuUl > li > ul > li > ul > li > ul > li > ul > li > div {position:relative; padding-left:45px !important; border:none; background:#f7f7f7 !important; }
+.menuUl > li > ul > li > ul > li > ul > li > ul > li > div > a {display:inline-block; padding:11px 11px 11px 5px !important; line-height:20px; font-size:0.7rem; font-family:'NotoSans' !important; olor:#666;}
+.menuUl > li > ul > li > ul > li > ul > li > ul > li > div > a:hover {text-decoration:underline; }
+.menuUl > li > ul > li > ul > li > ul > li > ul > li > div > a:active, 
+.menuUl > li > ul > li > ul > li > ul > li > ul > li > div > a:focus {color:#222; text-decoration:underline;} 
+
+/* +, - 아이콘 */
+.menuUl li span.sortableListsOpener {position:absolute ; left:15px; top:50%; float:none !important; display:block !important; width:14px; height:14px; margin:-7px 0 0 0 !important; }
+.menuUl li span.sortableListsOpener img {display:block; }
+
+/* 메뉴 이동 1,2,3 */
+.sortableListsBase {clear:both; margin-top:10px; background-color :#dce4ed !important; border :1px solid #b2b7c7 !important; }
+.sortableListsBase li {padding:0 !important; margin:0 !important; border:none !important; font-family:'NotoSans' !important; }
+.sortableListsBase li ul {background-color:#fff !important; }
+.sortableListsBase li div  {position:relative; padding-left:50px !important; background:#fff !important; border:2px solid #e7e7e7 !important; }
+
+/* 200602 추가 :메뉴조회에만 들어가는 버튼들 다른데서는 절대 쓰지 마세요 */
+.sortableListsBase button.btnmnSt1 {padding:0 8px; font-family:"NotoSans"; font-size:14px; line-height:24px; color:#555 !important; font-weight:300; border:1px solid #dcdcdc; background:#f1f1f1; border-radius:0; }
+.sortableListsBase button.btnmnSt2 {padding:0 8px; font-family:"NotoSans"; font-size:14px; line-height:24px; color:#0081dd !important; font-weight:300; border:1px solid #0081dd; background:#fff; border-radius:0; }
+/* //200602 추가 :메뉴조회에만 들어가는 버튼들 다른데서는 절대 쓰지 마세요 */ 
+
+
+/* 라인 */
+.clickFirst li ul {position:relative; margin-left:22px; overflow:hidden;}
+.clickFirst li ul:before {content:""; display:block; position:absolute; left:0; bottom:0; width:1px; height:100%; background:#dcdcdc; }
+.clickFirst li ul li {position:relative; padding:10px 0 0 23px !important; }
+.clickFirst li ul li:before {content:""; display:block; position:absolute; left:0; top:36px; width:23px; height:1px; background:#dcdcdc; }
+.clickFirst li ul li:last-child:after {content:""; display:block; position:absolute; left:0; top:37px; width:23px; height:100%; background:#fff; }
+.clickFirst > li > ul > li > ul > li:before {top:34px;}
+.clickFirst > li > ul > li > ul > li:last-child:after {top:35px;}
+.clickFirst li ul li ul li ul li {padding:5px 0 0 23px !important; }
+.clickFirst > li > ul > li > ul > li > ul > li:before {top:28px;}
+.clickFirst > li > ul > li > ul > li > ul > li:last-child:after {top:29px;}
+.clickFirst > li > ul > li > ul > li > ul > li > ul > li:before {top:26px;}
+.clickFirst > li > ul > li > ul > li > ul > li > ul > li:last-child:after {top:27px;}
+
+.clickSecond li ul {position:relative; margin-left:22px; overflow:hidden;}
+.clickSecond li ul:before {content:""; display:block; position:absolute; left:0; bottom:0; width:1px; height:100%; background:#dcdcdc; }
+.clickSecond li ul li {position:relative; padding:10px 0 0 23px !important; }
+.clickSecond li ul li:before {content:""; display:block; position:absolute; left:0; top:36px; width:23px; height:1px; background:#dcdcdc; }
+.clickSecond li ul li:last-child:after {content:""; display:block; position:absolute; left:0; top:37px; width:23px; height:100%; background:#fff; }
+.clickSecond li ul li ul li {padding:5px 0 0 23px !important; }
+.clickSecond > li > ul > li > ul > li:before {top:28px;}
+.clickSecond > li > ul > li > ul > li:last-child:after {top:29px;}
+.clickSecond > li > ul > li > ul > li > ul > li:before {top:26px;}
+.clickSecond > li > ul > li > ul > li > ul > li:last-child:after {top:27px;}
+
+.clickThird li ul {position:relative; margin-left:22px; overflow:hidden;}
+.clickThird li ul:before {content:""; display:block; position:absolute; left:0; bottom:0; width:1px; height:100%; background:#dcdcdc; }
+.clickThird li ul li {position:relative; padding:10px 0 0 23px !important; }
+.clickThird li ul li:before {content:""; display:block; position:absolute; left:0; top:28px; width:23px; height:1px; background:#dcdcdc; }
+.clickThird li ul li:last-child:after {content:""; display:block; position:absolute; left:0; top:29px; width:23px; height:100%; background:#fff; }
+.clickThird > li ul li ul li {padding:5px 0 0 23px !important; }
+.clickThird > li > ul > li > ul > li:before {top:26px;}
+.clickThird > li > ul > li > ul > li:last-child:after {top:27px;}
+
+.clickFourth li ul {position:relative; margin-left:22px; overflow:hidden;}
+.clickFourth li ul:before {content:""; display:block; position:absolute; left:0; bottom:0; width:1px; height:100%; background:#dcdcdc; }
+.clickFourth li ul li {position:relative; padding:5px 0 0 23px !important; }
+.clickFourth li ul li:before {content:""; display:block; position:absolute; left:0; top:26px; width:23px; height:1px; background:#dcdcdc; }
+.clickFourth li ul li:last-child:after {content:""; display:block; position:absolute; left:0; top:27px; width:23px; height:100%; background:#fff; }
+
+/* +, - 아이콘 */
+.clickFirst li span.sortableListsOpener, 
+.clickSecond li span.sortableListsOpener, 
+.clickThird li span.sortableListsOpener, 
+.clickFourth li span.sortableListsOpener, 
+.clickFifth li span.sortableListsOpener{position:absolute ; left:15px; top:50%; float:none !important; display:block !important; width:14px; height:14px; margin:-7px 0 0 0 !important; }
+
+.clickFirst li span.sortableListsOpener img,
+.clickSecond li span.sortableListsOpener img, 
+.clickThird li span.sortableListsOpener img, 
+.clickFourth li span.sortableListsOpener img, 
+.clickFifth li span.sortableListsOpener img {display:block; }
+
+/* 메뉴 이동 1 ************************************************************************************************************************************************************/
+.clickFirst {clear:both; margin-top:10px; }
+.clickFirst li {padding:0 !important; margin:0 !important; border:none !important; font-family:'NotoSans' !important; }
+/* 메뉴 이동 1-1 */
+.clickFirst li div {position:relative; padding:0 !important; background:none !important; }
+.clickFirst > li {position:relative; margin-bottom:10px !important; }
+.clickFirst > li > div {position:relative; padding-left:45px !important; background:#fff !important; border:2px solid #e7e7e7 !important; }
+.clickFirst > li.sortableListsOpen > div  {background:#f2f9fd !important; border:2px solid #0081dd !important; }
+.clickFirst > li.sortableListsOpen > div a{color:#0081dd; text-decoration:underline; } 
+.clickFirst > li > div > a {display:inline-block; padding:17px 17px 17px 5px !important; line-height:22px; font-size:0.85rem; font-family:'NotoSans' !important; font-weight:500; color:#222; }
+
+/* 메뉴 이동 1-2 */
+.clickFirst > li > ul > li > div {position:relative; padding-left:45px !important; border:1px solid #dcdcdc !important; background:#fff !important; }
+.clickFirst > li > ul > li.sortableListsOpen > div {border:1px solid #0081dd !important; }
+.clickFirst > li > ul > li > div > a {display:inline-block; padding:15px 15px 15px 5px !important; line-height:20px; font-size:0.8rem; font-family:'NotoSans' !important; font-weight:500; color:#444;}
+
+/* 메뉴 이동 1-3 */
+.clickFirst > li > ul > li > ul > li > div {position:relative; padding-left:45px !important; border:1px solid #dcdcdc !important; background:#fafafa !important; }
+.clickFirst > li > ul > li > ul > li.sortableListsOpen > div {border:1px solid #53657c !important; }
+.clickFirst > li > ul > li > ul > li > div > a {display:inline-block; padding:13px 13px 13px 5px !important; line-height:20px; font-size:0.75rem; font-family:'NotoSans' !important; font-weight:400; color:#555;}
+
+/* 메뉴 이동 1-4 */
+.clickFirst > li > ul > li > ul > li > ul > li > div {position:relative; padding-left:45px !important; border:1px dashed #b2b7c7 !important; background:#fafafa !important; }
+.clickFirst > li > ul > li > ul > li > ul > li.sortableListsOpen > div {border:1px dashed #53657c !important; }
+.clickFirst > li > ul > li > ul > li > ul > li > div > a {display:inline-block; padding:11px 11px 11px 5px !important; line-height:20px; font-size:0.7rem; font-family:'NotoSans' !important; color:#666;}
+
+/* 메뉴 이동 1-5 */
+.clickFirst > li > ul > li > ul > li > ul > li > ul > li > div {position:relative; padding-left:45px !important; border:none !important; background:#f7f7f7 !important; }
+.clickFirst > li > ul > li > ul > li > ul > li > ul > li > div > a {display:inline-block; padding:11px 11px 11px 5px !important; line-height:20px; font-size:0.7rem; font-family:'NotoSans' !important; olor:#666;}
+
+/* 메뉴 이동 2 ************************************************************************************************************************************************************/
+.clickSecond {clear:both; margin-top:10px; }
+/* .clickSecond li {padding:0 !important; margin:0 !important; border:none !important; font-family:'NotoSans' !important; } 200703 디자이너 추가 수정 내용 주석처리. 아래 내용으로 대체 */
+.clickSecond li {position:relative; padding:10px 0 0 23px !important; margin:0 !important; border:none !important; font-family:'NotoSans' !important; }
+
+/* 메뉴 이동 2-2 */
+.clickSecond li div {position:relative; padding:0 !important; background:none !important;}
+.clickSecond > li {position:relative; margin-bottom:10px !important; }
+
+.clickSecond > li > div {position:relative; padding-left:45px !important; border:1px solid #dcdcdc !important; background:#fff !important; }
+.clickSecond > li.sortableListsOpen > div {border:1px solid #0081dd !important; }
+.clickSecond > li > div > a {display:inline-block; padding:15px 15px 15px 5px !important; line-height:20px; font-size:0.8rem; font-family:'NotoSans' !important; font-weight:500; color:#444;}
+
+/* 메뉴 이동 2-3 */
+.clickSecond > li > ul > li > div {position:relative; padding-left:45px !important; border:1px solid #dcdcdc !important; background:#fafafa !important; }
+.clickSecond > li > ul > li.sortableListsOpen > div {border:1px solid #53657c !important; }
+.clickSecond > li > ul > li > div > a {display:inline-block; padding:13px 13px 13px 5px !important; line-height:20px; font-size:0.75rem; font-family:'NotoSans' !important; font-weight:400; color:#555;}
+
+/* 메뉴 이동 2-4 */
+.clickSecond > li > ul > li > ul > li > div {position:relative; padding-left:45px !important; border:1px dashed #b2b7c7 !important; background:#fafafa !important; }
+.clickSecond > li > ul > li > ul > li.sortableListsOpen > div {border:1px dashed #53657c !important; }
+.clickSecond > li > ul > li > ul > li > div > a {display:inline-block; padding:11px 11px 11px 5px !important; line-height:20px; font-size:0.7rem; font-family:'NotoSans' !important; color:#666;}
+
+/* 메뉴 이동 2-5 */
+.clickSecond > li > ul > li > ul > li > ul > li > div {position:relative; padding-left:45px !important; border:none !important; background:#f7f7f7 !important; }
+.clickSecond > li > ul > li > ul > li > ul > li > div > a {display:inline-block; padding:11px 11px 11px 5px !important; line-height:20px; font-size:0.7rem; font-family:'NotoSans' !important; olor:#666;}
+
+/* 메뉴 이동 3 ************************************************************************************************************************************************************/
+.clickThird {clear:both; margin-top:10px; }
+/* .clickThird li {padding:0 !important; margin:0 !important; border:none !important; font-family:'NotoSans' !important; } 200703 디자이너 추가 수정 내용 주석처리. 아래 내용으로 대체 */
+.clickThird li {position:relative; padding:10px 0 0 23px !important; margin:0 !important; border:none !important; font-family:'NotoSans' !important; }
+/* 메뉴 이동 3-3 */
+.clickThird li div {position:relative; padding:0 !important; background:none !important;}
+.clickThird > li {position:relative; margin-bottom:10px !important; }
+
+.clickThird > li > div {position:relative; padding-left:45px !important; border:1px solid #dcdcdc !important; background:#fafafa !important; }
+.clickThird > li.sortableListsOpen > div {border:1px solid #53657c !important; }
+.clickThird > li > div > a  {display:inline-block; padding:13px 13px 13px 5px !important; line-height:20px; font-size:0.75rem; font-family:'NotoSans' !important; font-weight:400; color:#555;}
+
+/* 메뉴 이동 3-4 */
+.clickThird > li ul li {padding:5px 0 0 23px !important; } /* 200703 개발자 추가 */
+.clickThird > li > ul > li > div {position:relative; padding-left:45px !important; border:1px dashed #b2b7c7 !important; background:#fafafa !important; }
+.clickThird > li > ul > li.sortableListsOpen > div  {border:1px dashed #53657c !important; }
+.clickThird > li > ul > li > div > a {display:inline-block; padding:11px 11px 11px 5px !important; line-height:20px; font-size:0.7rem; font-family:'NotoSans' !important; color:#666;}
+
+/* 메뉴 이동 3-5 */
+.clickThird > li > ul > li > ul > li  {position:relative; margin-bottom:0 !important; }
+.clickThird > li > ul > li > ul > li > div  {position:relative; padding-left:45px !important; border:none !important; background:#f7f7f7 !important; }
+.clickThird > li > ul > li > ul > li > div > a {display:inline-block; padding:11px 11px 11px 5px !important; line-height:20px; font-size:0.7rem; font-family:'NotoSans' !important; olor:#666;}
+
+/* 메뉴 이동 4 ************************************************************************************************************************************************************/
+.clickFourth {clear:both; margin-top:10px; }
+/* .clickFourth li {padding:0 !important; margin:0 !important; border:none !important; font-family:'NotoSans' !important; } 200703 디자이너 추가 수정 내용 주석처리. 아래 내용으로 대체 */
+.clickFourth li {position:relative; padding:5px 0 0 23px !important; margin:0 !important; border:none !important; font-family:'NotoSans' !important; }
+/* 메뉴 이동 4-4 */
+.clickFourth li div {position:relative; padding:0 !important; background:none !important;}
+.clickFourth > li > div {position:relative; padding-left:45px !important; border:1px dashed #b2b7c7 !important; background:#fafafa !important; }
+.clickFourth > li.sortableListsOpen > div {border:1px dashed #53657c !important; }
+.clickFourth > li > div > a {display:inline-block; padding:11px 11px 11px 5px !important; line-height:20px; font-size:0.7rem; font-family:'NotoSans' !important; color:#666;}
+
+/* 메뉴 이동 4-5 */
+.clickFourth > li > ul > li {position:relative; margin-bottom:0 !important; }
+.clickFourth > li > ul > li > div {position:relative; padding-left:45px !important; border:none !important; background:#f7f7f7 !important; }
+.clickFourth > li > ul > li > div > a {display:inline-block; padding:11px 11px 11px 5px !important; line-height:20px; font-size:0.7rem; font-family:'NotoSans' !important; olor:#666;}
+
+/* 메뉴 이동 5 ************************************************************************************************************************************************************/
+.clickFifth {clear:both; margin-top:10px; }
+/* .clickFifth li {padding:0 !important; margin:0 !important; border:none !important; font-family:'NotoSans' !important; } */
+.clickFifth li {position:relative; padding:5px 0 0 23px !important; !important; margin:0 !important; border:none !important; font-family:'NotoSans' !important; }
+/* 메뉴 이동 5-5 */
+.clickFifth li div {position:relative; padding:0 !important; background:none !important;}
+.clickFifth > li > div {position:relative; padding-left:45px !important; border:none !important; background:#f7f7f7 !important; }
+.clickFifth > li > div > a {display:inline-block; padding:11px 11px 11px 5px !important; line-height:20px; font-size:0.7rem; font-family:'NotoSans' !important; olor:#666;}
+
+
+
+/* 디자이너 수정 버전
+	.clickFirst {clear:both; margin-top:10px; }
+	.clickFirst li {padding:0 !important; margin:0 !important; border:none !important; font-family:'NotoSans' !important; }
+	.clickFirst li div {position:relative; padding:0 !important; background:none !important; }
+	.clickFirst > li {position:relative; margin-bottom:15px !important; }
+	.clickFirst > li > div {position:relative; padding-left:50px !important; background:#fff !important; border:2px solid #e7e7e7; }
+	.clickFirst > li > div > a {display:inline-block; padding:10px 0 10px 10px !important; line-height:20px; font-size:16px; font-family:'NotoSans' !important; font-weight:500; color:#222; background:url('/images/web/apple/admin_mn_icon1.png') no-repeat -39px center; }
+
+	.clickFirst > li > ul {padding-left:20px; background:url('/images/web/apple/admin_mn_line1.png') repeat-y 1px bottom; }
+	.clickFirst > li > ul > li {padding:4px 0 0 19px !important; background:url('/images/web/apple/admin_mn_line3.png') no-repeat left 21px; }
+	.clickFirst > li > ul > li:last-child {background:url('/images/web/apple/admin_mn_line4.png') no-repeat left 21px; }
+	.clickFirst > li > ul > li > div {position:relative; padding-left:50px !important; border:1px solid #dcdcdc; background:#fafafa !important; }
+	.clickFirst > li > ul > li > div > a {display:inline-block; padding:10px 0 10px 15px !important; line-height:19px; font-size:15px; font-family:'NotoSans' !important; font-weight:500; color:#444; background:url('/images/web/apple/admin_mn_icon2.png') no-repeat -38px center; }
+
+	.clickFirst > li > ul > li > ul {padding-left:20px; background:url('/images/web/apple/admin_mn_line2.png') no-repeat left bottom; }
+	.clickFirst > li > ul > li > ul > li {padding:4px 0 0 19px !important; background:url('/images/web/apple/admin_mn_line3.png') no-repeat left 17px; }
+	.clickFirst > li > ul > li > ul > li:last-child {background:url('/images/web/apple/admin_mn_line4.png') no-repeat left 21px; }
+	.clickFirst > li > ul > li > ul > li > div {padding-left:50px !important; border:1px dashed #dcdcdc !important; background:#fafafa !important; }
+	.clickFirst > li > ul > li > ul > li > div > a {display:inline-block; padding:10px 0 10px 15px !important; line-height:18px; font-size:14px; font-family:'NotoSans' !important; font-weight:400; color:#555; background:url('/images/web/apple/admin_mn_icon2.png') no-repeat -38px center; }
+*/
+
+/* 원본
+	.clickFirst > li > ul > li > ul > li > ul {padding-left:20px; background:url('/images/web/apple/admin_mn_line2.png') no-repeat left bottom; }
+	.clickFirst > li > ul > li > ul > li > ul > li {padding:4px 0 0 19px !important; background:url('/images/web/apple/admin_mn_line3.png') no-repeat left 17px; }
+	.clickFirst > li > ul > li > ul > li > ul > li:last-child {background:url('/images/web/apple/admin_mn_line4.png') no-repeat left 21px; }
+	.clickFirst > li > ul > li > ul > li > ul > li > div {padding-left:50px !important; border:1px solid #b2b7c7 !important; background:#f5f7f8 !important; }
+	.clickFirst > li > ul > li > ul > li > ul > li > div > a {display:inline-block; padding:10px 0 10px 15px !important; line-height:18px; font-size:12px; font-family:'NotoSans' !important; font-weight:bold; color:#222; background:url('/images/web/apple/admin_mn_icon2.png') no-repeat -38px center; }
+	 
+	.clickFirst > li > ul > li > ul > li > ul > li > ul {padding-left:20px; background:url('/images/web/apple/admin_mn_line2.png') no-repeat left bottom; }
+	.clickFirst > li > ul > li > ul > li > ul > li > ul > li {padding:4px 0 0 19px !important; background:url('/images/web/apple/admin_mn_line3.png') no-repeat left 17px; }
+	.clickFirst > li > ul > li > ul > li > ul > li > ul > li:last-child {background:url('/images/web/apple/admin_mn_line4.png') no-repeat left 21px; }
+	.clickFirst > li > ul > li > ul > li > ul > li > ul > li > div {padding-left:50px !important; border:1px solid #b2b7c7 !important; background:#dbdfe1 !important; }
+	.clickFirst > li > ul > li > ul > li > ul > li > ul > li > div > a {display:inline-block; padding:10px 0 10px 15px !important; line-height:18px; font-size:12px; font-family:'NotoSans' !important; font-weight:bold; color:#222; background:url('/images/web/apple/admin_mn_icon2.png') no-repeat -38px center; }
+*/
+
+/* 메뉴 이동 2
+.clickSecond {clear:both; margin-top:10px; }
+.clickSecond li {padding:0 !important; margin:0 !important; border:none !important; font-family:'NotoSans' !important; }
+.clickSecond li div {position:relative; padding:0 !important; background:none !important; }
+.clickSecond > li {padding:4px 0 0 19px !important;}
+.clickSecond > li > div {position:relative; padding-left:50px !important; border:1px solid #dcdcdc; background:#fafafa !important; }
+.clickSecond > li.sortableListsOpen > div {border:1px solid #0081dd !important; }
+.clickSecond > li > div > a {display:inline-block; padding:10px 0 10px 15px !important; line-height:19px; font-size:15px; font-family:'NotoSans' !important; font-weight:500; color:#444; background:url('/images/web/apple/admin_mn_icon2.png') no-repeat -38px center; }
+
+.clickSecond > li > ul {padding-left:20px; background:url('/images/web/apple/admin_mn_line2.png') no-repeat left bottom; }
+.clickSecond > li > ul > li {padding:4px 0 0 19px !important; background:url('/images/web/apple/admin_mn_line3.png') no-repeat left 17px; }
+.clickSecond > li > ul > li:last-child {background:url('/images/web/apple/admin_mn_line4.png') no-repeat left 21px; }
+.clickSecond > li > ul > li > div {padding-left:50px !important; border:1px dashed #dcdcdc !important; background:#fafafa !important; }
+.clickSecond > li > ul > li > div > a {display:inline-block; padding:10px 0 10px 15px !important; line-height:18px; font-size:14px; font-family:'NotoSans' !important; font-weight:400; color:#555; background:url('/images/web/apple/admin_mn_icon2.png') no-repeat -38px center; } */
+
+
+/* 디자이너 수정 버전
+	.clickSecond {clear:both; margin-top:10px; }
+	.clickSecond li {padding:0 !important; margin:0 !important; border:none !important; font-family:'NotoSans' !important; }
+	.clickSecond li div {position:relative; padding:0 !important; background:none !important; }
+	.clickSecond > li {position:relative; margin-bottom:15px !important; }
+	.clickSecond > li > div {position:relative; padding-left:50px !important; background:#fff !important; border:2px solid #e7e7e7; }
+	.clickSecond > li > div > a {display:inline-block; padding:10px 0 10px 10px !important; line-height:20px; font-size:16px; font-family:'NotoSans' !important; font-weight:500; color:#222; background:url('/images/web/apple/admin_mn_icon1.png') no-repeat -39px center; }
+
+	.clickSecond > li > ul {padding-left:20px; background:url('/images/web/apple/admin_mn_line1.png') repeat-y 1px bottom; }
+	.clickSecond > li > ul > li {padding:4px 0 0 19px !important; background:url('/images/web/apple/admin_mn_line3.png') no-repeat left 21px; }
+	.clickSecond > li > ul > li:last-child {background:url('/images/web/apple/admin_mn_line4.png') no-repeat left 21px; }
+	.clickSecond > li > ul > li > div {padding-left:50px !important; border:1px dashed #dcdcdc !important; background:#fafafa !important; }
+	.clickSecond > li > ul > li > div > a {display:inline-block; padding:10px 0 10px 15px !important; line-height:18px; font-size:14px; font-family:'NotoSans' !important; font-weight:400; color:#555; background:url('/images/web/apple/admin_mn_icon2.png') no-repeat -38px center; }
+*/
+
+/* 원본
+	.clickSecond > li > ul > li > ul {padding-left:20px; background:url('/images/web/apple/admin_mn_line2.png') no-repeat left bottom; }
+	.clickSecond > li > ul > li > ul > li {padding:4px 0 0 19px !important; background:url('/images/web/apple/admin_mn_line3.png') no-repeat left 17px; }
+	.clickSecond > li > ul > li > ul > li:last-child {background:url('/images/web/apple/admin_mn_line4.png') no-repeat left 21px; }
+	.clickSecond > li > ul > li > ul > li > div {padding-left:50px !important; border:1px dashed #dcdcdc !important; background:#fafafa !important; }
+	.clickSecond > li > ul > li > ul > li > div > a {display:inline-block; padding:10px 0 10px 15px !important; line-height:18px; font-size:14px; font-family:'NotoSans' !important; font-weight:400; color:#555; background:url('/images/web/apple/admin_mn_icon2.png') no-repeat -38px center; }
+*/
+
+/* 메뉴 이동 3
+.clickThird {clear:both; margin-top:10px; }
+.clickThird li {padding:0 !important; margin:0 !important; border:none !important; font-family:'NotoSans' !important; }
+.clickThird li div {position:relative; padding:0 !important; background:none !important; }
+.clickThird > li {padding:4px 0 0 19px !important;}
+.clickThird > li > div {padding-left:50px !important; border:1px dashed #dcdcdc !important; background:#fafafa !important; }
+.clickThird > li > div > a {display:inline-block; padding:10px 0 10px 15px !important; line-height:18px; font-size:14px; font-family:'NotoSans' !important; font-weight:400; color:#555; background:url('/images/web/apple/admin_mn_icon2.png') no-repeat -38px center; }*/
+
+/* 디자이너 수정 버전
+	.clickThird {clear:both; margin-top:10px; }
+	.clickThird li {padding:0 !important; margin:0 !important; border:none !important; font-family:'NotoSans' !important; }
+	.clickThird li div {position:relative; padding:0 !important; background:none !important; }
+	.clickThird > li {position:relative; margin-bottom:15px !important; }
+	.clickThird > li > div {padding-left:50px !important; border:1px dashed #dcdcdc !important; background:#fafafa !important; }
+	.clickThird > li > div > a {display:inline-block; padding:10px 0 10px 15px !important; line-height:18px; font-size:14px; font-family:'NotoSans' !important; font-weight:400; color:#555; background:url('/images/web/apple/admin_mn_icon2.png') no-repeat -38px center; }
+*/
+
+/* 원본
+	.clickThird > li > ul {padding-left:20px; background:url('/images/web/apple/admin_mn_line1.png') repeat-y 1px bottom; }
+	.clickThird > li > ul > li {padding:4px 0 0 19px !important; background:url('/images/web/apple/admin_mn_line3.png') no-repeat left 21px; }
+	.clickThird > li > ul > li:last-child {background:url('/images/web/apple/admin_mn_line4.png') no-repeat left 21px; }
+	.clickThird > li > ul > li > div {position:relative; padding-left:50px !important; border:1px solid #dcdcdc; background:#fafafa !important; }
+	.clickThird > li > ul > li > div > a {display:inline-block; padding:10px 0 10px 15px !important; line-height:19px; font-size:15px; font-family:'NotoSans' !important; font-weight:500; color:#444; background:url('/images/web/apple/admin_mn_icon2.png') no-repeat -38px center; }
+
+	.clickThird > li > ul > li > ul {padding-left:20px; background:url('/images/web/apple/admin_mn_line2.png') no-repeat left bottom; }
+	.clickThird > li > ul > li > ul > li {padding:4px 0 0 19px !important; background:url('/images/web/apple/admin_mn_line3.png') no-repeat left 17px; }
+	.clickThird > li > ul > li > ul > li:last-child {background:url('/images/web/apple/admin_mn_line4.png') no-repeat left 21px; }
+	.clickThird > li > ul > li > ul > li > div {padding-left:50px !important; border:1px dashed #dcdcdc !important; background:#fafafa !important; }
+	.clickThird > li > ul > li > ul > li > div > a {display:inline-block; padding:10px 0 10px 15px !important; line-height:18px; font-size:14px; font-family:'NotoSans' !important; font-weight:400; color:#555; background:url('/images/web/apple/admin_mn_icon2.png') no-repeat -38px center; }
+*/
+
+/* 메뉴 이동 2
+.clickSecond {clear:both; margin-top:10px; }
+.clickSecond li {padding:4px 0 0 19px !important; margin:0 !important; border:none !important; font-family:'NotoSans' !important; }
+.clickSecond li div {position:relative; padding:0 !important; background:none !important; }
+.clickSecond > li {position:relative; margin-bottom:15px !important; }
+.clickSecond > li > div {position:relative; padding-left:50px !important; border:1px solid #dcdcdc; background:#fafafa !important; }
+.clickSecond > li > div > a {display:inline-block; padding:10px 0 10px 15px !important; line-height:19px; font-size:15px; font-family:'NotoSans' !important; font-weight:500; color:#444; background:url('/images/web/apple/admin_mn_icon2.png') no-repeat -38px center; }
+
+.clickSecond > li > ul {padding-left:20px; background:url('/images/web/apple/admin_mn_line1.png') repeat-y 1px bottom; }
+.clickSecond > li > ul > li {padding:4px 0 0 19px !important; background:url('/images/web/apple/admin_mn_line3.png') no-repeat left 17px; }
+.clickSecond > li > ul > li:last-child {background:url('/images/web/apple/admin_mn_line4.png') no-repeat left 21px; }
+.clickSecond > li > ul > li > div {padding-left:50px !important; border:1px dashed #dcdcdc !important; background:#fafafa !important; }
+.clickSecond > li > ul > li > div > a {display:inline-block; padding:10px 0 10px 15px !important; line-height:18px; font-size:14px; font-family:'NotoSans' !important; font-weight:400; color:#555; background:url('/images/web/apple/admin_mn_icon2.png') no-repeat -38px center; }
+
+.clickSecond > li > ul > li > ul {padding-left:20px; background:url('/images/web/apple/admin_mn_line2.png') no-repeat left bottom; }
+.clickSecond > li > ul > li > ul > li {padding:4px 0 0 19px !important; background:url('/images/web/apple/admin_mn_line3.png') no-repeat left 17px; }
+.clickSecond > li > ul > li > ul > li:last-child {background:url('/images/web/apple/admin_mn_line4.png') no-repeat left 21px; }
+.clickSecond > li > ul > li > ul > li > div  {padding-left:50px !important; border:1px solid #b2b7c7 !important; background:#f5f7f8 !important; }
+.clickSecond > li > ul > li > ul > li > div > a {display:inline-block; padding:10px 0 10px 15px !important; line-height:18px; font-size:12px; font-family:'NotoSans' !important; font-weight:bold; color:#222; background:url('/images/web/apple/admin_mn_icon2.png') no-repeat -38px center; }
+
+.clickSecond > li > ul > li > ul > li > ul {padding-left:20px; background:url('/images/web/apple/admin_mn_line2.png') no-repeat left bottom; }
+.clickSecond > li > ul > li > ul > li > ul > li {padding:4px 0 0 19px !important; background:url('/images/web/apple/admin_mn_line3.png') no-repeat left 17px; }
+.clickSecond > li > ul > li > ul > li > ul > li:last-child {background:url('/images/web/apple/admin_mn_line4.png') no-repeat left 21px; }
+.clickSecond > li > ul > li > ul > li > ul > li > div {padding-left:50px !important; border:1px solid #b2b7c7 !important; background:#dbdfe1 !important; }
+.clickSecond > li > ul > li > ul > li > ul > li > div > a {display:inline-block; padding:10px 0 10px 15px !important; line-height:18px; font-size:12px; font-family:'NotoSans' !important; font-weight:bold; color:#222; background:url('/images/web/apple/admin_mn_icon2.png') no-repeat -38px center; }*/
+
+/* 메뉴 이동 3
+.clickThird { clear:both; margin-top:10px; }
+.clickThird li {padding:4px 0 0 19px  !important; margin:0 !important; border:none !important; font-family:'NotoSans' !important; }
+.clickThird li div {position:relative; padding:0 !important; background:none !important; }
+.clickThird > li {position:relative; margin-bottom:15px !important; }
+.clickThird > li > div{position:relative; padding-left:50px !important; background:#fff !important; border:2px solid #e7e7e7; }
+.clickThird > li > div > a {display:inline-block; padding:10px 0 10px 15px !important; line-height:18px; font-size:14px; font-family:'NotoSans' !important; font-weight:400; color:#555; background:url('/images/web/apple/admin_mn_icon2.png') no-repeat -38px center; }
+
+.clickThird > li > ul {padding-left:20px; background:url('/images/web/apple/admin_mn_line1.png') repeat-y 1px bottom; }
+.clickThird > li > ul > li {padding:4px 0 0 19px !important; background:url('/images/web/apple/admin_mn_line3.png') no-repeat left 21px; }
+.clickThird > li > ul > li:last-child {background:url('/images/web/apple/admin_mn_line4.png') no-repeat left 21px; }
+.clickThird > li > ul > li > div {position:relative; padding-left:50px !important; border:1px solid #b2b7c7; background:#f5f7f8 !important; }
+.clickThird > li > ul > li > div > a {display:inline-block; padding:10px 0 10px 15px !important; line-height:18px; font-size:12px; font-family:'NotoSans' !important; font-weight:bold; color:#222; background:url('/images/web/apple/admin_mn_icon2.png') no-repeat -38px center; }
+
+.clickThird > li > ul > li > ul {padding-left:20px; background:url('/images/web/apple/admin_mn_line2.png') no-repeat left bottom; }
+.clickThird > li > ul > li > ul > li {padding:4px 0 0 19px !important; background:url('/images/web/apple/admin_mn_line3.png') no-repeat left 17px; }
+.clickThird > li > ul > li > ul > li:last-child {background:url('/images/web/apple/admin_mn_line4.png') no-repeat left 21px; }
+.clickThird > li > ul > li > ul > li > div {padding-left:50px !important; border:1px solid #b2b7c7 !important; background:#dbdfe1 !important; }
+.clickThird > li > ul > li > ul > li > div > a {display:inline-block; padding:10px 0 10px 15px !important; line-height:18px; font-size:12px; font-family:'NotoSans' !important; font-weight:bold; color:#222; background:url('/images/web/apple/admin_mn_icon2.png') no-repeat -38px center; } */
+
+/* 메뉴 이동 4
+.clickFourth { clear:both; margin-top:10px; }
+.clickFourth li {padding:4px 0 0 19px  !important; margin:0 !important; border:none !important; font-family:'NotoSans' !important; }
+.clickFourth li div {position:relative; padding:0 !important; background:none !important; }
+.clickFourth > li {position:relative; margin-bottom:15px !important; }
+.clickFourth > li > div {position:relative; padding-left:50px !important; border:1px solid #b2b7c7; background:#f5f7f8 !important; }
+.clickFourth > li > div > a {display:inline-block; padding:10px 0 10px 15px !important; line-height:18px; font-size:12px; font-family:'NotoSans' !important; font-weight:bold; color:#222; background:url('/images/web/apple/admin_mn_icon2.png') no-repeat -38px center; }
+
+.clickFourth > li > ul {padding-left:20px; background:url('/images/web/apple/admin_mn_line1.png') repeat-y 1px bottom; }
+.clickFourth > li > ul > li {padding:4px 0 0 19px !important; background:url('/images/web/apple/admin_mn_line3.png') no-repeat left 21px; }
+.clickFourth > li > ul > li:last-child {background:url('/images/web/apple/admin_mn_line4.png') no-repeat left 21px; }
+.clickFourth > li > ul > li > div {position:relative; padding-left:50px !important; border:1px solid #b2b7c7; background:#dbdfe1 !important; }
+.clickFourth > li > ul > li > div > a {display:inline-block; padding:10px 0 10px 15px !important; line-height:18px; font-size:12px; font-family:'NotoSans' !important; font-weight:bold; color:#222; background:url('/images/web/apple/admin_mn_icon2.png') no-repeat -38px center; } */
+
+/* 메뉴 이동 5
+.clickFifth { clear:both; margin-top:10px; }
+.clickFifth li {padding:4px 0 0 19px  !important; margin:0 !important; border:none !important; font-family:'NotoSans' !important; }
+.clickFifth li div {position:relative; padding:0 !important; background:none !important; }
+.clickFifth > li {position:relative; margin-bottom:15px !important; }
+.clickFifth > li > div {position:relative; padding-left:50px !important; border:1px solid #b2b7c7; background:#dbdfe1 !important; }
+.clickFifth > li > div > a {display:inline-block; padding:10px 0 10px 15px !important; line-height:18px; font-size:12px; font-family:'NotoSans' !important; font-weight:bold; color:#222; background:url('/images/web/apple/admin_mn_icon2.png') no-repeat -38px center; } */
+
+
+/*로딩*/
+.loading{margin:18% auto; width:250px; padding:30px; border-radius:10px; border:1px solid #ddd; background:#fff; font-family:NGBold; }
+.loading .img {text-align:center; }
+.loading .img img{width:130px; }
+
+.loading h2{margin-top:10px; text-align:center; line-height:25px; color:#0081d2; font-size:20px; }
+.loading h2 span{display:block; font-size:15px; color:#555; }
+
+/* 기본입력 한국어 시작 */
+.setKorea { ime-mode:active; }
+/* 기본입력 한국어 끝 */
+
+/* 비팝업 스타일 1 */
+.bPopup_style1 { opacity:0; 	display:none; position:relative; border:5px solid #fff; padding:20px; background-color:#fff; width:80%; height:80%; overflow-y:scroll}

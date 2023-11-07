@@ -1,0 +1,205 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="in_cpyrht">
+
+	<!-- 저작권 신고 접수인 시스템  리스트 sql-->
+	<sql id ="selectCpyrhtSmList">
+	  SELECT   IT.INSTT_CODE
+	          ,IT.INSTT_NM
+	          ,IT.INSTT_TY
+	          ,SM.SYS_ID
+	          ,SM.SYS_NM
+	          ,SM.SYS_TY
+              ,( SELECT COUNT(*) FROM TAP_IN_CPYRHT_MANAGE CP WHERE CP.SYS_ID = SM.SYS_ID ) AS TOTAL_CNT
+	    FROM   TAP_IM_INSTT_MANAGE IT, TAP_SM_SYS_MANAGE SM
+	   WHERE   IT.INSTT_CODE = SM.INSTT_CODE
+         AND   SM.SYS_STTUS = 'O'
+	   <include refid="srchCpyrhtSmList" /> 
+	ORDER BY   IT.INSTT_CODE, IT.INSTT_LEVEL DESC
+	</sql>
+	
+	 <!--  저작권 신고 접수인 시스템  리스트 검색조건 sql-->
+	<sql id ="srchCpyrhtSmList">
+	
+        <if test='@egovframework.MybatisUtils@isEmpty(author) || author != "master"'>
+         AND SM.SYS_ID NOT IN ('apple')
+        </if>
+        
+        <if test="@egovframework.MybatisUtils@isNotEmpty(insttCode)">
+	     AND   ( IT.INSTT_CODE =  #{insttCode}
+	     
+                    OR  IT.UPPER_INSTT_CODE = #{upperInsttCode}
+                    OR  IT.BSIS_INSTT_CODE = #{bsisInsttCode}
+                    
+               	)
+         </if>
+	    
+	     <if test="@egovframework.MybatisUtils@isNotEmpty(srchSmTxt)">
+	       AND  (  		 
+	       				 SM.SYS_NM like '%'||#{srchSmTxt}||'%'
+	              	  OR SM.SYS_TY like '%'||#{srchSmTxt}||'%' 
+	              	 
+	            )
+	    </if>
+	    
+	</sql>
+	
+	<!--  저작권 신고 접수인 시스템  리스트  -->
+    <select id="selectCpyrhtSmList" parameterType="egovMap" resultType="egovMap">
+	 	<include refid="selectCpyrhtSmList" /> 
+	 </select>
+	 	
+	<!-- 저작권 신고 접수인 시스템  리스트(페이징) -->
+    <select id="selectCpyrhtSmListPaging" parameterType="map" resultType="egovMap">
+    	SELECT
+    		PL.*
+    	FROM (
+        	SELECT 
+        		PO.*
+        		,rownum as rsn
+			FROM (
+	    		<include refid="selectCpyrhtSmList" /> 
+				) PO
+		) PL
+		WHERE
+		<![CDATA[
+			rsn <= #{maxSn} 
+			AND rsn > #{minSn}
+		]]>
+    </select>
+    
+    <!-- 저작권 신고 접수인 시스템  리스트 (페이징 전체 카운트) -->
+    <select id="selectCpyrhtSmListPagingCount" parameterType="map" resultType="int">
+    	SELECT   COUNT(*)
+	      FROM   TAP_IM_INSTT_MANAGE IT, TAP_SM_SYS_MANAGE SM
+	     WHERE   IT.INSTT_CODE = SM.INSTT_CODE
+           AND   SM.SYS_STTUS = 'O'
+           <include refid="srchCpyrhtSmList" /> 
+	  ORDER BY   IT.INSTT_CODE, IT.INSTT_LEVEL DESC
+    </select>
+    
+
+	<!--저작권 신고 접수인 리스트 -->
+    <sql id="selectCpyrhtList">
+       	SELECT   IC.SYS_ID
+			    ,IC.IN_CPYRHT_SN
+			    ,IC.IN_CPYRHT_RCEPTER
+			    ,IC.IN_CRCEPTER_EMAIL
+			    ,IC.IN_CRCEPTER_TELNO
+			    ,IC.IN_CRCEPTER_FXNUM
+			    ,IC.IN_CRCEPTER_ADRES
+			    ,TO_DATE(IC.REG_DT, 'YYYY/MM/DD') AS REG_DT
+			    ,SM.SYS_NM
+	   	  FROM   TAP_IN_CPYRHT_MANAGE IC, TAP_SM_SYS_MANAGE SM
+	     WHERE   IC.SYS_ID = SM.SYS_ID
+	       AND   IC.SYS_ID = #{sysId}
+	       <if test="@egovframework.MybatisUtils@isNotEmpty(srchRceptrNm)">
+	       AND   ( IC.IN_CPYRHT_RCEPTER like '%'||#{srchRceptrNm}||'%')
+	   	  </if>
+    </sql>
+    
+   	<!--저작권 신고 접수인 리스트 -->
+   <select id="selectCpyrhtList" parameterType="map" resultType="egovMap">
+	    <include refid="selectCpyrhtList" /> 
+   </select>
+   
+      <!-- 저작권 신고 접수인 리스트 조회(페이징) -->
+   <select id="selectCpyrhtListPaging" parameterType="map" resultType="egovMap">
+    	SELECT
+    		PL.*
+    	FROM (
+        	SELECT 
+        		PO.*
+        		,rownum as rsn
+			FROM (
+	    		<include refid="selectCpyrhtList" /> 
+				) PO
+		) PL
+		WHERE
+		<![CDATA[
+			rsn <= #{maxSn} 
+			AND rsn > #{minSn}
+		]]>
+    </select>
+    
+    <!--  저작권 신고 접수인 조회(페이징 전체 카운트) -->
+   <select id="selectCpyrhtListPagingCount" parameterType="map" resultType="int">
+      SELECT  COUNT(*)
+	    FROM  TAP_IN_CPYRHT_MANAGE
+	   WHERE  SYS_ID = #{sysId}
+	   <if test="@egovframework.MybatisUtils@isNotEmpty(srchRceptrNm)">
+	       AND   ( IN_CPYRHT_RCEPTER like '%'||#{srchRceptrNm}||'%')
+	   </if>
+    </select>
+    
+    
+    
+	<!--저작권 신고 접수인 정보 조회 -->
+    <select id="selectCpyrhtInfo" parameterType="map" resultType="egovMap">
+       	SELECT   IC.SYS_ID
+			    ,IC.IN_CPYRHT_SN
+			    ,IC.IN_CPYRHT_RCEPTER
+			    ,IC.IN_CRCEPTER_EMAIL
+			    ,IC.IN_CRCEPTER_TELNO
+			    ,IC.IN_CRCEPTER_FXNUM
+			    ,IC.IN_CRCEPTER_ADRES
+			    ,SM.*
+	   	  FROM   TAP_IN_CPYRHT_MANAGE IC, TAP_SM_SYS_MANAGE SM
+	     WHERE   IC.SYS_ID = SM.SYS_ID
+	       AND   IC.IN_CPYRHT_SN = #{inCpyrhtSn}
+    </select>
+    
+    <!-- 저작권 신고 접수인 정보 등록 -->
+	<insert id="insertCpyrhtInfo" parameterType="map" >
+    	INSERT INTO TAP_IN_CPYRHT_MANAGE (
+			 SYS_ID
+			,IN_CPYRHT_SN
+			,IN_CPYRHT_RCEPTER
+			,IN_CRCEPTER_EMAIL
+			,IN_CRCEPTER_TELNO
+			,IN_CRCEPTER_FXNUM
+			,IN_CRCEPTER_ADRES
+			,REG_DT
+			,REG_USID
+			,REG_USNM
+			,REG_USIP
+        ) VALUES (
+             #{sysId}
+			,SEQ_IN_CPYRHT_SN.NEXTVAL
+			,#{inCpyrhtRcepter}
+			,#{inCrcepterEmail}
+			,#{inCrcepterTelno}
+			,#{inCrcepterFxnum}
+			,#{inCrcepterAdres}
+			,sysdate
+			,#{regUsid}
+			,#{regUsnm}
+			,#{regUsip}
+        )
+	</insert>
+	
+	<!-- 저작권 신고 접수인 정보 수정 -->
+    <update id="updateCpyrhtInfo" parameterType ="map">
+		UPDATE   TAP_IN_CPYRHT_MANAGE	
+		   SET   IN_CPYRHT_RCEPTER  = #{inCpyrhtRcepter}
+				,IN_CRCEPTER_EMAIL  = #{inCrcepterEmail}
+				,IN_CRCEPTER_TELNO  = #{inCrcepterTelno}
+				,IN_CRCEPTER_FXNUM  = #{inCrcepterFxnum}
+				,IN_CRCEPTER_ADRES  = #{inCrcepterAdres}
+		WHERE   IN_CPYRHT_SN        = #{inCpyrhtSn}
+	</update>
+	
+	<!--저작권 신고 관리 삭제 -->
+	<delete id="deleteCpyrhtInfo" parameterType="map" >
+    	DELETE FROM TAP_IN_CPYRHT_MANAGE
+         WHERE IN_CPYRHT_SN = #{inCpyrhtSn}
+   	</delete>
+   	
+	<!--저작권 신고 보관관리 전체삭제 -->
+	<delete id="deleteAllCpyrhtCstdyInfo" parameterType="map" >
+    	DELETE FROM TAP_IN_CPYRHT_CSTDY
+         WHERE SYS_ID = #{sysId}
+   	</delete>
+  
+</mapper>

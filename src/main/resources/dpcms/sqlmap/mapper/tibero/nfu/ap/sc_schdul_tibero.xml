@@ -1,0 +1,826 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="sc_schdul">
+	<!-- 일정 관리 홈페이지목록 리스트 sql -->
+	<sql id="selectSchSmList">
+		SELECT IT.INSTT_CODE
+	          ,IT.INSTT_NM
+	          ,IT.INSTT_TY
+	          ,SM.SYS_ID
+			  ,SM.SYS_NM
+			   ,ROW_NUMBER() OVER(ORDER BY IT.INSTT_CODE, IT.INSTT_LEVEL DESC) AS RSN
+			  FROM TAP_IM_INSTT_MANAGE IT, TAP_SM_SYS_MANAGE SM
+			  WHERE IT.INSTT_CODE = SM.INSTT_CODE
+			  AND SM.SYS_STTUS = 'O'
+
+			<if test='@egovframework.MybatisUtils@isNotEmpty(author) || author != "master"'>
+	         AND SM.SYS_ID NOT IN ('apple')
+	        </if>
+
+	        <if test="@egovframework.MybatisUtils@isNotEmpty(mberId)">
+		      AND SM.SYS_ID IN (
+					SELECT SYS_ID
+					  FROM TAP_AU_AUTHOR_MBER
+					 WHERE MBER_ID = #{mberId}
+						   AND SYS_ID != 'apple'
+					   AND AUTHOR_CODE IN (1,2)
+	        	)
+		     </if>
+
+	        <if test="@egovframework.MybatisUtils@isNotEmpty(insttCode)">
+		     AND   ( IT.INSTT_CODE =  #{insttCode}
+	                    OR  IT.UPPER_INSTT_CODE = #{upperInsttCode}
+	                    OR  IT.BSIS_INSTT_CODE = #{bsisInsttCode}
+	               	)
+	         </if>
+
+		     <if test="@egovframework.MybatisUtils@isNotEmpty(insttGrad)">
+		     AND   ( IT.INSTT_GRAD IS NULL
+		     		 <if test="@egovframework.MybatisUtils@isNotEmpty(dtnt)">
+		                OR IT.INSTT_GRAD = #{dtnt}
+		             </if>
+		             <if test="@egovframework.MybatisUtils@isNotEmpty(elesch)">
+		                OR IT.INSTT_GRAD = #{elesch}
+		             </if>
+		             <if test="@egovframework.MybatisUtils@isNotEmpty(mskul)">
+		                OR IT.INSTT_GRAD = #{mskul}
+		             </if>
+		             <if test="@egovframework.MybatisUtils@isNotEmpty(hgschl)">
+		                OR IT.INSTT_GRAD = #{hgschl}
+		             </if>
+		             <if test="@egovframework.MybatisUtils@isNotEmpty(kndrgr)">
+		                OR IT.INSTT_GRAD = #{kndrgr}
+		             </if>
+		             <if test="@egovframework.MybatisUtils@isNotEmpty(spcl)">
+		                OR IT.INSTT_GRAD = #{spcl}
+		             </if>
+		           )
+		     </if>
+
+		     <if test="@egovframework.MybatisUtils@isNotEmpty(sysTy)">
+		      AND   SM.SYS_TY = #{sysTy}
+		     </if>
+
+		     <if test="@egovframework.MybatisUtils@isNotEmpty(srchTxt)">
+		       AND  (
+       				 SM.SYS_NM LIKE '%'||#{srchTxt}||'%'
+              	  OR SM.SYS_TY LIKE '%'||#{srchTxt}||'%'
+		       )
+		    </if>
+	</sql>
+
+	<!-- 일정 관리 홈페이지목록 리스트 -->
+	<select id="selectSchSmList" parameterType="map" resultType="egovMap">
+		<include refid="selectSchSmList"/>
+	</select>
+
+	<!-- 일정 관리 홈페이지목록 리스트 페이징 -->
+	<select id="selectSchSmListPaging" parameterType="map" resultType="egovMap">
+		SELECT
+    		PL.*
+    	FROM (
+        	SELECT
+        		PO.*
+			FROM (
+	    		<include refid="selectSchSmList" />
+				) PO
+		) PL
+		WHERE
+		<![CDATA[
+			rsn <= #{maxSn}
+			AND rsn > #{minSn}
+		]]>
+	</select>
+
+	<!-- 일정 관리 홈페이지목록 리스트 페이징 카운트 -->
+	<select id="selectSchSmListPagingCount" parameterType="map" resultType="int">
+		SELECT
+			COUNT(*)
+			FROM TAP_IM_INSTT_MANAGE IT, TAP_SM_SYS_MANAGE SM
+			  WHERE IT.INSTT_CODE = SM.INSTT_CODE
+			  AND SM.SYS_STTUS = 'O'
+
+			<if test='@egovframework.MybatisUtils@isNotEmpty(author) || author != "master"'>
+	         AND SM.SYS_ID NOT IN ('apple')
+	        </if>
+
+	        <if test="@egovframework.MybatisUtils@isNotEmpty(insttCode)">
+		     AND   ( IT.INSTT_CODE =  #{insttCode}
+                    OR  IT.UPPER_INSTT_CODE = #{upperInsttCode}
+                    OR  IT.BSIS_INSTT_CODE = #{bsisInsttCode}
+	               	)
+	         </if>
+
+		     <if test="@egovframework.MybatisUtils@isNotEmpty(insttGrad)">
+		     AND   ( IT.INSTT_GRAD IS NULL
+		     		 <if test="@egovframework.MybatisUtils@isNotEmpty(dtnt)">
+		                OR IT.INSTT_GRAD = #{dtnt}
+		             </if>
+		             <if test="@egovframework.MybatisUtils@isNotEmpty(elesch)">
+		                OR IT.INSTT_GRAD = #{elesch}
+		             </if>
+		             <if test="@egovframework.MybatisUtils@isNotEmpty(mskul)">
+		                OR IT.INSTT_GRAD = #{mskul}
+		             </if>
+		             <if test="@egovframework.MybatisUtils@isNotEmpty(hgschl)">
+		                OR IT.INSTT_GRAD = #{hgschl}
+		             </if>
+		             <if test="@egovframework.MybatisUtils@isNotEmpty(kndrgr)">
+		                OR IT.INSTT_GRAD = #{kndrgr}
+		             </if>
+		             <if test="@egovframework.MybatisUtils@isNotEmpty(spcl)">
+		                OR IT.INSTT_GRAD = #{spcl}
+		             </if>
+		           )
+		     </if>
+
+	        <if test="@egovframework.MybatisUtils@isNotEmpty(mberId)">
+		      AND SM.SYS_ID IN (
+					SELECT SYS_ID
+					  FROM TAP_AU_AUTHOR_MBER
+					 WHERE MBER_ID = #{mberId}
+						   AND SYS_ID != 'apple'
+					   AND AUTHOR_CODE IN (1,2)
+	        	)
+		     </if>
+
+		     <if test="@egovframework.MybatisUtils@isNotEmpty(sysTy)">
+		      AND   SM.SYS_TY = #{sysTy}
+		     </if>
+
+		     <if test="@egovframework.MybatisUtils@isNotEmpty(srchTxt)">
+		       AND  (
+       				 SM.SYS_NM LIKE '%'||#{srchTxt}||'%'
+              	  OR SM.SYS_TY LIKE '%'||#{srchTxt}||'%'
+		       )
+		    </if>
+	</select>
+
+
+	<!--  일정관리 시스템  리스트  -->
+	<select id="selectSchdulSmList" parameterType="egovMap" resultType="egovMap">
+		SELECT
+			IT.INSTT_CODE
+			, IT.INSTT_NM
+			, IT.INSTT_TY
+			, SM.SYS_ID
+			, SM.SYS_NM
+			, SM.SYS_TY
+			, (
+				SELECT
+					COUNT(*)
+				FROM
+					TAP_SC_SCHDUL_MANAGE SC
+				WHERE SC.SYS_ID = SM.SYS_ID
+					AND SC.USE_AT = 'Y'
+			) AS TOTAL_CNT
+		FROM
+			TAP_IM_INSTT_MANAGE IT
+			, TAP_SM_SYS_MANAGE SM
+		WHERE IT.INSTT_CODE = SM.INSTT_CODE
+			AND SM.SYS_STTUS = 'O'
+			<if test='@egovframework.MybatisUtils@isNotEmpty(author) || author != "master"'>
+				AND SM.SYS_ID NOT IN ('apple')
+			</if>
+			<if test="@egovframework.MybatisUtils@isNotEmpty(insttCode)">
+				AND (
+					IT.INSTT_CODE =  #{insttCode}
+					OR IT.UPPER_INSTT_CODE = #{upperInsttCode}
+					OR IT.BSIS_INSTT_CODE = #{bsisInsttCode}
+				)
+			</if>
+			<if test="@egovframework.MybatisUtils@isNotEmpty(srchSmTxt)">
+				AND (
+
+					SM.SYS_NM LIKE '%'||#{srchSmTxt}||'%'
+					OR SM.SYS_TY LIKE '%'||#{srchSmTxt}||'%'
+				)
+			</if>
+		ORDER BY IT.INSTT_CODE, IT.INSTT_LEVEL DESC
+	</select>
+
+	<!-- 일정관리 시스템  리스트(페이징) -->
+	<select id="selectSchdulSmListPaging" parameterType="map" resultType="egovMap">
+		SELECT
+			PL.*
+		FROM (
+			SELECT
+				PO.*
+				, ROWNUM as rsn
+			FROM (
+				SELECT
+					IT.INSTT_CODE
+					, IT.INSTT_NM
+					, IT.INSTT_TY
+					, SM.SYS_ID
+					, SM.SYS_NM
+					, SM.SYS_TY
+					, (
+						SELECT
+							COUNT(*)
+						FROM
+							TAP_SC_SCHDUL_MANAGE SC
+						WHERE SC.SYS_ID = SM.SYS_ID
+							AND SC.USE_AT = 'Y'
+					) AS TOTAL_CNT
+				FROM
+					TAP_IM_INSTT_MANAGE IT
+					, TAP_SM_SYS_MANAGE SM
+				WHERE IT.INSTT_CODE = SM.INSTT_CODE
+					AND SM.SYS_STTUS = 'O'
+					<if test='@egovframework.MybatisUtils@isNotEmpty(author) || author != "master"'>
+						AND SM.SYS_ID NOT IN ('apple')
+					</if>
+					<if test="@egovframework.MybatisUtils@isNotEmpty(insttCode)">
+						AND (
+							IT.INSTT_CODE =  #{insttCode}
+							OR IT.UPPER_INSTT_CODE = #{upperInsttCode}
+							OR IT.BSIS_INSTT_CODE = #{bsisInsttCode}
+						)
+					</if>
+					<if test="@egovframework.MybatisUtils@isNotEmpty(srchSmTxt)">
+						AND (
+							SM.SYS_NM LIKE '%'||#{srchSmTxt}||'%'
+							OR SM.SYS_TY LIKE '%'||#{srchSmTxt}||'%'
+						)
+					</if>
+				ORDER BY IT.INSTT_CODE, IT.INSTT_LEVEL DESC
+			) PO
+		) PL
+		WHERE
+		<![CDATA[
+			RSN <= #{maxSn}
+			AND RSN > #{minSn}
+		]]>
+	</select>
+
+	<!-- 일정관리 시스템  리스트 (페이징 전체 카운트) -->
+	<select id="selectSchdulSmListPagingCount" parameterType="map" resultType="int">
+		SELECT
+			COUNT(*)
+		FROM
+			TAP_IM_INSTT_MANAGE IT
+			, TAP_SM_SYS_MANAGE SM
+		WHERE IT.INSTT_CODE = SM.INSTT_CODE
+			AND SM.SYS_STTUS = 'O'
+			<if test='@egovframework.MybatisUtils@isNotEmpty(author) || author != "master"'>
+				AND SM.SYS_ID NOT IN ('apple')
+			</if>
+			<if test="@egovframework.MybatisUtils@isNotEmpty(insttCode)">
+				AND (
+					IT.INSTT_CODE =  #{insttCode}
+					OR IT.UPPER_INSTT_CODE = #{upperInsttCode}
+					OR IT.BSIS_INSTT_CODE = #{bsisInsttCode}
+				)
+			</if>
+			<if test="@egovframework.MybatisUtils@isNotEmpty(srchSmTxt)">
+				AND (
+					SM.SYS_NM LIKE '%'||#{srchSmTxt}||'%'
+					OR SM.SYS_TY LIKE '%'||#{srchSmTxt}||'%'
+				)
+			</if>
+	</select>
+
+	<!--일정 리스트 -->
+	<select id="selectSchduList" parameterType="map" resultType="egovMap">
+		SELECT
+			  TO_CHAR(TO_DATE(BGNDE, 'YYYY/MM/DD'), 'YYYY/MM/DD') AS BGNDE,
+			  TO_CHAR(TO_DATE(ENDDE, 'YYYY/MM/DD'), 'YYYY/MM/DD') AS ENDDE,
+			  TO_CHAR(TO_DATE(BGNDE, 'YYYY/MM/DD'), 'YYYY') AS BGNDE_Y,
+			  TO_CHAR(TO_DATE(BGNDE, 'YYYY/MM/DD'), 'MM') AS BGNDE_M,
+			  TO_CHAR(TO_DATE(BGNDE, 'YYYY/MM/DD'), 'DD') AS BGNDE_D,
+			  TO_CHAR(TO_DATE(ENDDE, 'YYYY/MM/DD'), 'YYYY') AS ENDDE_Y,
+			  TO_CHAR(TO_DATE(ENDDE, 'YYYY/MM/DD'), 'MM') AS ENDDE_M,
+			  TO_CHAR(TO_DATE(ENDDE, 'YYYY/MM/DD'), 'DD') AS ENDDE_D,
+			  BGNDE_TIME,
+			  ENDDE_TIME,
+			  SCHDUL_CN,
+			  SCHDUL_TITLE,
+			  SYS_ID,
+			  SCHDUL_SEQ,
+			  ALLDAY_AT,
+			  COLOR,
+			  SCHDUL_TY,
+			  SCHDUL_STTUS
+		 FROM TAP_SC_SCHDUL_MANAGE
+		WHERE USE_AT = 'Y'
+		  AND SYS_ID = #{sysId}
+		<if test="@egovframework.MybatisUtils@isNotEmpty(srchDate)">
+		  AND (
+			   TO_DATE(BGNDE,'YYYY/MM/DD') LIKE #{srchDate}||'%'
+			OR TO_DATE(ENDDE,'YYYY/MM/DD') LIKE #{srchDate}||'%'
+			  )
+		</if>
+		<if test="@egovframework.MybatisUtils@isNotEmpty(paraDate)">
+
+		  AND #{paraDate} BETWEEN TO_DATE(BGNDE, 'YYYY/MM/DD') AND TO_DATE(ENDDE, 'YYYY/MM/DD')
+		</if>
+		<if test="@egovframework.MybatisUtils@isNotEmpty(color)">
+		  AND COLOR = #{color}
+		</if>
+		<if test="@egovframework.MybatisUtils@isNotEmpty(schColorList)">
+						<foreach collection="schColorList" item="schColor" open="" close="" separator=",">
+							#{schColor}
+						</foreach>
+					   )
+		</if>
+	 ORDER BY BGNDE ASC
+	</select>
+
+	<!-- 일정 리스트(대표포함) -->
+	<select id="selectSchduListAll" parameterType="map" resultType="egovMap">
+		SELECT
+			BGNDE
+			, ENDDE
+			, BGNDE_TIME
+			, ENDDE_TIME
+			, SCHDUL_CN
+			, SCHDUL_TITLE
+			, SYS_ID
+			, SCHDUL_SEQ
+			, ALLDAY_AT
+			, COLOR
+			, SCHDUL_TY
+			, SCHDUL_STTUS
+		FROM
+			TAP_SC_SCHDUL_MANAGE
+		WHERE USE_AT = 'Y'
+			AND (SYS_ID = #{sysId} OR SYS_ID = 'main')
+			<if test="@egovframework.MybatisUtils@isNotEmpty(srchDate)">
+				AND (
+					TO_DATE(BGNDE, 'YYYY/MM/DD') LIKE #{srchDate}||'%'
+					OR TO_DATE(ENDDE, 'YYYY/MM/DD') LIKE #{srchDate}||'%'
+				)
+			</if>
+			<if test="@egovframework.MybatisUtils@isNotEmpty(paraDate)">
+				AND #{paraDate} BETWEEN TO_DATE(BGNDE, 'YYYY/MM/DD') AND TO_DATE(ENDDE, 'YYYY/MM/DD')
+			</if>
+		ORDER BY BGNDE ASC
+	</select>
+
+	<!--일정 목록 조회 메인홈페이지 -->
+	<select id="selectSchdulMainList" parameterType="map" resultType="egovMap">
+		SELECT
+			  TO_CHAR(TO_DATE(A.BGNDE, 'YYYY/MM/DD'), 'YYYY/MM/DD') AS BGNDE
+			, TO_CHAR(TO_DATE(A.BGNDE, 'YYYY/MM/DD'), 'MM') AS BGNDE_MM
+			, TO_CHAR(TO_DATE(A.BGNDE, 'YYYY/MM/DD'), 'MM.DD') AS BGNDE_MD
+			, SUBSTR(TO_CHAR(TO_DATE(A.BGNDE, 'YYYY/MM/DD'), 'DAY'), 0, 1 ) AS BGNDE_WK
+			, TO_CHAR(TO_DATE(A.ENDDE, 'YYYY/MM/DD'), 'YYYY/MM/DD') AS ENDDE
+			, TO_CHAR(TO_DATE(A.ENDDE, 'YYYY/MM/DD'), 'MM') AS ENDDE_MM
+			, TO_CHAR(TO_DATE(A.ENDDE, 'YYYY/MM/DD'), 'MM.DD') AS ENDDE_MD
+			, SUBSTR(TO_CHAR(TO_DATE(A.ENDDE, 'YYYY/MM/DD'), 'DAY'), 0, 1 ) AS ENDDE_WK
+			, SUBSTR(A.BGNDE_TIME,0,5) AS BGNDE_TIME
+			, SUBSTR(A.ENDDE_TIME,0,5) AS ENDDE_TIME
+			, A.SCHDUL_CN
+			, A.SCHDUL_TITLE
+			, A.SCHDUL_SEQ
+			, A.ALLDAY_AT
+			, TRIM(A.COLOR) AS COLOR
+			, A.MENU_ID
+			, A.SCHDUL_TY
+			, A.SCHDUL_STTUS
+			, A.SYS_ID
+		FROM
+			TAP_SC_SCHDUL_MANAGE A
+		WHERE A.USE_AT = 'Y'
+			AND A.SYS_ID = #{sysId}
+			<!-- <if test="@egovframework.MybatisUtils@isNotEmpty(mainViewAt)">
+				AND A.SYS_ID = #{sysId}
+			</if> -->
+
+			<if test="@egovframework.MybatisUtils@isNotEmpty(fromDate)">
+				AND (
+					TO_DATE(A.BGNDE, 'YYYY/MM/DD') BETWEEN #{fromDate} AND #{toDate}
+					OR TO_DATE(A.ENDDE, 'YYYY/MM/DD') BETWEEN #{fromDate} AND #{toDate}
+				)
+			</if>
+			<if test="@egovframework.MybatisUtils@isNotEmpty(schColor)">
+				AND A.COLOR = #{schColor}
+			</if>
+			<if test="@egovframework.MybatisUtils@isNotEmpty(schColorList)">
+				AND A.COLOR IN (
+					<foreach collection="schColorList" item="schColor" open="" close="" separator=",">
+						#{schColor}
+					</foreach>
+				)
+			</if>
+
+			<if test="@egovframework.MybatisUtils@isNotEmpty(date)">
+
+				AND #{date} BETWEEN TO_DATE(A.BGNDE, 'YYYY/MM/DD') AND TO_DATE(A.ENDDE, 'YYYY/MM/DD')
+			</if>
+			<if test="@egovframework.MybatisUtils@isNotEmpty(srchYear)">
+				AND (
+					TO_CHAR(TO_DATE(A.BGNDE, 'YYYY/MM/DD'), 'YYYY')  = #{srchYear}
+					OR TO_CHAR(TO_DATE(A.ENDDE, 'YYYY/MM/DD'), 'YYYY')  = #{srchYear}
+				)
+			</if>
+			AND A.MENU_ID = #{menuId}
+
+		ORDER BY TO_DATE(A.BGNDE,'YYYY/MM/DD') ASC, A.SCHDUL_SEQ ASC
+	</select>
+
+	<!-- 추가 대체 휴일일정 리스트 -->
+	<select id="selectAddHldyist" parameterType="map" resultType="egovMap">
+		SELECT
+			HLDY_SEQ
+			, HLDY_DATE
+			, HLDY_CN
+			, HLDY_TITLE
+		FROM
+			TAP_SC_SCHDUL_HLDY
+		ORDER BY HLDY_DATE ASC
+	</select>
+
+	<!--일정 상세 보기 -->
+	<select id="selectSchdulInfo" parameterType="map" resultType="egovMap">
+		SELECT
+			  TO_DATE(BGNDE, 'YYYY/MM/DD') AS BGNDE
+			, TO_DATE(ENDDE, 'YYYY/MM/DD') AS ENDDE
+			, BGNDE_TIME
+			, ENDDE_TIME
+			, SCHDUL_CN
+			, SCHDUL_TITLE
+			, SYS_ID
+			, SCHDUL_SEQ
+			, ALLDAY_AT
+			, TRIM(COLOR) AS COLOR
+			, SCHDUL_TY
+			, SCHDUL_STTUS
+			, INS_TY
+			, RMMN_ID
+		FROM
+			TAP_SC_SCHDUL_MANAGE
+		WHERE
+			SCHDUL_SEQ = #{schdulSeq}
+	</select>
+
+	<!--일정 입력 -->
+	<insert id="insertSchdulInfo" parameterType="map">
+		INSERT INTO TAP_SC_SCHDUL_MANAGE(
+			SCHDUL_SEQ
+			, BGNDE
+			, ENDDE
+			, BGNDE_TIME
+			, ENDDE_TIME
+			, SCHDUL_CN
+			, SCHDUL_TITLE
+			, SYS_ID
+			, MENU_ID
+			, ALLDAY_AT
+			, COLOR
+			, REG_ID
+			, REG_DT
+			, USE_AT
+			, SCHDUL_TY
+			, SCHDUL_STTUS
+			, INS_TY
+		) VALUES (
+			SCHDUL_SEQ.NEXTVAL
+			, #{bgnde}
+			, #{endde}
+			, #{bgndeTime}
+			, #{enddeTime}
+			, #{schdulCn}
+			, #{schdulTitle}
+			, #{sysId}
+			, #{menuId}
+			, #{allday}
+			, #{color}
+			, #{mberId}
+			, SYSDATE
+			, 'Y'
+			, #{schdulTy}
+			, #{schdulSttus}
+			, #{insTy}
+		)
+	</insert>
+
+	<!--온라인신청 등록시 일정관리에도 등록 기간이 있을경우만-->
+	<insert id="insertSchdulRmInfo" parameterType="map">
+		INSERT INTO TAP_SC_SCHDUL_MANAGE(
+			SCHDUL_SEQ
+			, BGNDE
+			, ENDDE
+			, SCHDUL_CN
+			, SCHDUL_TITLE
+			, SYS_ID
+			, MENU_ID
+			, ALLDAY_AT
+			, COLOR
+			, REG_ID
+			, REG_DT
+			, USE_AT
+			, INS_TY
+			, RMMN_ID
+			, REQST_NO
+		) VALUES (
+			  SCHDUL_SEQ.NEXTVAL
+			, #{reqstBgnde}
+			, #{reqstEndde}
+			, #{reqstCn}
+			, #{reqstSj}
+			, #{sysId}
+			, #{menuId}
+			, 'Y'
+			, 'thistle'
+			, #{creatId}
+			, SYSDATE
+			, 'Y'
+			, 'R'
+			, #{rmmnId}
+			, #{reqstNo}
+
+
+		)
+	</insert>
+	<!--온라인신청 등록시 일정관리에도 등록 없을경우만-->
+	<insert id="insertSchdulRmNInfo" parameterType="map">
+		INSERT INTO TAP_SC_SCHDUL_MANAGE(
+			SCHDUL_SEQ
+			, BGNDE
+			, ENDDE
+			, SCHDUL_CN
+			, SCHDUL_TITLE
+			, SYS_ID
+			, MENU_ID
+			, ALLDAY_AT
+			, COLOR
+			, REG_ID
+			, REG_DT
+			, USE_AT
+			, INS_TY
+			, RMMN_ID
+			, REQST_NO
+		) VALUES (
+			SCHDUL_SEQ.NEXTVAL
+			,  SYSDATE
+			,  SYSDATE
+			, #{reqstCn}
+			, #{reqstSj}
+			, #{sysId}
+			, #{menuId}
+			, 'Y'
+			, 'thistle'
+			, #{creatId}
+			, SYSDATE
+			, 'Y'
+			, 'R'
+			, #{rmmnId}
+			, #{reqstNo}
+		)
+	</insert>
+
+	<!--일정 수정 -->
+	<update id="updateSchdulInfo" parameterType ="map">
+		UPDATE
+			TAP_SC_SCHDUL_MANAGE
+		SET
+			BGNDE			= #{bgnde}
+			, ENDDE			= #{endde}
+			, SCHDUL_CN		= #{schdulCn}
+			, SCHDUL_TITLE	= #{schdulTitle}
+			, BGNDE_TIME	= #{bgndeTime}
+			, ENDDE_TIME	= #{enddeTime}
+			, ALLDAY_AT		= #{allday}
+			, COLOR			= #{color}
+			, MOD_ID		= #{mberId}
+			, MOD_DT		= SYSDATE
+			, SCHDUL_TY		= #{schdulTy}
+			, SCHDUL_STTUS	= #{schdulSttus}
+		WHERE
+			SCHDUL_SEQ	= #{schdulSeq}
+	</update>
+
+
+	<!-- 일정 삭제-->
+	<delete id="deleteBundleSchdul" parameterType="map" >
+		UPDATE
+			TAP_SC_SCHDUL_MANAGE
+		SET
+			USE_AT		= 'D'
+			, MOD_ID	= #{mberId}
+			, MOD_DT	= SYSDATE
+		<![CDATA[
+			WHERE   SYS_ID = #{sysId}
+			AND 	 BGNDE >= #{beginDt}
+			AND  	 ENDDE <= #{endDt}
+		]]>
+	</delete>
+
+	<!-- 일정 삭제-->
+	<delete id="deleteSchdulInfo" parameterType="map" >
+		UPDATE
+			TAP_SC_SCHDUL_MANAGE
+		SET
+			USE_AT		= 'N'
+			, MOD_ID	= #{mberId}
+			, MOD_DT	= SYSDATE
+		WHERE
+			SCHDUL_SEQ = #{schdulSeq}
+	</delete>
+
+	<!-- 온라인 일정 삭제-->
+	<delete id="deleteSchdulRmInfo" parameterType="map" >
+		DELETE
+		FROM	TAP_SC_SCHDUL_MANAGE
+		WHERE 	SYS_ID = #{sysId}
+		AND 	REQST_NO = #{reqstNo}
+	</delete>
+
+	<!-- 일정관리 메뉴 목록 카운트 -->
+	<select id="selectSchdulMenuListPagingCount" parameterType="map" resultType="int">
+		SELECT
+			COUNT(*)
+		FROM
+			TAP_MN_MENU_MANAGE A
+		WHERE A.SYS_ID = #{sysId}
+			AND A.USE_AT = 'Y'
+			AND A.MENU_TY = 'SCHDUL'
+			<if test="@egovframework.MybatisUtils@isNotEmpty(srchTxt)">
+				AND A.MENU_NM LIKE '%'||#{srchTxt}||'%'
+			</if>
+		ORDER BY SORT_ORDR
+	</select>
+
+	<!-- 일정관리 메뉴 목록 조회 -->
+	<select id="selectSchdulMenuListPaging" parameterType="map" resultType="egovMap">
+		SELECT
+			PL.*
+		FROM (
+			SELECT
+				PO.*
+				, rownum AS RSN
+			FROM (
+				SELECT
+					A.SYS_ID
+					, A.SYS_NM
+					, A.UPPER_MENU_NM
+					, A.MENU_ID
+					, A.MENU_NM
+					, A.MENU_TY
+					, (SELECT COUNT(*) FROM TAP_SC_SCHDUL_MANAGE B WHERE B.USE_AT = 'Y' AND B.SYS_ID = #{sysId} AND B.MENU_ID = A.MENU_ID) AS TOT_CNT
+				FROM
+					TAP_MN_MENU_MANAGE A
+				WHERE A.SYS_ID = #{sysId}
+					AND A.USE_AT = 'Y'
+					AND A.MENU_TY = 'SCHDUL'
+					<if test="@egovframework.MybatisUtils@isNotEmpty(srchTxt)">
+						AND A.MENU_NM LIKE '%'||#{srchTxt}||'%'
+					</if>
+				ORDER BY SORT_ORDR
+			) PO
+		) PL
+		WHERE
+		<![CDATA[
+			RSN <= #{maxSn}
+			AND RSN > #{minSn}
+		]]>
+	</select>
+
+	<!-- 일정타입 조회 -->
+	<select id="selectSchdulTyList" parameterType="map" resultType="egovMap">
+		SELECT
+			A.CMMN_DETAIL_CODE AS SCHDUL_TY
+			, A.CMMN_DETAIL_CODE_NM AS SCHDUL_TY_NM
+			, A.CMMN_DETAIL_CODE_DC AS SCHDUL_COLOR
+		FROM
+			TAP_CD_CMMNCODE_DETAIL A
+			, TAP_CD_CMMNCODE_MANAGE B
+		WHERE A.CMMN_CODE = B.CMMN_CODE
+			AND A.USE_AT = 'Y'
+			AND B.USE_AT = 'Y'
+			AND A.CMMN_CODE ='schdulTy'
+			<!-- AND A.CMMN_DETAIL_CODE LIKE CONCAT(#{sysId},'||',#{menuId},'%') -->
+		ORDER BY
+			A.CMMN_DETAIL_CODE_ORDR
+	</select>
+
+	<!-- 일정 표시 정보 확인 -->
+	<select id="selectMainViewInfo" parameterType="map" resultType="egovMap">
+		SELECT
+			SYS_ID
+			, MENU_ID
+			, VIEW1
+			, VIEW2
+			, VIEW3
+			, VIEW4
+			, REG_ID
+			, REG_DT
+			, MOD_ID
+			, MOD_DT
+		FROM
+			TAP_SC_SCHDUL_VIEW
+		WHERE
+			SYS_ID = #{sysId}
+			AND MENU_ID = #{menuId}
+	</select>
+
+	<!-- 일정 표시 정보 등록 -->
+	<insert id="insertMainViewInfo" parameterType="map">
+		INSERT INTO TAP_SC_SCHDUL_VIEW (
+			SYS_ID
+			, MENU_ID
+			, VIEW1
+			, VIEW2
+			, VIEW3
+			, VIEW4
+			, REG_ID
+			, REG_DT
+		) VALUES (
+			#{sysId}
+			, #{menuId}
+			, #{view1}
+			, #{view2}
+			, #{view3}
+			, #{view4}
+			, #{mberId}
+			, SYSDATE
+		)
+
+	</insert>
+
+	<!-- 일정 표시 정보 수정 -->
+	<update id="updateMainViewInfo" parameterType="map">
+		UPDATE
+			TAP_SC_SCHDUL_VIEW
+		SET
+			VIEW1 = #{view1}
+			, VIEW2 = #{view2}
+			, VIEW3 = #{view3}
+			, VIEW4 = #{view4}
+			, MOD_ID = #{mberId}
+			, MOD_DT = SYSDATE
+		WHERE
+			SYS_ID = #{sysId}
+			AND MENU_ID = #{menuId}
+	</update>
+
+	<!-- 나이스연계 일정 삭제 -->
+	<delete id="deleteSchdulNeisData" parameterType="map">
+		UPDATE
+			TAP_SC_SCHDUL_MANAGE
+		SET
+			USE_AT	= 	'N',
+			MOD_ID	=	#{mberId},
+			MOD_DT	=	SYSDATE
+		WHERE
+			INS_TY	=	#{insTy}
+			AND	SYS_ID = #{sysId}
+			AND BGNDE LIKE TO_CHAR(TO_DATE(#{delDate},'YYYY/MM'),'YYYY/MM')||'%'
+	</delete>
+
+	<!-- 나이스연계 일정 등록 -->
+	<insert id="insertSchdulDataNeis">
+		INSERT INTO TAP_SC_SCHDUL_MANAGE(
+			SCHDUL_SEQ
+			, BGNDE
+			, ENDDE
+			, BGNDE_TIME
+			, ENDDE_TIME
+			, SCHDUL_CN
+			, SCHDUL_TITLE
+			, SYS_ID
+			, MENU_ID
+			, ALLDAY_AT
+			, COLOR
+			, REG_ID
+			, REG_DT
+			, USE_AT
+			, SCHDUL_TY
+			, SCHDUL_STTUS
+			, INS_TY
+		) VALUES (
+			SCHDUL_SEQ.NEXTVAL
+			, #{fmDt}
+			, #{fmDt}
+			, #{time}
+			, #{time}
+			, #{schdulCn}
+			, #{schdulTitle}
+			, #{sysId}
+			, #{menuId}
+			, #{allday}
+			, #{color}
+			, #{mberId}
+			, SYSDATE
+			, 'Y'
+			, #{schdulTy}
+			, #{schdulSttus}
+			, #{insTy}
+		)
+	</insert>
+
+	<select id="selectMopasCode" parameterType="map" resultType="String">
+		SELECT
+			A.MOPAS_CODE
+		FROM
+			TAP_IM_INSTT_MANAGE A,
+			TAP_SM_SYS_MANAGE B
+		WHERE
+			B.SYS_ID = #{sysId}
+			AND A.INSTT_CODE = B.INSTT_CODE
+	</select>
+
+</mapper>

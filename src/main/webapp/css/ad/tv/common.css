@@ -1,0 +1,162 @@
+@charset "utf-8";
+/* CSS Document */
+
+/* 본고딕 */
+@font-face {
+    font-family: 'NotoT';
+    src: url(font/NotoSansKR/NotoSansKR/NotoSansKR-Thin.eot);
+    src: url(font/NotoSansKR/NotoSansKR/NotoSansKR-Thin.eot?#iefix) format('embedded-opentype'),
+    	 url(font/NotoSansKR/NotoSansKR/NotoSansKR-Thin.woff2) format('woff2'),
+		 url(font/NotoSansKR/NotoSansKR/NotoSansKR-Thin.woff) format('woff');
+}
+
+@font-face {
+    font-family: 'NotoL';
+    src: url(font/NotoSansKR/NotoSansKR/NotoSansKR-Light.eot);
+    src: url(font/NotoSansKR/NotoSansKR/NotoSansKR-Light.eot?#iefix) format('embedded-opentype'),
+    	 url(font/NotoSansKR/NotoSansKR/NotoSansKR-Light.woff2) format('woff2'),
+		 url(font/NotoSansKR/NotoSansKR/NotoSansKR-Light.woff) format('woff');
+}
+
+@font-face {
+    font-family: 'NotoDL';
+    src: url(font/NotoSansKR/NotoSansKR/NotoSansKR-DemiLight.eot);
+    src: url(font/NotoSansKR/NotoSansKR-DemiLight.eot?#iefix) format('embedded-opentype'),
+		 url(font/NotoSansKR/NotoSansKR-DemiLight.woff2) format('woff2'),
+		 url(font/NotoSansKR/NotoSansKR-DemiLight.woff) format('woff');
+}
+
+@font-face {
+    font-family: 'NotoR';
+    src: url(font/NotoSansKR/NotoSansKR-Regular.eot);
+    src: url(font/NotoSansKR/NotoSansKR-Regular.eot?#iefix) format('embedded-opentype'),
+    	 url(font/NotoSansKR/NotoSansKR-Regular.woff2) format('woff2'),
+		 url(font/NotoSansKR/NotoSansKR-Regular.woff) format('woff');
+}
+
+@font-face {
+    font-family: 'NotoM';
+    src: url(font/NotoSansKR/NotoSansKR-Medium.eot);
+   	src: url(font/NotoSansKR/NotoSansKR-Medium.eot?#iefix) format('embedded-opentype'),
+    	 url(font/NotoSansKR/NotoSansKR-Medium.woff2) format('woff2'),
+		 url(font/NotoSansKR/NotoSansKR-Medium.woff) format('woff');
+}
+
+@font-face {
+    font-family: 'NotoB';
+    src: url(font/NotoSansKR/NotoSansKR-Bold.eot);
+    src: url(font/NotoSansKR/NotoSansKR-Bold.eot?#iefix) format('embedded-opentype'),
+    	 url(font/NotoSansKR/NotoSansKR-Bold.woff2) format('woff2'),
+		 url(font/NotoSansKR/NotoSansKR-Bold.woff) format('woff');
+}
+
+@font-face {
+    font-family: 'NotoBK';
+    src: url(font/NotoSansKR/NotoSansKR-Black.eot);
+    src: url(font/NotoSansKR/NotoSansKR-Black.eot?#iefix) format('embedded-opentype'),
+    	 url(font/NotoSansKR/NotoSansKR-Black.woff2) format('woff2'),
+		 url(font/NotoSansKR/NotoSansKR-Black.woff) format('woff');
+}
+
+html, body {height:100%; margin:0 auto; padding:0; text-align:center; font-family:"NotoR"; letter-spacing:-1px}
+a { text-decoration:none}
+ul, li { text-decoration:none; list-style:none;}
+
+.wrap { position:relative; width:100%; text-align:center}
+
+/* 시안 리스트 */
+.list {width:1200px; margin:2% auto;}
+.list_tit {margin:0 15px; border-bottom:1px solid #fff;}
+.list_tit h2 {padding-bottom:20px; font-size:36px; color:#222; letter-spacing:-1px; text-align:center;  border-bottom:1px solid #d3d5d7; margin:0}
+.list_tit h2 span {font-family: 'NotoB'; color:#014d9b; font-weight:normal;}
+.tem_view { position:absolute; top:0; left:50%; margin-left:-960px; width:1920px}
+.tem_view h2.num {background:#f00; font-family: 'NotoB'; font-size:30px; text-align:center; color:#fff; margin:0; padding:0; z-index:99}
+.section { width:100%; text-align:center; overflow:hidden; padding:50px 0 0 0;}
+.section dl { width:25%; min-height:420px; float:left; padding:0 15px; box-sizing:border-box}
+.section.dl2 dl { width:50%}
+.section dt {margin-bottom:7px; padding-left:5px; font-size:18px; color:#262626;}
+.section dt strong {display:inline-block; width:32px; height:37px; font-size:20px; font-weight:bold; color:#fff; line-height:37px; background:url(/images/ad/tv/tmplat/bg_type_blue.png) no-repeat 0 0;}
+.section dd {position:relative; z-index:1; width:100%; overflow:hidden; border:1px solid #d3d5d7; background-color:#fff; margin:0; box-sizing:border-box}
+.section dd span {display: none;}
+.section dd:hover span { width:100%; height:100%; position:absolute; top:0; right:0; z-index:20; display: block; background:url(/images/ad/tv/tmplat/bg_hover.png) repeat 0 0; background-size:cover; }
+.section dd:hover span img {position:absolute; width:59px; height:68px;  top:30%; left:50%; margin-left:-29px }
+.section dd img {width:100%; vertical-align:top; border:0;}
+
+.tem_view { position:absolute; top:0; left:50%; margin-left:-960px; width:1920px}
+.tem_view h2.num {background:#1e2c39; font-family: 'NotoB'; font-size:30px; text-align:center; color:#fff; line-height:50px; margin:0; padding:0; z-index:99}
+.tem_view a{ font-family: 'NotoB'; font-size:16px !important;}
+.tem_view a.btn_list { position:absolute; top:8px; left:0; margin-left:350px; color:#fff; background:#2e95fe; border-radius:5px; padding:5px 10px}
+.tem_view .btnBox{position:absolute; top:8px; right:0; margin-right:350px;}
+.tem_view .btnBox a.btn{ color:#333; background:#fff; font-weight:600; display:inline-block; margin-left:5px; border-radius:5px; padding:5px 10px}
+
+/* 탭추가 */
+.tab_list *,
+.tab_list *:before,
+.tab_list *:after {-webkit-box-sizing: border-box; box-sizing: border-box;}
+.tab_list {margin: 50px 0 0; padding: 0;}
+.tab_list li {display: inline-block;}
+.tab_list li a {display: block; padding: 0 20px; width: 200px; height: 50px; line-height: 50px; font-size: 20px; color: #333; background: #eff6ff; border: 1px solid #abceff; border-radius: 30px;}
+.tab_list li.current > a {line-height: 48px; color: #fff; background: #266ed4; border: 1px solid #266ed4;}
+.section#section2 {padding: 30px 0 0 0;}
+.section#section2 .tab_list {display: flex; margin: 0 0 40px; width: 100%; height: 50px; background: #fff; border-bottom: 1px solid #9eb0c1; border-radius: 10px 10px 0 0; box-shadow: -7px 0 7px rgba(0,0,0,0.1);}
+.section#section2 .tab_list li {position: relative; width: 25%;}
+.section#section2 .tab_list li:before {position: absolute; top: 50%; left: 0; margin-top: -5px; width: 1px; height: 10px; background: #d5d5d5; content: "";}
+.section#section2 .tab_list li a {width: 100%; color: #222; font-size: 18px; background: #fff; border: none; border-radius: 10px 10px 0 0;}
+.section#section2 .tab_list li a em {font-style: normal;}
+.section#section2 .tab_list li.current > a {height: 51px; color: #266ed4; background: #f1f1f1 url('/images/ad/tv/tmplat/icon_current.png') no-repeat calc(100% - 20px) center; border: 1px solid #266ed4; border-bottom: none;}
+.section#section2 .tab_list li.current:after {position: absolute; bottom: -10px; left: 1px; width: calc(100% - 2px); height: 10px; background: #f1f1f1; content: "";}
+.section#section2 .tab_list li:first-child:before,
+.section#section2 .tab_list li.current + li:before,
+.section#section2 .tab_list li.current:before {display: none;}
+
+.grade {display: none;}
+
+@media (max-width: 1019px) {
+
+	/* 시안 리스트 */
+	.list {width:100%; padding:0 2%; box-sizing:border-box}
+
+	.tem_view { margin-left:-50%; width:100%}
+	.sian_img { width:100%}
+	.tem_view a.btn_list {left:10px; margin-left:0}
+
+}
+
+@media (max-width: 860px) {
+
+	.section dl { width:50%; min-height:480px;}
+
+	/* 탭추가 */
+	.tab_list {margin:20px auto 0; overflow:hidden;}
+	.tab_list li {width:33%; display:block; float:left;}
+	.tab_list li a {width:100%; font-size:17px; -webkit-box-sizing:border-box; -moz-box-sizing:border-box; box-sizing:border-box; }
+	.tab_list li.current a {color:#fff; border:1px solid #266ed4; background:#266ed4;}
+
+}
+
+@media (max-width: 580px) {
+
+	/* 시안 리스트 */
+	.list_tit h2 {font-size: 20px;}
+
+	.section { padding:10px 0 0 0;}
+
+	.section dl { width:100%; min-height:100%; padding:0; float:none}
+	.section.dl2 dl { width:100%}
+
+
+	.tem_view h2.num {font-size:22px; text-align:right; padding-right:10px}
+
+	/* 탭추가 */
+	.tab_list li { width:100%; float:none; margin:1% 0 0}
+
+	.section#section2 {padding: 20px 0 0 0;}
+	.section#section2 .tab_list {margin: 0 0 20px;}
+	.section#section2 .tab_list li {margin: 0;}
+	.section#section2 .tab_list li a {font-size: 16px;}
+	.section#section2 .tab_list li a em {display: none;}
+	.section#section2 .tab_list li.current > a {background: #f1f1f1;}
+
+}
+
+

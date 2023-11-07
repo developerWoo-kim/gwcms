@@ -1,0 +1,412 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="fr_system">
+
+	<!-- 맵핑 사용 여부 조회 -->
+    <select id="selectMapngUseYn" parameterType="string" resultType="string">
+        SELECT
+        	CASE WHEN COUNT(*) > 0 THEN 'Y' END AS RESULT
+		FROM
+			TFR_PA_MAPNG_MANAGE
+		WHERE
+			MAPNG_PATH = #mapngPath#
+			AND MAPNG_USE_YN = 'Y'
+    </select>
+
+    <!-- 빌더 갱신 이력 등록 -->
+    <insert id="insertBuilderUpdtHist" parameterType="map">
+    	INSERT INTO TFR_BU_UPDT_HIST (
+    		BU_UPDT_SEQ
+    		,BU_UPDT_GROUP_SEQ
+    		,BU_UPDT_TY
+    		,BU_UPDT_DATE
+    		,BU_UPDT_SYS_ID
+    	) VALUES (
+    		#buUpdtSeq#
+    		,#buUpdtGroupSeq#
+    		,#buUpdtTy#
+    		,SYSDATE
+    		,#buUpdtSysId#
+    	)
+    </insert>
+
+    <!-- 메뉴이력등록 (이력등록을 위한) -->
+    <select id="insertMenuHistInfo" parameterType="map" >
+		INSERT INTO TAP_MN_MENU_HIST
+		SELECT
+			A.SYS_ID
+			,A.SYS_NM
+			,A.UPPER_MENU_ID
+			,A.UPPER_MENU_NM
+			,A.MENU_ID
+			,A.MENU_NM
+			,A.MENU_LEVEL
+			,A.MENU_TY
+			,A.CNTNTS_ID
+			,A.MENU_LINK
+			,A.MENU_URL
+			,A.CNNC_MENU_ID
+			,A.USE_AT
+			,A.CONECT_AT
+			,A.CONECT_AUTHOR
+			,A.SORT_ORDR
+			,A.NEW_WIN_AT
+			,A.CNTNTS_AT
+			,A.RCLICK_AT
+			,A.LWPRT_RCLICK_AT
+			,A.CLSDR_AT
+			,A.TAB_AT
+
+			,SEQ_HIST_SEQ.NEXTVAL
+			,#{histGroupSeq}
+			,#{histUserId}
+			,#{histUserNm}
+			,#{histUserIp}
+			,SYSDATE
+			,#{histTy}
+			,#{recovryId}
+			,#{recovryIp}
+			,#{recovryNm}
+			,#{recovryDt}
+			,#{recovryAt}
+
+			,A.UPEND_AT
+
+  		FROM TAP_MN_MENU_MANAGE A
+  		WHERE
+  		<choose>
+  			<when test='histTy == "D"'>
+  			MENU_ID = #{menuId}
+  			OR UPPER_MENU_ID = #{menuId}
+  			OR UPPER_MENU_ID IN (
+  				SELECT MENU_ID
+  				FROM TAP_MN_MENU_MANAGE SUB
+  				WHERE SUB.UPPER_MENU_ID = #{menuId}
+  			)
+  			</when>
+  			<otherwise>
+  			MENU_ID = #{menuId}
+  			</otherwise>
+  		</choose>
+    </select>
+
+    <!-- 게시판 이력 등록 (이력등록을 위한)  -->
+    <select id="insertBbsHistInfo" parameterType="map" >
+		INSERT INTO TAP_BM_BBS_HIST
+		SELECT A.*
+			,SEQ_HIST_SEQ.NEXTVAL
+			,#{histGroupSeq}
+			,#{histUserId}
+			,#{histUserNm}
+			,#{histUserIp}
+			,SYSDATE
+			,#{histTy}
+  		FROM
+  			TAP_BM_BBS_MANAGE A
+  		WHERE
+  			A.BBS_ID = #{bbsId}
+    </select>
+
+    <!-- 게시물이력등록 (이력등록을 위한) -->
+    <select id="insertNttHistInfo" parameterType="map" >
+		INSERT INTO TCO_NA_NTT_HIST
+		SELECT
+			A.BBS_ID
+			,A.NTT_SN
+			,A.UPPER_NTT_SN
+			,A.NTT_SJ
+			,A.NTT_CN
+			,A.REG_ID
+			,A.REG_NM
+			,A.REG_IP
+			,A.REG_DT
+			,A.NTT_RDCNT
+			,A.NTT_OPPS_CO
+			,A.NTT_APPRVL_CO
+			,A.NTT_STTUS
+			,A.NTT_USE_AT
+			,A.SECRET_AT
+			,A.SMS_AT
+			,A.EMAIL_AT
+			,A.NOTICE_AT
+			,A.NOTICE_BEGIN_DT
+			,A.NOTICE_END_DT
+			,A.ADIT_COL1
+			,A.ADIT_COL2
+			,A.ADIT_COL3
+			,A.ADIT_COL4
+			,A.ADIT_COL5
+			,A.ADIT_COL6
+			,A.ADIT_COL7
+			,A.ADIT_COL8
+			,A.ADIT_COL9
+			,A.ADIT_COL10
+			,A.CLSDR_AT
+			,A.BEFORE_ID
+			,A.CONFM_AT
+			,A.CONFM_BEGIN_DT
+			,A.CONFM_END_DT
+			,A.CONFM_MBER_ID
+			,A.CONFM_MBER_NM
+			,A.CONFM_DT
+			,SEQ_HIST_SEQ.NEXTVAL
+			,#{histGroupSeq}
+			,#{histUserId}
+			,#{histUserNm}
+			,#{histUserIp}
+			,SYSDATE
+			,#{histTy}
+			,#{vodSttl}
+  		FROM TCO_NA_NTT_MANAGE A
+  		WHERE
+  		<if test="@egovframework.MybatisUtils@isNotEmpty(insertType)">
+  		<choose>
+  			<when test='insertType == "bbs"'>
+  			BBS_ID = #{bbsId}
+  			</when>
+  			<otherwise>
+  			NTT_SN = #{nttSn}
+  			</otherwise>
+  		</choose>
+  		</if>
+  		<if test="@egovframework.MybatisUtils@isEmpty(insertType)">
+  			NTT_SN = #{nttSn}
+  		</if>
+    </select>
+
+    <!-- 게시물댓글이력등록 (이력등록을 위한) -->
+    <select id="insertNttAnwerHistInfo" parameterType="map" >
+		INSERT INTO TCO_NA_NTT_ANSWER_HIST
+		SELECT A.*
+			,SEQ_HIST_SEQ.NEXTVAL
+			,#{histGroupSeq}
+			,#{histUserId}
+			,#{histUserNm}
+			,#{histUserIp}
+			,SYSDATE
+			,#{histTy}
+  		FROM TCO_NA_NTT_ANSWER A
+  		WHERE
+  		<if test="@egovframework.MybatisUtils@isNotEmpty(insertType)">
+  		<choose>
+  			<when test='insertType == "bbs"'>
+  			BBS_ID = #{bbsId}
+  			</when>
+  			<when test='insertType == "ntt"'>
+  			NTT_SN = #{nttSn}
+  			</when>
+  			<otherwise>
+  			ANSWER_SN = #{answerSn}
+  			</otherwise>
+  		</choose>
+  		</if>
+  		<if test="@egovframework.MybatisUtils@isEmpty(insertType)">
+  			ANSWER_SN = #{answerSn}
+  		</if>
+    </select>
+
+    <!-- 게시물파일이력등록 (이력등록을 위한) -->
+    <select id="insertNttFileHistInfo" parameterType="map" >
+		INSERT INTO TCO_NA_NTT_FILE_HIST
+		SELECT A.*
+			,SEQ_HIST_SEQ.NEXTVAL
+			,#{histGroupSeq}
+			,#{histUserId}
+			,#{histUserNm}
+			,#{histUserIp}
+			,SYSDATE
+			,#{histTy}
+  		FROM TCO_NA_NTT_FILE A
+  		WHERE
+  		<if test="@egovframework.MybatisUtils@isNotEmpty(insertType)">
+  		<choose>
+  			<when test='insertType == "bbs"'>
+  			BBS_ID = #{bbsId}
+  			</when>
+  			<when test='insertType == "ntt"'>
+  			NTT_SN = #{nttSn}
+  			</when>
+  			<otherwise>
+  			FILE_SN = #{fileSn}
+  			</otherwise>
+  		</choose>
+  		</if>
+  		<if test="@egovframework.MybatisUtils@isEmpty(insertType)">
+  			FILE_SN = #{fileSn}
+  		</if>
+    </select>
+
+	<!-- 메뉴 리스트 조회 -->
+    <select id="selectMenuList" parameterType="map" resultType="egovMap">
+        SELECT
+			 A.SYS_ID
+			,A.SYS_NM
+			,A.UPPER_MENU_ID
+			,A.UPPER_MENU_NM
+			,A.MENU_ID
+			,A.MENU_NM
+			,A.MENU_LEVEL
+			,A.MENU_TY
+			,A.CNTNTS_ID
+			,A.MENU_LINK
+			,A.MENU_URL
+			,A.CNNC_MENU_ID
+			,A.USE_AT
+			,A.CONECT_AT
+			,A.CONECT_AUTHOR
+			,A.SORT_ORDR
+			,A.NEW_WIN_AT
+			,A.CNTNTS_AT
+			,A.RCLICK_AT
+			,A.LWPRT_RCLICK_AT
+			,A.CLSDR_AT
+			,A.TAB_AT
+			,A.UPEND_AT
+		FROM TAP_MN_MENU_MANAGE	A
+		WHERE A.SYS_ID = #{sysId}
+          AND A.USE_AT = 'Y'
+          <if test="@egovframework.MybatisUtils@isNotEmpty(postHandleAt)">
+		   AND  A.MENU_ID =
+            (
+                CASE
+                	WHEN A.MENU_LEVEL= 1
+                    THEN A.MENU_ID
+
+                    WHEN A.MENU_LEVEL= 2
+                         AND  ( SELECT B.USE_AT FROM TAP_MN_MENU_MANAGE B WHERE B.MENU_ID = A.UPPER_MENU_ID ) = 'Y' <!--Lv1 메뉴 사용여부 -->
+                    THEN A.MENU_ID
+
+                    WHEN A.MENU_LEVEL= 3
+                         AND  ( SELECT B.USE_AT FROM TAP_MN_MENU_MANAGE B WHERE B.MENU_ID = A.UPPER_MENU_ID ) = 'Y'<!--Lv2 메뉴 사용여부 -->
+                           AND (SELECT B.USE_AT FROM TAP_MN_MENU_MANAGE B WHERE B.MENU_ID = (SELECT C.UPPER_MENU_ID FROM TAP_MN_MENU_MANAGE C WHERE C.MENU_ID = A.UPPER_MENU_ID) )= 'Y' <!--Lv1 메뉴 사용여부 -->
+                    THEN A.MENU_ID
+                END
+            )
+          </if>
+	  	ORDER BY
+            A.SORT_ORDR
+    </select>
+
+	<!-- 연결 메뉴 리스트 조회 -->
+    <select id="selectCnncMenuList" parameterType="map" resultType="egovMap">
+	 SELECT
+	 	 DISTINCT
+         MN.MENU_ID
+        ,MN.CONECT_AUTHOR
+        ,MN.MENU_URL
+        ,MN.MENU_TY
+        ,MN.CNTNTS_ID
+     FROM TAP_MN_MENU_MANAGE MN,
+      (SELECT
+           CNNC_MENU_ID
+         FROM
+           TAP_MN_MENU_MANAGE
+         WHERE
+           SYS_ID = #{sysId}
+       ) A
+    WHERE MN.MENU_ID = A.CNNC_MENU_ID
+     AND SYS_ID = #{sysId}
+    </select>
+
+    <!-- 이력 그룹 시퀀스 조회 -->
+    <select id="selectSeqHistGroupSeq" resultType="string">
+		SELECT SEQ_HIST_GROUP_SEQ.NEXTVAL
+		FROM DUAL
+    </select>
+
+    <!-- 사용중 도메인 조회 -->
+    <select id="selectSysDomnList" resultType="egovMap">
+    	SELECT SYS_ID
+    		,SYS_DOMN
+    	FROM TAP_SM_SYS_DOMN
+    	WHERE USE_AT = 'Y'
+    </select>
+
+    <!-- 포워딩 도메인 조회 -->
+    <select id="selectSysDomnForwdList" resultType="egovMap">
+    	SELECT DOMN_SN
+    		,SYS_ID
+    		,SYS_DOMN
+    		,USE_AT
+    	FROM TAP_SM_SYS_DOMN
+    	WHERE USE_AT = 'F'
+    	ORDER BY SYS_ID ASC, USE_AT DESC
+    </select>
+
+    <!-- 포워딩 도메인 맵핑 조회 -->
+    <select id="selectSysDomnMappingList" resultType="egovMap">
+    	SELECT DOMN_SN
+			,SYS_ID
+			,SYS_DOMN
+			,USE_AT
+		FROM TAP_SM_SYS_DOMN
+		WHERE USE_AT = 'Y'
+		AND SYS_ID = #{sysId}
+    	ORDER BY DOMN_SN
+    </select>
+
+	<!-- 권한이력등록 (일반) -->
+	<insert id="insertAuthorHistInfo" parameterType="map">
+        INSERT INTO TAP_AU_AUTHOR_HIST
+		(
+			AUTHOR_MBER_SEQ
+		   ,MBER_ID
+		   ,AUTHOR_CODE
+		   ,SYS_ID
+		   ,HIST_SEQ
+		   ,HIST_GROUP_SEQ
+		   ,HIST_USER_ID
+		   ,HIST_USER_NM
+		   ,HIST_USER_IP
+		   ,HIST_DATE
+		   ,HIST_TY
+		)
+        VALUES
+		(
+			#{authorMberSeq}
+		   ,#{mberId}
+		   ,#{authorCode}
+		   ,#{sysId}
+		   ,SEQ_HIST_SEQ.NEXTVAL
+		   ,#{histGroupSeq}
+		   ,#{histUserId}
+		   ,#{histUserNm}
+		   ,#{histUserIp}
+		   ,SYSDATE
+		   ,#{histTy}
+        )
+	</insert>
+
+	<!-- 권한이력등록 (그룹) -->
+	<insert id="insertAuthorGrpHistInfo" parameterType="map">
+        INSERT INTO TAP_GR_GROUP_AUTHOR_HIST
+		(
+			AUTHORGRP_SEQ
+		   ,GROUP_CODE
+		   ,AUTHOR_CODE
+		   ,SYS_ID
+		   ,HIST_SEQ
+		   ,HIST_GROUP_SEQ
+		   ,HIST_USER_ID
+		   ,HIST_USER_NM
+		   ,HIST_USER_IP
+		   ,HIST_DATE
+		   ,HIST_TY
+		)
+        VALUES
+		(
+			#{authorgrpSeq}
+		   ,#{groupCode}
+		   ,#{authorCode}
+		   ,#{sysId}
+		   ,SEQ_HIST_SEQ.NEXTVAL
+		   ,#{histGroupSeq}
+		   ,#{histUserId}
+		   ,#{histUserNm}
+		   ,#{histUserIp}
+		   ,SYSDATE
+		   ,#{histTy}
+        )
+	</insert>
+</mapper>

@@ -1,0 +1,264 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="my_pge">
+
+	<resultMap id="clobMap" type="egovMap">
+        <result property="NTT_CN" column="NTT_CN" jdbcType="CLOB" javaType="java.lang.String"/>
+    </resultMap>
+
+	<!-- 내 게시글 모아보기 조회 -->
+	<sql id ="selectMyBbscttList">
+		SELECT
+			NM.NTT_SN,
+			NM.NTT_SJ,
+			NM.BBS_ID,
+			(SELECT BBS_SJ FROM TAP_BM_BBS_MANAGE BM WHERE BM.BBS_ID = NM.BBS_ID) AS BBS_SJ,
+			(SELECT MENU_ID FROM TAP_BM_BBS_MANAGE BM WHERE BM.BBS_ID = NM.BBS_ID) AS MENU_ID,
+			NM.REG_DT,
+			(SELECT COUNT(*) FROM TCO_NA_NTT_FILE NF WHERE NF.NTT_SN = NM.NTT_SN) AS FILE_CNT
+		FROM TCO_NA_NTT_MANAGE NM
+		WHERE NM.REG_ID = #{mberId}
+		AND NM.NTT_USE_AT = 'Y'
+		ORDER BY NM.REG_DT DESC
+	</sql>
+
+	<!-- 내 게시글 모아보기 조회 (페이징) -->
+    <select id="selectMyBbscttListPaging" parameterType="map" resultMap="clobMap">
+    	SELECT
+    		PL.*
+    	FROM (
+        	SELECT
+        		PO.*
+        		,rownum as rsn
+			FROM (
+	    		<include refid="selectMyBbscttList" />
+				) PO
+		) PL
+		WHERE
+		<![CDATA[
+			rsn <= #{maxSn}
+			AND rsn > #{minSn}
+		]]>
+    </select>
+
+    <!-- 내 게시글 모아보기 조회 (페이징 전체 카운트) -->
+    <select id="selectMyBbscttListPagingCount" parameterType="map" resultType="int">
+		SELECT COUNT(*)
+		FROM TCO_NA_NTT_MANAGE NM
+		WHERE NM.REG_ID = #{mberId}
+		AND NM.NTT_USE_AT = 'Y'
+    </select>
+
+	<!-- 최신글 모아보기 조회 -->
+	<sql id ="selectNewestBbscttList">
+		SELECT
+			A.*
+		FROM
+			(
+			SELECT
+				NM.NTT_SN,
+				NM.NTT_SJ,
+				NM.BBS_ID,
+				(SELECT BBS_SJ FROM TAP_BM_BBS_MANAGE BM WHERE BM.BBS_ID = NM.BBS_ID) AS BBS_SJ,
+				(SELECT MENU_ID FROM TAP_BM_BBS_MANAGE BM WHERE BM.BBS_ID = NM.BBS_ID) AS MENU_ID,
+				NM.REG_DT,
+				(SELECT COUNT(*) FROM TCO_NA_NTT_FILE NF WHERE NF.NTT_SN = NM.NTT_SN) AS FILE_CNT,
+				(SELECT READNG_AUTHOR FROM TAP_BM_BBS_AUTHOR BA WHERE BA.BBS_ID = NM.BBS_ID) AS READNG_AUTHOR,
+				(SELECT MBER_TY FROM TAP_MM_MBER_TY MT WHERE MT.MBER_ID = #{mberId}
+					AND MT.INSTT_CODE = (SELECT SM.INSTT_CODE FROM TAP_SM_SYS_MANAGE SM WHERE SM.SYS_ID = #{sysId})) AS MBER_TY,
+				CASE
+					WHEN (SELECT MBER_TY FROM TAP_MM_MBER_TY MT WHERE MT.MBER_ID = #{mberId}
+						AND MT.INSTT_CODE = (SELECT SM.INSTT_CODE FROM TAP_SM_SYS_MANAGE SM WHERE SM.SYS_ID = #{sysId})) = '4' THEN 'common=4'
+					WHEN (SELECT MBER_TY FROM TAP_MM_MBER_TY MT WHERE MT.MBER_ID = #{mberId}
+						AND MT.INSTT_CODE = (SELECT SM.INSTT_CODE FROM TAP_SM_SYS_MANAGE SM WHERE SM.SYS_ID = #{sysId})) = '5' THEN 'common=5'
+					WHEN (SELECT MBER_TY FROM TAP_MM_MBER_TY MT WHERE MT.MBER_ID = #{mberId}
+						AND MT.INSTT_CODE = (SELECT SM.INSTT_CODE FROM TAP_SM_SYS_MANAGE SM WHERE SM.SYS_ID = #{sysId})) = '6' THEN 'common=6'
+					WHEN (SELECT MBER_TY FROM TAP_MM_MBER_TY MT WHERE MT.MBER_ID = #{mberId}
+						AND MT.INSTT_CODE = (SELECT SM.INSTT_CODE FROM TAP_SM_SYS_MANAGE SM WHERE SM.SYS_ID = #{sysId})) = '7' THEN 'common=7'
+					WHEN (SELECT MBER_TY FROM TAP_MM_MBER_TY MT WHERE MT.MBER_ID = #{mberId}
+						AND MT.INSTT_CODE = (SELECT SM.INSTT_CODE FROM TAP_SM_SYS_MANAGE SM WHERE SM.SYS_ID = #{sysId})) = '10' THEN 'common=10'
+					ELSE 'common=3'
+				END AS AUTH_CHK
+			FROM TCO_NA_NTT_MANAGE NM
+			WHERE NM.NTT_USE_AT = 'Y'
+			AND NM.REG_ID != #{mberId}
+			<![CDATA[
+			AND TO_CHAR(NM.REG_DT,'YYYY-MM-DD') >= TO_CHAR(SYSDATE-3,'YYYY-MM-DD')
+			AND NM.BBS_ID IN (SELECT BBS_ID FROM TAP_BM_BBS_MANAGE WHERE SYS_ID = #{sysId})
+			ORDER BY NM.REG_DT DESC
+			) A
+		WHERE A.READNG_AUTHOR LIKE '%common=0%' OR A.READNG_AUTHOR LIKE '%common=2%' OR (REGEXP_LIKE(A.READNG_AUTHOR, A.AUTH_CHK))
+		]]>
+	</sql>
+
+	<!-- 최신글 모아보기 조회 (페이징) -->
+    <select id="selectNewestBbscttListPaging" parameterType="map" resultMap="clobMap">
+    	SELECT
+    		PL.*
+    	FROM (
+        	SELECT
+        		PO.*
+        		,rownum as rsn
+			FROM (
+	    		<include refid="selectNewestBbscttList" />
+				) PO
+		) PL
+		WHERE
+		<![CDATA[
+			rsn <= #{maxSn}
+			AND rsn > #{minSn}
+		]]>
+    </select>
+
+    <!-- 최신글 모아보기 조회 (페이징 전체 카운트) -->
+    <select id="selectNewestBbscttListPagingCount" parameterType="map" resultType="int">
+		SELECT COUNT(*)
+		FROM (
+			<include refid="selectNewestBbscttList" />
+		)
+    </select>
+
+    <!-- 가입 된 홈페이지 목록 -->
+	<sql id ="selectSbscrbHmpgList">
+		SELECT
+			(SELECT SYS_ID FROM TAP_SM_SYS_MANAGE SM WHERE SM.INSTT_CODE = TM.INSTT_CODE) AS SYS_ID,
+			TM.INSTT_CODE,
+			TM.INSTT_NM,
+			(SELECT CONFM_DATE FROM TAP_MM_MBER_TY MT WHERE MT.INSTT_CODE = TM.INSTT_CODE AND MT.MBER_ID = #{mberId}) AS CONFM_DATE,
+			'/' || (SELECT SYS_ID FROM TAP_SM_SYS_MANAGE SM WHERE SM.INSTT_CODE = TM.INSTT_CODE) || '/main.do' AS URL
+		FROM TAP_IM_INSTT_MANAGE TM
+		WHERE TM.INSTT_CODE IN (SELECT INSTT_CODE FROM TAP_MM_MBER_TY MY WHERE MBER_ID = #{mberId})
+		ORDER BY TM.INSTT_NM ASC
+	</sql>
+
+	<!-- 가입 된 홈페이지 목록 (페이징) -->
+    <select id="selectSbscrbHmpgListPaging" parameterType="map" resultMap="clobMap">
+    	SELECT
+    		PL.*
+    	FROM (
+        	SELECT
+        		PO.*
+        		,rownum as rsn
+			FROM (
+	    		<include refid="selectSbscrbHmpgList" />
+				) PO
+		) PL
+		WHERE
+		<![CDATA[
+			rsn <= #{maxSn}
+			AND rsn > #{minSn}
+		]]>
+    </select>
+
+    <!-- 가입 된 홈페이지 목록 (페이징 전체 카운트) -->
+    <select id="selectSbscrbHmpgListPagingCount" parameterType="map" resultType="int">
+		SELECT COUNT(*)
+		FROM TAP_IM_INSTT_MANAGE TM
+		WHERE TM.INSTT_CODE IN (SELECT INSTT_CODE FROM TAP_MM_MBER_TY MY WHERE MBER_ID = #{mberId})
+		ORDER BY TM.INSTT_NM ASC
+    </select>
+
+    <!-- 상단 마이페이지 클릭 시 메뉴아이디 정보 조회 -->
+    <select id="selectSbscrbMenuId" parameterType="map" resultType="egovMap">
+    	SELECT
+    		MENU_ID
+    	FROM
+        	TAP_MN_MENU_MANAGE
+        WHERE SYS_ID = #{sysId}
+        AND UPPER_MENU_ID IN (SELECT MENU_ID FROM TAP_MN_MENU_MANAGE WHERE MENU_TY = 'MYPGE' AND UPEND_AT = 'Y')
+        AND MENU_NM = '사용자 정보'
+    </select>
+
+    <!-- 즐겨찾기 등록 여부 -->
+    <select id="selectBkmkMenuAt" parameterType="map" resultType="egovMap">
+    	SELECT
+    		COUNT(*) AS BKMK_CHK
+    	FROM
+        	TAD_BK_BKMK_MANAGE
+        WHERE SYS_ID = #{sysId}
+        AND MENU_ID = #{currMenuId}
+        AND MBER_ID = #{mberId}
+    </select>
+
+    <!-- 등록 된 즐겨찾기 목록 -->
+	<sql id ="selectBkBkmkList">
+		SELECT
+			BM.MBER_ID,
+			BM.SYS_ID,
+			BM.MENU_ID,
+			BM.MENU_NM,
+			BM.MENU_COURS,
+			BM.MENU_URL
+		FROM TAD_BK_BKMK_MANAGE BM
+		WHERE BM.MBER_ID = #{mberId}
+		AND BM.SYS_ID = #{sysId}
+		ORDER BY BM.MENU_NM ASC
+	</sql>
+
+	<!-- 등록 된 즐겨찾기 목록 (페이징) -->
+    <select id="selectBkBkmkListPaging" parameterType="map" resultMap="clobMap">
+    	SELECT
+    		PL.*
+    	FROM (
+        	SELECT
+        		PO.*
+        		,rownum as rsn
+			FROM (
+	    		<include refid="selectBkBkmkList" />
+				) PO
+		) PL
+		WHERE
+		<![CDATA[
+			rsn <= #{maxSn}
+			AND rsn > #{minSn}
+		]]>
+    </select>
+
+    <!-- 등록 된 즐겨찾기 목록 (페이징 전체 카운트) -->
+    <select id="selectBkBkmkListPagingCount" parameterType="map" resultType="int">
+		SELECT
+			COUNT(*)
+		FROM TAD_BK_BKMK_MANAGE BM
+		WHERE BM.MBER_ID = #{mberId}
+		AND BM.SYS_ID = #{sysId}
+		ORDER BY BM.MENU_NM DESC
+    </select>
+
+    <!-- 즐겨찾기 등록 -->
+    <insert id="insertBkmkInfo" parameterType="map" >
+    	INSERT INTO
+    	TAD_BK_BKMK_MANAGE
+    	(
+    		MBER_ID
+			,SYS_ID
+			,MENU_ID
+			,MENU_NM
+			,MENU_COURS
+			,MENU_URL
+    	) VALUES (
+    		#{mberId}
+    		,#{sysId}
+    		,#{currMenuId}
+    		,(SELECT MENU_NM FROM TAP_MN_MENU_MANAGE WHERE MENU_ID = #{currMenuId})
+    		,CASE
+				WHEN (SELECT MENU_LEVEL FROM TAP_MN_MENU_MANAGE WHERE MENU_ID = #{currMenuId}) = '2'
+				THEN (SELECT MENU_NM FROM TAP_MN_MENU_MANAGE WHERE MENU_ID = #{baseMenuId}) || ' > ' || (SELECT MENU_NM FROM TAP_MN_MENU_MANAGE WHERE MENU_ID = #{currMenuId})
+				WHEN (SELECT MENU_LEVEL FROM TAP_MN_MENU_MANAGE WHERE MENU_ID = #{currMenuId}) = '3'
+				THEN (SELECT MENU_NM FROM TAP_MN_MENU_MANAGE WHERE MENU_ID = #{baseMenuId}) || ' > ' || (SELECT UPPER_MENU_NM FROM TAP_MN_MENU_MANAGE WHERE MENU_ID = #{currMenuId}) || ' > ' || (SELECT MENU_NM FROM TAP_MN_MENU_MANAGE WHERE MENU_ID = #{currMenuId})
+			END
+    		,#{accessUrl}
+    	)
+    </insert>
+
+    <!-- 즐겨찾기 삭제 -->
+    <delete id="deleteBkmkInfo" parameterType="map" >
+    	DELETE
+    		TAD_BK_BKMK_MANAGE
+    	WHERE
+    		MENU_ID = #{currMenuId}
+    </delete>
+
+</mapper>
+
+

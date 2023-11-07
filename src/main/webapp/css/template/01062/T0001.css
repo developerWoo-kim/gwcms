@@ -1,0 +1,52 @@
+﻿/* 메인 컨테이너 */
+#container { position:relative; z-index:2; width:100%; }
+#container *{ scrollbar-arrow-color: #ddd; scrollbar-Track-Color: #ddd; scrollbar-base-color: #aaa; scrollbar-Face-Color: #aaa; scrollbar-3dLight-Color: #aaa; scrollbar-DarkShadow-Color: #aaa; scrollbar-Highlight-Color: #aaa; scrollbar-Shadow-Color: #aaa;}
+#container ::-webkit-scrollbar { width: 5px; }
+#container ::-webkit-scrollbar-thumb { background-color: #aaa; border-radius:10px; }
+#container ::-webkit-scrollbar-track { background-color: #ddd; border-radius:10px; }
+
+.MC_wrap1 { position:relative; }
+.MC_wrap2 { position:relative; padding:2.75rem 0; }
+.MC_wrap3 { position:relative; padding:3rem 0; background: rgb(255,244,213);
+    background: -moz-linear-gradient(90deg, rgba(255,244,213,1) 0%, rgba(201,242,234,1) 100%);
+    background: -webkit-linear-gradient(90deg, rgba(255,244,213,1) 0%, rgba(201,242,234,1) 100%);
+    background: linear-gradient(90deg, rgba(255,244,213,1) 0%, rgba(201,242,234,1) 100%);}
+
+
+.MC_box1 { position:relative; width:100%; height:25.25rem; } /* 메인비주얼 */
+.MC_box2 { position:absolute; top:50%; right:calc(50% - 30rem); width:18rem; height:auto; transform: translateY(-50%); -webkit-transform: translateY(-50%); } /* 바로가기1 */
+.MC_box3 { position:relative; width:calc(97% - 17.5rem); height:13.75rem; float:left; } /* 게시판 */
+.MC_box4 { position:relative; width:17.5rem; height:13.75rem; float:right;} /* 팝업존 */
+.MC_box5 { position:relative; width:calc(97% - 17.5rem); height:9.75rem; margin-top:3rem; float:left; } /* 캘린더 */
+.MC_box6 { position:relative; width:17.5rem; height:9.75rem; margin-top:3rem; float:right; } /* 식단 */
+.MC_box7 { position:relative; width:100%; height:auto; max-width:62rem; padding:0 1rem; margin:0 auto; } /* 갤러리 */
+
+@media (max-width: 1240px) {
+
+    .MC_wrap2{ padding:2.5rem 1rem;}
+	
+    .MC_box1{ height:auto;}
+    .MC_box2{ right:1rem;}
+}
+
+@media (max-width: 1024px) {
+
+    #container{ padding-top:3.5rem;}
+
+    .MC_box3{ width:63%;}
+    .MC_box4{ width:35%;}
+    .MC_box5{ width:63%;}
+    .MC_box6{ width:35%;}
+}
+
+@media (max-width: 840px) {
+
+    .MC_wrap2{ padding:1.5rem 1rem;}
+    .MC_wrap3{ padding:2rem 0;}
+
+    .MC_box2{ position:relative; right:auto; top:auto; width:100%; margin-top:1.5rem; transform: none; -webkit-transform: none;}
+    .MC_box3{ width:100%; height:auto; float:none;}
+    .MC_box4{ width:100%; height:auto; float:none; margin-top:1.5rem;}
+    .MC_box5{ width:100%; height:auto; float:none; margin-top:1.5rem;}
+    .MC_box6{ width:100%; height:auto; float:none; margin-top:1.5rem;}
+}

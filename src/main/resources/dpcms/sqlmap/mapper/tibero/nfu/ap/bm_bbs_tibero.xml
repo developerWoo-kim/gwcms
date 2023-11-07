@@ -1,0 +1,790 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="bm_bbs">
+
+	<!-- 게시판 아이디 획득 -->
+	<select id="selectSeqBbsId" resultType="string">
+        SELECT SEQ_BBS_ID.NEXTVAL
+        FROM DUAL
+    </select>
+    
+    <!-- 게시판 조회 쿼리 -->
+    <sql id="selectBbsListSql" >
+		SELECT 
+		       BM.BBS_ID,
+		       BM.SYS_ID,
+		       BM.BBS_TY,
+		       BM.BBS_PRPOS,
+		       BM.BBS_SJ,
+		       BM.BBS_DC,
+		       BM.ANSWER_TY,
+		       BM.MENU_COURS,
+		       BM.MENU_ID,
+		       BM.PAGE_NTT_CO,
+		       BM.COLUMN_NM_NO,
+		       BM.COLUMN_NM_CO,
+		       BM.COLUMN_NM_REG_NM,
+		       BM.COLUMN_NM_REG_DT,
+		       BM.SECRET_USE_AT,
+		       BM.FILE_MXM_CO,
+		       BM.EDITR_USE_AT,
+		       BM.STTUS_USE_AT,
+		       BM.NEW_NTT_NTCN_HOUR,
+		       BM.SEARCH_PAGE,
+		       BM.LIST_FILE_DWLD_AT,
+		       BM.FILE_LMTT_SIZE,
+		       BM.CONFM_USE_AT,
+		       BM.STSFDG_USE_AT,
+		       BM.INDVDLINFO_COLCT_AGRE_USE_AT,
+		       BM.INDVDLINFO_COLCT_AGRE_CN,
+		       BM.INFO_PROVD_AGRE_USE_AT,
+		       BM.INFO_PROVD_AGRE_CN,
+		       BM.FLTER_USE_AT,
+		       BM.SMS_USE_AT,
+		       BM.EMAIL_USE_AT,
+		       BM.OWNER_LIST_USE_AT,
+		       BM.NTT_CN_ESSNTL_AT,
+		       BM.NOTICE_AT,
+		       BM.REG_ID,
+		       BM.REG_NM,
+		       BM.REG_IP,
+		       BM.REG_DT,
+		       BM.BBS_USE_AT,
+		       BM.REPLY_AT,
+		       BM.CVPL_AT,
+		       BM.PRFACE_USE_AT,
+		       BM.PRFACE_CN,
+		       BM.ANNYMTY_USE_AT,
+		       BM.CLSDR_USE_AT,
+		       BM.ATCHMNFL_EXTSN,
+		       BM.IPIN_PAGE,
+			   BM.REGIST_PD_USE_AT,
+			   BM.REGIST_BEGIN_DE,
+			   BM.REGIST_END_DE,
+			   (SELECT COUNT(*) FROM TAP_MN_MENU_MANAGE WHERE SYS_ID = BM.SYS_ID AND MENU_TY = 'BBS' AND BBS_ID = CNTNTS_ID) AS CNTNTS_ID,
+			<if test="@egovframework.MybatisUtils@isNotEmpty(bbsNttSttus)">
+               (SELECT COUNT(*) FROM TCO_NA_NTT_MANAGE A, TAP_BM_BBS_MANAGE B WHERE A.BBS_ID = B.BBS_ID AND A.BBS_ID = BM.BBS_ID AND B.STTUS_USE_AT = 'Y' AND A.NTT_STTUS = 'W') AS NTT_WAIT,
+               (SELECT COUNT(*) FROM TCO_NA_NTT_MANAGE A, TAP_BM_BBS_MANAGE B WHERE A.BBS_ID = B.BBS_ID AND A.BBS_ID = BM.BBS_ID AND B.STTUS_USE_AT = 'Y' AND A.NTT_STTUS = 'R') AS NTT_RCEPT,
+               (SELECT COUNT(*) FROM TCO_NA_NTT_MANAGE A, TAP_BM_BBS_MANAGE B WHERE A.BBS_ID = B.BBS_ID AND A.BBS_ID = BM.BBS_ID AND B.STTUS_USE_AT = 'Y' AND A.NTT_STTUS = 'C') AS NTT_COMPT, 
+			</if>			   	       
+		       SM.SYS_NM
+		       ,ROW_NUMBER() OVER(ORDER BY BBS_ID DESC) AS RSN
+		  FROM 
+		  	   TAP_BM_BBS_MANAGE BM,
+		       TAP_SM_SYS_MANAGE SM
+		 WHERE 1 = 1
+		   AND BM.SYS_ID = SM.SYS_ID
+		   AND BM.BBS_USE_AT = 'Y' 
+		   AND BM.SYS_ID = #{sysId}
+		<if test="@egovframework.MybatisUtils@isNotEmpty(bbsSearchValue)">
+		   AND ((BM.BBS_ID LIKE '%'||#{bbsSearchValue}||'%') OR (BM.BBS_SJ LIKE '%'||#{bbsSearchValue}||'%'))
+		</if>
+		<if test="@egovframework.MybatisUtils@isNotEmpty(bbsTy)">
+		   AND BM.BBS_TY = #{bbsTy}
+		</if>
+    </sql>
+    
+	<!-- 게시판 리스트 조회 -->
+    <select id="selectBbsList" parameterType="map" resultType="egovMap">
+    	<include refid="selectBbsListSql" /> 
+        ORDER BY BBS_ID DESC
+    </select>
+    
+    <!-- 게시판 리스트 조회(페이징) -->
+    <select id="selectBbsListPaging" parameterType="map" resultType="egovMap">
+    	SELECT
+    		PL.*
+    	FROM (
+        	SELECT 
+        		PO.*
+			FROM (
+	    		<include refid="selectBbsListSql" /> 
+	    		ORDER BY BBS_ID DESC
+				) PO
+		) PL
+		WHERE
+		<![CDATA[
+			rsn <= #{maxSn} 
+			AND rsn > #{minSn}
+		]]>
+    </select>
+    
+    <!-- 게시판 리스트 조회(페이징 전체 카운트) -->
+    <select id="selectBbsListPagingCount" parameterType="map" resultType="int">
+    	SELECT COUNT(*)
+	    FROM TAP_BM_BBS_MANAGE
+        WHERE 
+        	BBS_USE_AT = 'Y'
+        	AND SYS_ID = #{sysId}
+        <if test="@egovframework.MybatisUtils@isNotEmpty(bbsSearchValue)">
+        	AND ( 
+        		( BBS_ID LIKE '%'||#{bbsSearchValue}||'%' ) 
+        		OR 
+        		( BBS_SJ LIKE '%'||#{bbsSearchValue}||'%' )
+        	)
+        </if>
+        <if test="@egovframework.MybatisUtils@isNotEmpty(bbsTy)">
+		   AND BBS_TY = #{bbsTy}
+		</if>
+    </select>
+	
+	<!-- 게시판 상세 조회 -->
+	<select id="selectBbsInfo" parameterType="map" resultType="egovMap">
+	    SELECT 
+	           BBS_ID,
+	           SYS_ID,
+	           BBS_TY,
+	           BBS_PRPOS,
+	           BBS_SJ,
+	           BBS_DC,
+	           ANSWER_TY,
+	           MENU_COURS,
+	           MENU_ID,
+	           PAGE_NTT_CO,
+	           COLUMN_NM_NO,
+	           COLUMN_NM_CO,
+	           COLUMN_NM_REG_NM,
+	           COLUMN_NM_REG_DT,
+	           SECRET_USE_AT,
+	           FILE_MXM_CO,
+	           EDITR_USE_AT,
+	           STTUS_USE_AT,
+	           NEW_NTT_NTCN_HOUR,
+	           SEARCH_PAGE,
+	           LIST_FILE_DWLD_AT,
+	           FILE_LMTT_SIZE,
+	           CONFM_USE_AT,
+	           STSFDG_USE_AT,
+	           INDVDLINFO_COLCT_AGRE_USE_AT,
+	           INDVDLINFO_COLCT_AGRE_CN,
+	           INFO_PROVD_AGRE_USE_AT,
+	           INFO_PROVD_AGRE_CN,
+	           FLTER_USE_AT,
+	           SMS_USE_AT,
+	           EMAIL_USE_AT,
+	           OWNER_LIST_USE_AT,
+	           NTT_CN_ESSNTL_AT,
+	           NOTICE_AT,
+	           REG_ID,
+	           REG_NM,
+	           REG_IP,
+	           REG_DT,
+	           BBS_USE_AT,
+	           REPLY_AT,
+	           CVPL_AT,
+	           PRFACE_USE_AT,
+	           PRFACE_CN,
+	           ANNYMTY_USE_AT,
+	           CLSDR_USE_AT,
+	           ATCHMNFL_EXTSN,
+	           IPIN_PAGE,
+	           REGIST_PD_USE_AT,
+	           TO_CHAR(REGIST_BEGIN_DE, 'YYYY/MM/DD') AS REGIST_BEGIN_DE,
+	           TO_CHAR(REGIST_END_DE, 'YYYY/MM/DD') AS REGIST_END_DE,
+	           CASE
+	              WHEN REGIST_PD_USE_AT = 'Y' AND TO_CHAR(SYSDATE, 'YYYYMMDD') || '000000' BETWEEN TO_CHAR(REGIST_BEGIN_DE, 'YYYYMMDDHH24MISS') AND TO_CHAR(REGIST_END_DE, 'YYYYMMDDHH24MISS')
+	              THEN 'Y'
+	              ELSE 'N'
+	           END AS REGIST_PD_CHECK
+	      FROM TAP_BM_BBS_MANAGE
+	     WHERE 1 = 1 
+	       AND BBS_ID = #{bbsId}        
+    </select>
+    
+    <!-- 게시판 권한 조회 -->
+	<select id="selectBbsAuthor" parameterType="map" resultType="egovMap">
+        SELECT *
+        FROM TAP_BM_BBS_AUTHOR
+        WHERE BBS_ID = #{bbsId}
+    </select>
+    
+    <!-- 게시판 추가항목 리스트조회 -->
+	<select id="selectBbsAditList" parameterType="map" resultType="egovMap">
+        SELECT *
+        FROM TAP_BM_BBS_ADIT
+        WHERE BBS_ID = #{bbsId}
+        <if test="@egovframework.MybatisUtils@isNotEmpty(listUseAt)">
+        	AND LIST_USE_AT = #{listUseAt}
+        </if>
+        <if test="@egovframework.MybatisUtils@isNotEmpty(defaultAt)">
+        	<choose>
+        	<when test='defaultAt == "Y"'>
+        	AND ADIT_TY = 'DEFAULT'
+        	</when>
+        	<otherwise>
+        <![CDATA[
+        	AND ADIT_TY <> 'DEFAULT'
+        ]]>
+        	</otherwise>
+        	</choose>
+        </if>
+        <if test="@egovframework.MybatisUtils@isNotEmpty(useAt)">
+        	AND VIEW_USE_AT = #{useAt}
+        </if>
+        <if test="@egovframework.MybatisUtils@isNotEmpty(listFileDwldAt)">
+        	AND COL_NM != #{listFileDwldAt}
+        </if>
+        ORDER BY ADIT_ORDR
+    </select>
+    
+    <!-- 게시판 기본항목 등록 -->
+    <insert id="insertBbsInfo" parameterType="map">
+    	INSERT INTO TAP_BM_BBS_MANAGE (
+    		BBS_ID
+			,SYS_ID
+			,BBS_TY
+			,BBS_PRPOS
+			,BBS_SJ
+			,BBS_DC
+			,ANSWER_TY
+			,MENU_COURS
+			,MENU_ID
+			,PAGE_NTT_CO
+			,COLUMN_NM_NO
+			,COLUMN_NM_CO
+			,COLUMN_NM_REG_NM
+			,COLUMN_NM_REG_DT
+			,SECRET_USE_AT
+			,FILE_MXM_CO
+			,EDITR_USE_AT
+			,STTUS_USE_AT
+			,NEW_NTT_NTCN_HOUR
+			,SEARCH_PAGE
+			,LIST_FILE_DWLD_AT
+			,FILE_LMTT_SIZE
+			,CONFM_USE_AT
+			,STSFDG_USE_AT
+			,INDVDLINFO_COLCT_AGRE_USE_AT
+			,INDVDLINFO_COLCT_AGRE_CN
+			,INFO_PROVD_AGRE_USE_AT
+			,INFO_PROVD_AGRE_CN
+			,FLTER_USE_AT
+			,SMS_USE_AT
+			,EMAIL_USE_AT
+			,OWNER_LIST_USE_AT
+			,NTT_CN_ESSNTL_AT
+			,NOTICE_AT
+			,REG_ID
+			,REG_NM
+			,REG_IP
+			,REG_DT
+			,BBS_USE_AT
+			,REPLY_AT
+			,CVPL_AT
+			,PRFACE_USE_AT
+			,PRFACE_CN
+			,ANNYMTY_USE_AT
+			,CLSDR_USE_AT
+			,ATCHMNFL_EXTSN
+			,IPIN_PAGE
+			,REGIST_PD_USE_AT
+			,REGIST_BEGIN_DE
+			,REGIST_END_DE
+    	) VALUES (
+    		#{bbsId}
+    		,#{sysId}
+    		,#{bbsTy}
+    		,#{bbsPrpos}
+    		,#{bbsSj}
+    		,#{bbsDc}
+    		,#{answerTy}
+    		,#{menuCours}
+    		,#{menuId}
+    		,#{pageNttCo}
+    		,#{columnNmNo}
+    		,#{columnNmCo}
+    		,#{columnNmRegNm}
+    		,#{columnNmRegDt}
+    		,#{secretUseAt}
+    		,#{fileMxmCo}
+    		,#{editrUseAt}
+    		,#{sttusUseAt}
+    		,#{newNttNtcnHour}
+    		,0
+    		,#{listFileDwldAt}
+    		,#{fileLmttSize}
+    		,#{confmUseAt}
+    		,#{stsfdgUseAt}
+    		,#{indvdlinfoColctAgreUseAt}
+    		,#{indvdlinfoColctAgreCn}
+    		,#{infoProvdAgreUseAt}
+    		,#{infoProvdAgreCn}
+    		,#{flterUseAt}
+    		,#{smsUseAt}
+    		,#{emailUseAt}
+    		,#{ownerListUseAt}
+    		,#{nttCnEssntlAt}
+    		,#{noticeAt}
+    		,#{regId}
+    		,#{regNm}
+    		,#{regIp}
+    		,SYSDATE
+    		,'Y'
+    		,#{replyAt}
+    		,#{cvplAt}
+			,#{prfaceUseAt}
+			,#{prfaceCn}
+			,#{annymtyUseAt}
+			,#{clsdrUseAt}
+			,#{atchmnflExtsn}
+			,#{ipinPage}
+			,#{registPdUseAt}
+			,#{registBeginDe}
+			,#{registEndDe}			
+    	)
+    </insert>
+    
+    <!-- 게시판 권한등록 -->
+    <insert id="insertBbsAuthor" parameterType="map">
+    	INSERT INTO TAP_BM_BBS_AUTHOR (
+    		BBS_ID
+			,MANAGE_AUTHOR
+			,UPDT_AUTHOR
+			,DELETE_AUTHOR
+			,READNG_AUTHOR
+			,READNG_MSSAGE
+			,WRIT_AUTHOR
+			,WRIT_MSSAGE
+			,SECRET_AUTHOR
+			,SECRET_MSSAGE
+			,ANSWER_AUTHOR
+			,ANSWER_MSSAGE
+			,PRNTNG_AUTHOR
+			,WRIT_BUTTON_INDICT_AT
+			,ANSWER_BUTTON_INDICT_AT
+    	) VALUES (
+    		#{bbsId}
+    		,#{manageAuthor}
+    		,#{updtAuthor}
+    		,#{deleteAuthor}
+    		,#{readngAuthor}
+    		,#{readngMssage}
+    		,#{writAuthor}
+    		,#{writMssage}
+    		,#{secretAuthor}
+    		,#{secretMssage}
+    		,#{answerAuthor}
+    		,#{answerMssage}
+    		,#{prntngAuthor}
+    		,#{writButtonIndictAt}
+    		,#{answerButtonIndictAt}
+    	)
+    </insert>
+    
+    <!-- 게시판 기본항목 수정 -->
+    <update id="updateBbsInfo" parameterType="map">
+    	UPDATE TAP_BM_BBS_MANAGE SET
+			BBS_TY = #{bbsTy}
+			,BBS_PRPOS = #{bbsPrpos}
+			,BBS_SJ = #{bbsSj}
+			,BBS_DC = #{bbsDc}
+			,ANSWER_TY = #{answerTy}
+			,MENU_COURS = #{menuCours}
+			,MENU_ID = #{menuId}
+			,PAGE_NTT_CO = #{pageNttCo}
+			,COLUMN_NM_NO = #{columnNmNo}
+			,COLUMN_NM_CO = #{columnNmCo}
+			,COLUMN_NM_REG_NM = #{columnNmRegNm}
+			,COLUMN_NM_REG_DT = #{columnNmRegDt}
+			,SECRET_USE_AT = #{secretUseAt}
+			,FILE_MXM_CO = #{fileMxmCo}
+			,EDITR_USE_AT = #{editrUseAt}
+			,STTUS_USE_AT = #{sttusUseAt}
+			,NEW_NTT_NTCN_HOUR = #{newNttNtcnHour}
+			,SEARCH_PAGE = #{searchPage}
+			,LIST_FILE_DWLD_AT = #{listFileDwldAt}
+			,FILE_LMTT_SIZE = #{fileLmttSize}
+			,CONFM_USE_AT = #{confmUseAt}
+			,STSFDG_USE_AT = #{stsfdgUseAt}
+			,INDVDLINFO_COLCT_AGRE_USE_AT = #{indvdlinfoColctAgreUseAt}
+			,INDVDLINFO_COLCT_AGRE_CN = #{indvdlinfoColctAgreCn}
+			,INFO_PROVD_AGRE_USE_AT = #{infoProvdAgreUseAt}
+			,INFO_PROVD_AGRE_CN = #{infoProvdAgreCn}
+			,FLTER_USE_AT = #{flterUseAt}
+			,SMS_USE_AT = #{smsUseAt}
+			,EMAIL_USE_AT = #{emailUseAt}
+			,OWNER_LIST_USE_AT = #{ownerListUseAt}
+			,NTT_CN_ESSNTL_AT = #{nttCnEssntlAt}
+			,NOTICE_AT = #{noticeAt}
+			,REPLY_AT = #{replyAt}
+			,CVPL_AT = #{cvplAt}
+			,PRFACE_USE_AT = #{prfaceUseAt}
+			,PRFACE_CN = #{prfaceCn}
+			,ANNYMTY_USE_AT = #{annymtyUseAt}
+			,CLSDR_USE_AT = #{clsdrUseAt}
+			,ATCHMNFL_EXTSN = #{atchmnflExtsn}
+			,IPIN_PAGE = #{ipinPage}
+			,REGIST_PD_USE_AT = #{registPdUseAt} 
+			,REGIST_BEGIN_DE = #{registBeginDe}
+			,REGIST_END_DE = #{registEndDe}			
+    	WHERE
+    		BBS_ID = #{bbsId}
+    </update>
+    
+    <!-- 게시판 권한수정 -->
+    <update id="updateBbsAuthor" parameterType="map">
+    	UPDATE TAP_BM_BBS_AUTHOR SET
+			 READNG_AUTHOR = #{readngAuthor}
+			,READNG_MSSAGE = #{readngMssage}
+			,WRIT_AUTHOR = #{writAuthor}
+			,WRIT_MSSAGE = #{writMssage}
+			,SECRET_AUTHOR = #{secretAuthor}
+			,SECRET_MSSAGE = #{secretMssage}
+			,ANSWER_AUTHOR = #{answerAuthor}
+			,ANSWER_MSSAGE = #{answerMssage}
+			,PRNTNG_AUTHOR = #{prntngAuthor}
+			,WRIT_BUTTON_INDICT_AT = #{writButtonIndictAt}
+			,ANSWER_BUTTON_INDICT_AT = #{answerButtonIndictAt}
+		WHERE
+			BBS_ID = #{bbsId}
+    </update>
+    
+    <!-- 게시판 삭제 -->
+    <update id="deleteBbsInfo" parameterType="map">
+    	UPDATE TAP_BM_BBS_MANAGE SET
+    		BBS_USE_AT = 'N'
+    	WHERE
+    		BBS_ID = #{bbsId}
+    </update>
+    
+    <!-- 기본컬럼 초기등록(확장컬럼과 같이 관리하기 위함. 확장컬럼이 없는경우 모두 제거) -->
+    <insert id="insertBbsAditBasicInfo" parameterType="map">
+    	INSERT INTO TAP_BM_BBS_ADIT (
+    		ADIT_SN
+			,BBS_ID
+			,ADIT_NM
+			,ADIT_TY
+			,ADIT_VALUE
+			,ADIT_ORDR
+			,LIST_USE_AT
+			,LIST_ADIT_AR
+			,ESSNTL_AT
+			,VIEW_USE_AT
+			,CTGRY_USE_AT
+			,COL_NM
+    	) VALUES (
+    		SEQ_ADIT_SN.NEXTVAL
+    		,#{bbsId}
+    		,#{aditNm}
+    		,'DEFAULT'
+    		,#{aditValue}
+    		,#{aditOrdr}
+    		,#{listUseAt}
+    		,#{listAditAr}
+    		,#{essntlAt}
+    		,'Y'
+    		,#{ctgryUseAt}
+    		,#{colNm}
+    	)
+    </insert>
+    
+    <!-- 기본컬럼 모두삭제 -->
+    <delete id="deleteBbsAditBasicList" parameterType="map">
+    	DELETE FROM TAP_BM_BBS_ADIT
+    	WHERE BBS_ID = #{bbsId}
+    		AND ADIT_TY = 'DEFAULT'
+    </delete>
+    
+    <!-- 확장컬럼 등록 -->
+    <insert id="insertBbsAditInfo" parameterType="map">
+    	INSERT INTO TAP_BM_BBS_ADIT (
+    		ADIT_SN
+			,BBS_ID
+			,ADIT_NM
+			,ADIT_TY
+			,ADIT_VALUE
+			,ADIT_ORDR
+			,LIST_USE_AT
+			,LIST_ADIT_AR
+			,ESSNTL_AT
+			,VIEW_USE_AT
+			,CTGRY_USE_AT
+			,COL_NM
+    	) VALUES (
+    		SEQ_ADIT_SN.NEXTVAL
+    		,#{bbsId}
+    		,#{aditNm}
+    		,#{aditTy}
+    		,#{aditValue}
+    		,#{aditOrdr}
+    		,#{listUseAt}
+    		,#{listAditAr}
+    		,#{essntlAt}
+    		,#{viewUseAt}
+    		,#{ctgryUseAt}
+    		,#{colNm}
+    	)
+    </insert>
+    
+    <!-- 확장컬럼 수정 -->
+    <update id="updateBbsAditInfo" parameterType="map">
+    	UPDATE TAP_BM_BBS_ADIT 
+    	SET	LIST_ADIT_AR = #{listAditAr}
+    		,LIST_USE_AT = #{listUseAt}
+    		,VIEW_USE_AT = #{viewUseAt}
+		<if test="@egovframework.MybatisUtils@isEmpty(colType)">
+			,ADIT_TY = #{aditTy}
+			,ADIT_NM = #{aditNm}
+			,ADIT_VALUE = #{aditValue}
+			,ESSNTL_AT = #{essntlAt}
+			,CTGRY_USE_AT = #{ctgryUseAt}
+		</if>
+    	WHERE ADIT_SN = #{aditSn}
+    </update>
+    
+    <!-- 리스트파일다운 값에 맞게 수정 -->
+    <update id="updateListFileDw" parameterType="map">
+    	UPDATE TAP_BM_BBS_ADIT 
+    	SET	LIST_USE_AT = #{listFileDwldAt}
+    		,VIEW_USE_AT = #{listFileDwldAt}
+    	WHERE BBS_ID = #{bbsId}
+    	AND COL_NM = 'atch'
+    </update>
+    
+    <!-- 확장컬럼 삭제 -->
+    <delete id="deleteBbsAditInfo" parameterType="map">
+    	DELETE FROM TAP_BM_BBS_ADIT
+    	WHERE ADIT_SN = #{aditSn}
+    </delete>
+    
+    <!-- 확장컬럼 순서변경 -->
+    <update id="updateOrderBbsAditInfo" parameterType="map">
+    	UPDATE TAP_BM_BBS_ADIT 
+    	SET	ADIT_ORDR = #{aditOrdr}
+    	WHERE ADIT_SN = #{aditSn}
+    </update>
+    
+    <!-- 확장컬럼 갯수조회(기본컬럼제외) -->
+    <select id="selectBbsAditCnt" parameterType="map" resultType="int">
+	<![CDATA[
+    	SELECT COUNT(*)
+    	FROM TAP_BM_BBS_ADIT
+    	WHERE BBS_ID = #{bbsId}
+    		AND ADIT_TY <> 'DEFAULT'
+   	]]>
+    </select>
+    
+     <!-- 기본컬럼 갯수조회(확장컬럼제외) -->
+      <select id="selectBbsAditBasicCnt" parameterType="map" resultType="int">
+    <![CDATA[
+    	SELECT COUNT(*)
+    	FROM TAP_BM_BBS_ADIT
+    	WHERE BBS_ID = #{bbsId}
+    		AND ADIT_TY = 'DEFAULT'
+   	]]>
+     </select>
+     
+    <!-- 확장컬럼명 조회( 추가될 컬럼명 번호 ) -->
+    <select id="selectBbsAditNum" parameterType="map" resultType="string">
+	<![CDATA[
+    	SELECT MAX(TO_NUMBER(COL_NM))+1
+    	FROM TAP_BM_BBS_ADIT
+    	WHERE BBS_ID = #{bbsId}
+    		AND ADIT_TY <> 'DEFAULT'
+   	]]>
+    </select>
+    
+    <!-- 메뉴 경로 초기화 -->
+    <update id="updateMenuCoursInitl" parameterType="map">
+    	UPDATE TAP_BM_BBS_MANAGE 
+    	   SET MENU_COURS = ''
+    	 WHERE SYS_ID = #{sysId}
+    </update>    
+    
+     <!-- 게시판 이력 sql -->
+    <sql id="selectBbsHistSql" >
+		SELECT 
+		       BM.BBS_ID,
+		       BM.SYS_ID,
+		       BM.BBS_TY,
+		       BM.BBS_PRPOS,
+		       BM.BBS_SJ,
+		       SM.SYS_NM,
+		       BM.HIST_SN,
+			   BM.HIST_GROUP_SEQ,
+			   BM.HIST_USER_ID,
+			   BM.HIST_USER_NM,
+			   BM.HIST_USER_IP,
+			   TO_CHAR(BM.HIST_DATE, 'YYYY/MM/DD HH:MM') AS HIST_DATE,
+			   BM.HIST_TY
+		  FROM 
+		  	   TAP_BM_BBS_HIST BM,
+		       TAP_SM_SYS_MANAGE SM
+		 WHERE 1 = 1
+		   AND BM.SYS_ID = SM.SYS_ID
+		   AND BM.BBS_USE_AT = 'Y' 
+		   AND BM.SYS_ID = #{sysId}
+		<if test="@egovframework.MybatisUtils@isNotEmpty(bbshistSearch)">
+		   AND ( (BM.BBS_ID LIKE '%'||#{bbshistSearch}||'%') OR (BM.BBS_SJ LIKE '%'||#{bbshistSearch}||'%') OR 
+		   		 	(BM.HIST_USER_ID LIKE '%'||#{bbshistSearch}||'%') OR (BM.HIST_USER_NM LIKE '%'||#{bbshistSearch}||'%')		   
+		   		)
+		</if>
+    </sql>
+    
+	<!-- 게시판 이력 조회 -->
+    <select id="selectBbsHist" parameterType="map" resultType="egovMap">
+    	<include refid="selectBbsHistSql" /> 
+        ORDER BY HIST_SN DESC
+    </select>
+    
+    <!-- 게시판 이력 조회 (페이징) -->
+    <select id="selectBbsHistPaging" parameterType="map" resultType="egovMap">
+    	SELECT
+    		PL.*
+    	FROM (
+        	SELECT 
+        		PO.*
+        		,rownum as rsn
+			FROM (
+	    		<include refid="selectBbsHistSql" /> 
+	    		ORDER BY HIST_SN DESC
+				) PO
+		) PL
+		WHERE
+		<![CDATA[
+			rsn <= #{maxSn} 
+			AND rsn > #{minSn}
+		]]>
+    </select>
+    
+    <!-- 게시판 이력 조회 (페이징 전체 카운트) -->
+    <select id="selectBbsHistPagingCount" parameterType="map" resultType="int">
+    	SELECT COUNT(*)
+	    FROM ( <include refid="selectBbsHistSql" /> ) BM 
+    </select>
+    
+    <!-- 게시판 이력 시스템  리스트 sql-->
+	<sql id ="selectBbsHistSmSql">
+	  SELECT   IT.INSTT_CODE
+	          ,IT.INSTT_NM
+	          ,IT.INSTT_TY
+	          ,SM.SYS_ID
+	          ,SM.SYS_NM
+	          ,SM.SYS_TY
+              ,( <include refid="selectBbsHistStats" />  ) AS TOTAL_CNT
+              ,( <include refid="selectBbsHistStats" />  AND BM.HIST_TY  = 'I' ) AS ISNERT_CNT 
+              ,( <include refid="selectBbsHistStats" />  AND BM.HIST_TY  = 'U' ) AS UPDT_CNT
+              ,( <include refid="selectBbsHistStats" />  AND BM.HIST_TY  = 'D' ) AS DEL_CNT
+	    FROM   TAP_IM_INSTT_MANAGE IT, TAP_SM_SYS_MANAGE SM
+	   WHERE   IT.INSTT_CODE = SM.INSTT_CODE
+         AND   SM.SYS_STTUS = 'O'
+	   <include refid="srchBbsHistSmList" /> 
+	ORDER BY   IT.INSTT_CODE, IT.INSTT_LEVEL DESC
+	</sql>
+	
+	<!--  게시판 이력 관리 시스템  리스트 팝업 통계 sql-->
+	<sql id ="selectBbsHistStats">
+		SELECT COUNT(*)
+          FROM TAP_BM_BBS_HIST BM
+         WHERE BM.SYS_ID = SM.SYS_ID
+	</sql>
+	
+	 <!--  게시판 이력 관리 시스템  리스트 검색조건 sql-->
+	<sql id ="srchBbsHistSmList">
+	
+		<if test='@egovframework.MybatisUtils@isEmpty(author) || author != "master"'>
+         AND SM.SYS_ID NOT IN ('apple')
+        </if>
+        
+        <if test="@egovframework.MybatisUtils@isNotEmpty(insttCode)">
+	     AND   ( IT.INSTT_CODE =  #{insttCode}
+	     
+                    OR  IT.UPPER_INSTT_CODE = #{upperInsttCode}
+                    OR  IT.BSIS_INSTT_CODE = #{bsisInsttCode}
+                    
+               	)
+         </if>
+	    
+	     <if test="@egovframework.MybatisUtils@isNotEmpty(srchSmTxt)">
+	       AND  (  		 
+	       				 SM.SYS_NM like '%'||#{srchSmTxt}||'%'
+	              	  OR SM.SYS_TY like '%'||#{srchSmTxt}||'%' 
+	              	 
+	            )
+	    </if>
+	    
+	</sql>
+	
+	<!--  게시판 이력 관리 시스템  리스트  -->
+    <select id="selectBbsHistSmList" parameterType="egovMap" resultType="egovMap">
+	 	<include refid="selectBbsHistSmSql" /> 
+	 </select>
+	 	
+	<!-- 게시판 이력 관리 시스템  리스트(페이징) -->
+    <select id="selectBbsHistSmListPaging" parameterType="map" resultType="egovMap">
+    	SELECT
+    		PL.*
+    	FROM (
+        	SELECT 
+        		PO.*
+        		,rownum as rsn
+			FROM (
+	    		<include refid="selectBbsHistSmSql" /> 
+				) PO
+		) PL
+		WHERE
+		<![CDATA[
+			rsn <= #{maxSn} 
+			AND rsn > #{minSn}
+		]]>
+    </select>
+    
+    <!-- 게시판 이력 관리 시스템  리스트 (페이징 전체 카운트) -->
+    <select id="selectBbsHistSmListPagingCount" parameterType="map" resultType="int">
+    	SELECT   COUNT(*)
+	      FROM   TAP_IM_INSTT_MANAGE IT, TAP_SM_SYS_MANAGE SM
+	     WHERE   IT.INSTT_CODE = SM.INSTT_CODE
+           AND   SM.SYS_STTUS = 'O'
+	   <include refid="srchBbsHistSmList" /> 
+	  ORDER BY   IT.INSTT_CODE, IT.INSTT_LEVEL DESC
+    </select>
+    
+   	<!-- 엑셀다운로드 -->
+	<select id="selectBbsHistListExcel" parameterType="map" resultType="egovMap">
+			SELECT 
+		       BM.BBS_ID,
+		       BM.BBS_SJ,
+		       BM.HIST_USER_NM,
+		       BM.HIST_USER_ID,
+		       TO_CHAR(BM.HIST_DATE, 'YYYY/MM/DD HH24:MI') AS HIST_DATE,
+		       BM.HIST_TY,
+			   ROW_NUMBER() OVER(ORDER BY BM.BBS_ID) AS RSN
+		  FROM 
+		  	   TAP_BM_BBS_HIST BM,
+		       TAP_SM_SYS_MANAGE SM
+		 WHERE 1 = 1
+		   AND BM.SYS_ID = SM.SYS_ID
+		   AND BM.BBS_USE_AT = 'Y' 
+		   AND BM.SYS_ID = #{sysId}
+		<if test="@egovframework.MybatisUtils@isNotEmpty(bbshistSearch)">
+		   AND ( BM.BBS_ID LIKE '%'||#{bbshistSearch}||'%' OR BM.BBS_SJ LIKE '%'||#{bbshistSearch}||'%' OR 
+		   		 BM.HIST_USER_ID LIKE '%'||#{bbshistSearch}||'%' OR BM.HIST_USER_NM LIKE '%'||#{bbshistSearch}||'%'		   
+		   		)
+		</if>
+	</select>
+	
+	<!-- 개인아이디로 가입된 홈페이지 관리자 정보 조회 -->
+	<select id="selectHmpgAdminListByBbsId" parameterType="map" resultType="egovMap">
+		SELECT
+			BM.BBS_ID 
+			,BM.BBS_SJ
+			,MM.MBER_ID
+			,MM.MBTLNUM 
+		FROM
+			TAP_BM_BBS_MANAGE BM
+			,TAP_AU_AUTHOR_MBER AM
+			,V_TAP_MM_MBER_MANAGE MM
+		WHERE
+			BM.SYS_ID = AM.SYS_ID
+		AND
+			AM.MBER_ID = MM.MBER_ID
+		AND
+			BM.BBS_ID = #{bbsId}
+		AND
+			AM.AUTHOR_CODE IN (1,2)
+		AND
+			MM.DI_KEY != 'diKey'
+	</select>
+
+</mapper>

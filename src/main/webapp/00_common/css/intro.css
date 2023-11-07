@@ -1,0 +1,187 @@
+@charset "utf-8";
+@import url('/00_common/css/basic.css');
+@import url('/00_common/css/con_com.css');
+
+body {background:#f7f7f7;}
+body.intro2 {background:#fff;}
+
+#intro_container {position:relative; letter-spacing:-1px; padding:5rem 0 2rem;}
+#intro_container:before {position:absolute; top:0; left:0; width:100%; height:27rem; background:#0693ef url('/00_common/images/intro/intro_bg.png') no-repeat center bottom; content:'';}
+
+#intro_container .container_inner {width:100%; max-width:49.5rem; margin:0 auto; padding:0 1rem;}
+
+#intro_container .titWrap {position:relative; text-align:center; color:#fff;}
+#intro_container .titWrap h1 {font-size:2.2rem; word-break:keep-all;}
+#intro_container .titWrap h1 strong {font-weight:700; color:#ffe63f;}
+#intro_container .titWrap span {font-size:1rem;}
+
+#intro_container .intro_contents {margin-top:3.5rem;}
+#intro_container .linkWrap {width:100%; padding:0.75rem; }
+#intro_container .linkWrap ul {display:flex; margin:0 -1rem;}
+#intro_container .linkWrap li {width:50%; padding:0 1rem;}
+#intro_container .linkWrap li a {position:relative; display:flex; flex-direction:column; text-align:center; border-radius:2rem; overflow:hidden; background:#fff; margin:0 auto; box-shadow:3px 3px 18px rgba(97,129,175,.18); -webkit-box-shadow:3px 3px 18px rgba(97,129,175,.18); border-width:2px; border-style:solid; z-index:1;}
+#intro_container .linkWrap li.link01 a {border-color:#f58436;}
+#intro_container .linkWrap li.link02 a {border-color:#1b64c8;}
+#intro_container .linkWrap li a .img {position:relative; text-align:center;}
+#intro_container .linkWrap li a .img:before {position:absolute; top:0; left:0; width:100%; height:97%; z-index:-1; content:'';}
+#intro_container .linkWrap li.link01 a .img:before {background:#fbeade;}
+#intro_container .linkWrap li.link02 a .img:before {background:#c2ddb1;}
+#intro_container .linkWrap li a .img img {max-width:96%; height:auto;}
+#intro_container .linkWrap .cont {margin-top:0.25rem; flex:1; padding:0 1rem;}
+#intro_container .linkWrap .cont .cont_txt {display:flex; align-items:center; justify-content:center; min-height:5rem; flex-direction:column;}
+#intro_container .linkWrap .cont .tit {font-size:1.4rem; font-weight:600; word-break:keep-all;}
+#intro_container .linkWrap .cont .tit strong {font-weight:700;}
+#intro_container .linkWrap .cont .tit strong em {color:#eb6b15;}
+#intro_container .linkWrap .cont .tit2 {font-size:0.9rem; color:#1c2972; font-weight:600; margin:0.2rem 0;}
+#intro_container .linkWrap .cont .txt {font-size:0.75rem; color:#555;}
+#intro_container .linkWrap span {position:relative; display:inline-block; margin:0.75rem auto 1.3rem; line-height:2.5rem; padding:0 2rem; border-radius:1.25rem; width:auto; color:#fff; z-index:1;}
+#intro_container .linkWrap span:before {position:absolute; top:0; left:50%; width:100%; height:100%; border-radius:1.25rem; background:#f58436; z-index:-1; content:''; transform:translateX(-50%); -webkit-transform:translateX(-50%);}
+#intro_container .linkWrap li.link02 span:before {background:#1b64c8;}
+#intro_container .linkWrap li a:hover,
+#intro_container .linkWrap li a:focus {transform:translateY(-5%); -webkit-transform:translateY(-5%); box-shadow:3px 3px 18px rgba(97,129,175,.5); -webkit-box-shadow:3px 3px 18px rgba(97,129,175,.5);}
+#intro_container .linkWrap li a:hover span:before,
+#intro_container .linkWrap li a:focus span:before {width:200%;}
+#intro_container .linkWrap li a,
+#intro_container .linkWrap li a span:before {transition: all .3s; -webkit-transition: all .3s; -ms-transition: all .3s;}
+
+#intro_container .callInfo {margin-top:3.5rem; border-top:2px solid #2c7ce0; background:#fff; position:relative; width:100%; min-height:5rem; line-height:2rem; padding:1.5rem 1.5rem 1.5rem 6.5rem; border-bottom:1px solid #eeee;}
+#intro_container .callInfo:before {content:""; position:absolute; left:1.5rem; top:50%; width:4rem; height:4rem; margin-top:-2rem; border-radius:50%; background:#f2f2f2 url('/00_common/images/intro/intro_img_03.png') no-repeat center; }
+#intro_container .callInfo > * {display:inline-block; vertical-align:middle;}
+#intro_container .callInfo h2 {position:relative; color:#0746b9; font-size:1.2rem; font-weight:700; margin-right:2rem; padding-right:7rem;}
+#intro_container .callInfo h2:before{content:""; position:absolute; right:0; top:50%; width:calc(100% - 7.25rem); height:1px; background:#a6caff;}
+#intro_container .callInfo h2:after{content:""; position:absolute; right:0; top:50%; width:.5rem; height:.5rem; margin-top:-0.25rem; border-radius:50%; background:#a6caff;}
+#intro_container .callInfo p {font-size:0.9rem; color:#666; word-break:keep-all; line-height:1.5;}
+
+
+/* 인트로_학교리스트 */
+#intro_container.intro_container2 {padding:0;}
+#intro_container.intro_container2:before {display:none;}
+
+#intro_container .container_inner2 {width:100%; max-width:60rem; margin:0 auto; padding:3rem 0;}
+
+#intro_container .titWrap2 {height:6.6rem; background: url('/00_common/images/intro/intro2_top_bg.png') repeat 0 0;}
+#intro_container .titWrap2:before,
+#intro_container .titWrap2:after {position:absolute; bottom:0; background-position:0 0; background-repeat:no-repeat; content:'';}
+#intro_container .titWrap2:before {left:0; width:236px; height:76px; background-image:url('/00_common/images/intro/intro2_top_img2.png');}
+#intro_container .titWrap:after {right:0; width:345px; height:97px; background-image:url('/00_common/images/intro/intro2_top_img3.png');}
+#intro_container .titWrap2 img {position:absolute; top:0; left:50%; margin-left:-26.5rem; max-height:100%;}
+#intro_container .titWrap2 .txt {position:absolute; top:0; left:50%; margin-left:-3rem; display:flex; flex-direction:column; height:100%; justify-content:center; }
+#intro_container .titWrap2 h1 {font-size:1.7rem; word-break:keep-all;}
+#intro_container .titWrap2 h1 strong,
+#intro_container .titWrap2 h1 em {font-weight:700;}
+#intro_container .titWrap2 h1 strong {color:#fff43f;}
+#intro_container .titWrap2 span {font-size:0.9rem;}
+
+#intro_container .bu_wnrn:before {top:1px;}
+
+#intro_container .tbl_st_row table tr:nth-child(odd) {background:#f8fbff;}
+#intro_container .school_info {display:flex; text-align:left; margin:0 0.5rem;}
+#intro_container .school_info dt {flex:1;}
+#intro_container .school_info dt strong {font-size:1rem; font-weight:700; color:#0746b9;}
+#intro_container .school_info dt span {display:block; font-size:0.75rem; color:#666; margin-top:.15rem; }
+#intro_container .school_info dd {width:8.5rem;}
+#intro_container .goschool_btn {display:flex; width:100%; height:100%; background:#005fd4; font-size:0.9rem; padding:0.75rem 1.5rem; font-size:0.8rem; color:#fff; align-items:center; justify-content:space-between; border-radius:.5rem;}
+#intro_container .goschool_btn:hover {background:#003276;}
+
+.tabcontent{
+  margin-top:0.75rem;
+}
+
+/* 반응형 */
+@media screen and (max-width:1540px){ 
+	#intro_container .titWrap2:before,
+#intro_container .titWrap2:after {display:none;}
+}
+
+@media screen and (max-width:1240px){ 
+	#intro_container .container_inner2 {padding:3rem 1rem;}
+}
+
+@media screen and (max-width:1200px){ 
+	#intro_container .container_inner2 {padding:1.5rem 1rem;}
+}
+
+@media screen and (max-width:1024px){ 	
+	#intro_container {padding-top:3rem;}
+	#intro_container:before {height: 50%;}
+	#intro_container .intro_contents {margin-top:2.5rem;}
+	#intro_container .callInfo {margin-top:2.5rem;}
+}
+
+@media screen and (max-width:980px){ 
+	#intro_container .school_info {flex-direction:column; text-align:center;}
+	#intro_container .school_info dd {margin:0 auto;}
+	#intro_container .goschool_btn {margin-top:0.5rem; padding:0.5rem 1.5rem;}
+   
+   #intro_container .titWrap2 .txt {margin-left:-6rem;}
+   #intro_container .titWrap2 h1 {font-size:1.5rem;}
+}
+
+@media screen and (max-width:900px){ 
+	#intro_container .linkWrap ul {margin:0 -0.5rem;}
+	#intro_container .linkWrap li {padding:0 0.5rem;}
+   
+}
+@media screen and (max-width:860px){ 
+	#intro_container .intro_contents {margin-top:2rem;}
+	#intro_container:before {height: 45%;}
+	#intro_container .linkWrap ul {flex-direction:column;}
+	#intro_container .linkWrap li {width:100%; padding:0.5rem 0;}
+	#intro_container .linkWrap .cont .cont_txt {min-height:auto;}
+	#intro_container .callInfo {margin-top:2rem; padding:0.75rem 0.75rem 0.75rem 6.5rem;}   
+}
+@media (min-width:581px) and (max-width:860px){ 
+	#intro_container .linkWrap li a {flex-direction:row; align-items:center;}
+	#intro_container .linkWrap li a .img {width:40%;}
+	#intro_container .linkWrap li a .img:before {top:-.5rem; height:110%;}	
+	#intro_container .linkWrap span {margin:1rem auto 0.5rem;} 
+}
+@media screen and (max-width:768px){ 	
+    
+    
+}
+@media screen and (max-width:680px){
+	#intro_container {padding-top:2rem;}
+	#intro_container .intro_contents {margin-top:1rem;}
+	#intro_container .callInfo {margin-top:1rem;}   
+    #intro_container .linkWrap .cont .tit {font-size:1.2rem;}
+}
+@media screen and (max-width:580px){
+	#intro_container:before {height: 30%;}
+	#intro_container .titWrap h1 {font-size:1.9rem;}
+	#intro_container .linkWrap li a .img img {height:8rem;}
+	
+	#intro_container .titWrap2 h1 {font-size:1.5rem;}
+   
+}
+
+@media screen and (max-width:480px){
+   	#intro_container .callInfo h2 {font-size:1rem; margin-right:0; padding-right:0;}
+	#intro_container .callInfo {padding:.25rem .75rem .5rem 6.5rem;}   
+	#intro_container .callInfo h2:before{display:none;}
+	#intro_container .callInfo h2:after{display:none;}
+	
+	#intro_container .titWrap2 img {display:none;}
+	#intro_container .titWrap2 .txt {margin-left:0; transform:translateX(-50%); -webkit-transform:translateX(-50%); width:100%; }
+	#intro_container .titWrap2 span {font-size:0.85rem; letter-spacing:-2px;}
+}
+
+@media screen and (max-width:420px){
+	#intro_container .school_info dd {width:100%;}
+	#intro_container .goschool_btn {padding:.5rem;}
+}
+
+@media screen and (max-width:380px){
+	#intro_container .linkWrap li a:hover span:before,
+	#intro_container .linkWrap li a:focus span:before {width:140%;}
+}
+
+@media screen and (max-width:320px){
+	#intro_container .callInfo:before {display:none;}
+	#intro_container .callInfo {padding:0.25rem 0.75rem 0.5rem;}
+}
+
+
+@media screen and (max-width:320px){ 
+   
+}

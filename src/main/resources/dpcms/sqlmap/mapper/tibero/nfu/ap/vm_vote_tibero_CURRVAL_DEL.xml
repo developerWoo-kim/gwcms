@@ -1,0 +1,696 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="vm_vote_CURRVAL_DEL">
+	
+	<!-- 투표관리 시퀀스 획득 -->
+	<select id="selectSeqVoteSn" resultType="string">
+        SELECT SEQ_VOTE_SN.NEXTVAL
+        FROM DUAL
+    </select>
+	
+	<!-- 투표 조회 쿼리 -->
+    <sql id="selectVoteListSql" >
+        SELECT VOTE_SN
+		    ,VOTE_SJ
+		    ,VOTE_DC
+		    ,VOTE_KIND
+		    ,TO_CHAR(VOTE_BGNDE,'YYYY/MM/DD') AS VOTE_BGNDE
+		    ,TO_CHAR(VOTE_ENDDE,'YYYY/MM/DD') AS VOTE_ENDDE
+		    ,VOTE_RESULT_SE
+		    ,VOTE_PLURAL_SE
+		    ,VOTE_ANNYMTY_SE
+		    ,VOTE_AUTHOR
+		    ,SYS_ID
+		    ,VOTE_CREAT_USID
+		    ,VOTE_CREAT_USNM
+		    ,(SELECT MBER_NM FROM TAP_MM_MBER_MANAGE WHERE MBER_ID=VOTE_CREAT_USID) AS MBER_NM
+		    ,rank() OVER (ORDER BY VOTE_CREAT_DATE,VOTE_SN) as rank
+		    ,VOTE_CREAT_USIP
+		    ,TO_CHAR(VOTE_CREAT_DATE,'YYYY.MM.DD') AS VOTE_CREAT_DATE
+		    ,(CASE
+		    <![CDATA[
+            WHEN TO_CHAR(SYSDATE,'YYYY/MM/DD') < TO_CHAR(VOTE_BGNDE,'YYYY/MM/DD') THEN '대기'
+            WHEN TO_CHAR(SYSDATE,'YYYY/MM/DD') > TO_CHAR(VOTE_ENDDE,'YYYY/MM/DD') THEN '종료'
+            WHEN TO_CHAR(SYSDATE,'YYYY/MM/DD') >= TO_CHAR(VOTE_BGNDE,'YYYY/MM/DD') AND TO_CHAR(SYSDATE,'YYYY/MM/DD') <= TO_CHAR(VOTE_ENDDE,'YYYY/MM/DD') THEN '진행'
+            ]]>
+            end) as kind
+        FROM TAP_VM_VOTE_MANAGE 
+        WHERE 
+        	SYS_ID = #{sysId}
+        <if test="@egovframework.MybatisUtils@isNotEmpty(srchVoteAt)">
+	       <if test='srchVoteAt=="P"'>
+	       <![CDATA[ 
+ 	       		AND  TO_CHAR(VOTE_BGNDE,'YYYY/MM/DD') <= TO_CHAR(SYSDATE,'YYYY/MM/DD') 
+ 				AND  TO_CHAR(SYSDATE,'YYYY/MM/DD') <= TO_CHAR(VOTE_ENDDE,'YYYY/MM/DD') 
+ 			]]> 
+	       </if>
+	       <if test='srchVoteAt=="F"'>
+	       <![CDATA[
+ 				AND TO_CHAR(SYSDATE,'YYYY/MM/DD') > TO_CHAR(VOTE_ENDDE,'YYYY/MM/DD') 
+ 			]]> 
+	       </if>
+	       <if test='srchVoteAt=="W"'> 
+	       <![CDATA[
+ 				AND TO_CHAR(SYSDATE,'YYYY/MM/DD') < TO_CHAR(VOTE_BGNDE,'YYYY/MM/DD') 
+ 			]]>
+	       </if>
+	       <if test='srchVoteAt=="T"'>
+	       </if>
+		</if>
+	     
+	     <if test="@egovframework.MybatisUtils@isNotEmpty(srchVoteOp)">
+	     	<if test='srchVoteOp=="T"'>
+	     		AND VOTE_SJ LIKE '%'||#{srchVote}||'%'
+	     	</if>
+	     	<if test='srchVoteOp=="W"'>
+	     		AND VOTE_CREAT_USID LIKE '%'||#{srchVote}||'%'
+	     	</if>
+	     	<if test='srchVoteOp=="P"'>
+	     	<![CDATA[
+ 	     		and TO_CHAR(VOTE_BGNDE,'YYYY/MM/DD')  >= #{startDate} 
+ 				and #{endDate} >= TO_CHAR(VOTE_ENDDE,'YYYY/MM/DD')  
+ 			]]> 
+	     	</if>
+	     </if>
+    </sql>
+	
+<!-- 	투표 리스트 조회 -->
+	<select id="selectVoteList" parameterType="map" resultType="egovMap">
+		<include refid="selectVoteListSql" /> 
+        ORDER BY VOTE_CREAT_DATE DESC,VOTE_SN DESC
+	</select>
+	
+	<!-- 투표 리스트 조회(페이징) -->
+    <select id="selectVoteListPaging" parameterType="map" resultType="egovMap">
+    	SELECT
+    		PL.*
+    	FROM (
+        	SELECT 
+        		PO.*
+        		,rownum as rsn
+			FROM (
+	    		<include refid="selectVoteListSql" /> 
+	    		ORDER BY VOTE_CREAT_DATE DESC,VOTE_SN DESC
+				) PO
+		) PL
+		WHERE
+		<![CDATA[
+  			rsn <= #{maxSn}   
+  			AND rsn > #{minSn}  
+  		]]> 
+    </select>
+    
+<!--     투표 리스트 조회(페이징 전체 카운트) -->
+    <select id="selectVoteListPagingCount" parameterType="map" resultType="int">
+    	SELECT COUNT(*) 
+        FROM TAP_VM_VOTE_MANAGE 
+        WHERE 
+        	SYS_ID = #{sysId}
+         <if test="@egovframework.MybatisUtils@isNotEmpty(srchVoteAt)">
+	       <if test='srchVoteAt=="P"'>
+	       <![CDATA[ 
+ 	       		AND  TO_CHAR(VOTE_BGNDE,'YYYY/MM/DD') <= TO_CHAR(SYSDATE,'YYYY/MM/DD') 
+ 				AND  TO_CHAR(SYSDATE,'YYYY/MM/DD') <= TO_CHAR(VOTE_ENDDE,'YYYY/MM/DD') 
+ 			]]> 
+	       </if>
+	       <if test='srchVoteAt=="F"'>
+	       <![CDATA[
+ 				AND TO_CHAR(SYSDATE,'YYYY/MM/DD') > TO_CHAR(VOTE_ENDDE,'YYYY/MM/DD') 
+ 			]]> 
+	       </if>
+	       <if test='srchVoteAt=="W"'> 
+	       <![CDATA[
+ 				AND TO_CHAR(SYSDATE,'YYYY/MM/DD') < TO_CHAR(VOTE_BGNDE,'YYYY/MM/DD') 
+ 			]]>
+	       </if>
+	       <if test='srchVoteAt=="T"'>
+	       </if>
+		</if>
+	     
+	     <if test="@egovframework.MybatisUtils@isNotEmpty(srchVoteOp)">
+	     	<if test='srchVoteOp=="T"'>
+	     		AND VOTE_SJ LIKE '%'||#{srchVote}||'%'
+	     	</if>
+	     	<if test='srchVoteOp=="W"'>
+	     		AND VOTE_CREAT_USID LIKE '%'||#{srchVote}||'%'
+	     	</if>
+	     	<if test='srchVoteOp=="P"'>
+	     	<![CDATA[
+ 	     		and TO_CHAR(VOTE_BGNDE,'YYYY/MM/DD')  >= #{startDate} 
+ 				and #{endDate} >= TO_CHAR(VOTE_ENDDE,'YYYY/MM/DD')  
+ 			]]> 
+	     	</if>
+	     </if>
+    </select>
+	
+	<!--     투표 리스트 수 조회 -->
+    <select id="selectVoteListPagingCount2" parameterType="map" resultType="egovMap">
+    	SELECT COUNT(*) CNT
+        FROM TAP_VM_VOTE_MANAGE 
+        WHERE 
+        	SYS_ID = #{sysId}
+         <if test="@egovframework.MybatisUtils@isNotEmpty(srchVoteAt)">
+	       <if test='srchVoteAt=="P"'>
+	       <![CDATA[ 
+ 	       		AND  TO_CHAR(VOTE_BGNDE,'YYYY/MM/DD') <= TO_CHAR(SYSDATE,'YYYY/MM/DD') 
+ 				AND  TO_CHAR(SYSDATE,'YYYY/MM/DD') <= TO_CHAR(VOTE_ENDDE,'YYYY/MM/DD') 
+ 			]]> 
+	       </if>
+	       <if test='srchVoteAt=="F"'>
+	       <![CDATA[
+ 				AND TO_CHAR(SYSDATE,'YYYY/MM/DD') > TO_CHAR(VOTE_ENDDE,'YYYY/MM/DD') 
+ 			]]> 
+	       </if>
+	       <if test='srchVoteAt=="W"'> 
+	       <![CDATA[
+ 				AND TO_CHAR(SYSDATE,'YYYY/MM/DD') < TO_CHAR(VOTE_BGNDE,'YYYY/MM/DD') 
+ 			]]>
+	       </if>
+	       <if test='srchVoteAt=="T"'>
+	       </if>
+		</if>
+	     
+	     <if test="@egovframework.MybatisUtils@isNotEmpty(srchVoteOp)">
+	     	<if test='srchVoteOp=="T"'>
+	     		AND VOTE_SJ LIKE '%'||#{srchVote}||'%'
+	     	</if>
+	     	<if test='srchVoteOp=="W"'>
+	     		AND VOTE_CREAT_USID LIKE '%'||#{srchVote}||'%'
+	     	</if>
+	     	<if test='srchVoteOp=="P"'>
+	     	<![CDATA[
+ 	     		and TO_CHAR(VOTE_BGNDE,'YYYY/MM/DD')  >= #{startDate} 
+ 				and #{endDate} >= TO_CHAR(VOTE_ENDDE,'YYYY/MM/DD')  
+ 			]]> 
+	     	</if>
+	     </if>
+    </select>
+	
+	<!-- 투표생성 -->
+	<insert id="insertVote" parameterType="Map">
+		insert into TAP_VM_VOTE_MANAGE(
+		    VOTE_SN
+		    ,VOTE_SJ
+		    ,VOTE_DC
+		    ,VOTE_KIND
+		    ,VOTE_BGNDE
+		    ,VOTE_ENDDE
+		    ,VOTE_RESULT_SE
+		    ,VOTE_ANNYMTY_SE
+		    ,VOTE_PLURAL_SE
+		    ,VOTE_AUTHOR
+		    ,SYS_ID
+		    ,VOTE_CREAT_USID
+		    ,VOTE_CREAT_USNM
+		    ,VOTE_CREAT_USIP
+		    ,VOTE_CREAT_DATE
+		)values(
+		    #{voteSn}
+		    ,#{voteTitle}
+		    ,#{voteContent}
+		    ,#{voteRadio}
+		    ,#{beginDt}
+		    ,#{endDt}
+		    ,#{voteOp1}
+		    ,#{voteOp2}
+		    ,#{voteOp3}
+		    ,#{voteAuthor}
+		    ,#{sysId}<!-- 시스템아이디 -->
+		    ,#{creatId}<!-- 등록자아이디 -->
+		    ,''<!-- 등록자명 -->
+		    ,#{creatIp}<!-- 등록자아이피 -->
+		    ,SYSDATE
+		)
+	</insert>
+	
+	<!-- 투표복사 -->
+	<insert id="copyVote" parameterType="Map">
+		insert into TAP_VM_VOTE_MANAGE(
+		    VOTE_SN
+		    ,VOTE_SJ
+		    ,VOTE_DC
+		    ,VOTE_KIND
+		    ,VOTE_BGNDE
+		    ,VOTE_ENDDE
+		    ,VOTE_RESULT_SE
+		    ,VOTE_ANNYMTY_SE
+		    ,VOTE_PLURAL_SE
+		    ,VOTE_AUTHOR
+		    ,SYS_ID
+		    ,VOTE_CREAT_USID
+		    ,VOTE_CREAT_USNM
+		    ,VOTE_CREAT_USIP
+		    ,VOTE_CREAT_DATE
+		)values(
+			#{voteSn}
+		    ,#{voteSj}
+		    ,#{voteDc}
+		    ,#{voteKind}
+		    ,SYSDATE
+		    ,SYSDATE
+		    ,#{voteResultSe}
+		    ,#{voteAnnymtySe}
+		    ,#{votePluralSe}
+		    ,#{voteAuthor}
+		    ,#{sysId}<!-- 시스템아이디 -->
+		    ,#{creatId}<!-- 등록자아이디 -->
+		    ,''<!-- 등록자명 -->
+		    ,#{creatIp}<!-- 등록자아이피 -->
+		    ,SYSDATE
+		)
+	</insert>
+	
+	<!-- 투표항목생성 -->
+	<insert id="insertVoteItem" parameterType="Map">
+		insert into TAP_VI_VOTE_ITEM(
+		    VOTE_SN 
+		    ,IEM_SN
+		    ,VOTE_QESITM
+		    ,IMAGE
+		)values(
+		    <choose>
+		    	<when test="@egovframework.MybatisUtils@isNotEmpty(voteNm)">
+		    		#{voteNm},
+		    	</when>
+		    	<otherwise>
+		    		#{voteSn},
+		    	</otherwise>
+		    </choose>
+		    #{itemNo},
+		    #{qesItm},
+		    #{fileStreCours}
+		)
+	</insert>
+	
+	<!-- 투표항목복사 -->
+	<insert id="copyVoteItem" parameterType="Map">
+		INSERT INTO TAP_VI_VOTE_ITEM(
+		    VOTE_SN 
+		    ,IEM_SN
+		    ,VOTE_QESITM
+		    ,IMAGE
+		)VALUES(
+		    #{voteSn},
+		    #{iemSn},
+		    #{voteQesitm},
+		    #{image}
+		)
+	</insert>
+	
+	<!-- 투표이력삭제 -->
+	<delete id="deleteVoteHist" parameterType="Map">
+		DELETE FROM TAP_VH_VOTE_HIST WHERE VOTE_SN = #{voteNm}
+	</delete>
+	
+	<!-- 투표항목삭제 -->
+	<delete id="deleteVoteItem" parameterType="Map">
+		DELETE FROM TAP_VI_VOTE_ITEM WHERE VOTE_SN = #{voteNm}
+	</delete>
+	
+	<!-- 투표삭제 -->
+	<delete id="deleteVote" parameterType="Map">
+		DELETE FROM TAP_VM_VOTE_MANAGE WHERE VOTE_SN = #{voteNm}
+	</delete>
+	
+	<!-- 투표 상세조회(단건) -->
+	<select id="viewVoteInfo" parameterType="Map" resultType="egovMap">
+		SELECT VOTE_SN
+		    ,VOTE_SJ
+		    ,VOTE_DC
+		    ,VOTE_KIND
+		    ,TO_CHAR(VOTE_BGNDE,'YYYY/MM/DD') AS VOTE_BGNDE
+		    ,TO_CHAR(VOTE_ENDDE,'YYYY/MM/DD') AS VOTE_ENDDE
+		    ,VOTE_RESULT_SE
+		    ,VOTE_PLURAL_SE
+		    ,VOTE_ANNYMTY_SE
+		    ,VOTE_AUTHOR
+		    ,SYS_ID
+		    ,VOTE_CREAT_USID
+		    ,VOTE_CREAT_USNM
+		    ,VOTE_CREAT_USIP
+		    ,TO_CHAR(VOTE_CREAT_DATE,'YYYY.MM.DD') AS VOTE_CREAT_DATE
+		    ,(CASE
+		    <![CDATA[
+            WHEN TO_CHAR(SYSDATE,'YYYY/MM/DD') < TO_CHAR(VOTE_BGNDE,'YYYY/MM/DD') THEN '대기'
+            WHEN TO_CHAR(SYSDATE,'YYYY/MM/DD') > TO_CHAR(VOTE_ENDDE,'YYYY/MM/DD') THEN '종료'
+            WHEN TO_CHAR(SYSDATE,'YYYY/MM/DD') >= TO_CHAR(VOTE_BGNDE,'YYYY/MM/DD') AND TO_CHAR(SYSDATE,'YYYY/MM/DD') <= TO_CHAR(VOTE_ENDDE,'YYYY/MM/DD') THEN '진행'
+            ]]>
+            end) as kind
+		FROM TAP_VM_VOTE_MANAGE WHERE VOTE_SN = #{voteNm}
+	</select>
+	
+	<!-- 투표 상세조회(단건) 일반투표일시 문항조회 -->
+	<select id="viewVoteItemInfo" parameterType="Map" resultType="egovMap">
+		SELECT * 
+		FROM TAP_VI_VOTE_ITEM WHERE VOTE_SN = #{voteNm} order by IEM_SN
+	</select>
+	
+	<!-- 투표에 참여한 사람 수(아이디 중복제거) -->
+	<select id="votePrtcpnt" parameterType="Map" resultType= "egovMap">
+		SELECT COUNT(DISTINCT VOTE_ID) AS CNT FROM TAP_VH_VOTE_HIST WHERE VOTE_SN = #{voteNm}
+	</select>
+	
+	<!-- 항목별 투표수 알아오기 -->
+	<select id="voteCount" parameterType="Map" resultType= "egovMap">
+		SELECT COUNT(*) AS CNT FROM TAP_VH_VOTE_HIST WHERE VOTE_SN = #{voteNm}
+		AND IEM_SN = #{item}
+	</select>
+	
+	<!-- 투표 수정하기 -->
+	<update id="updateVote" parameterType="Map">
+		update TAP_VM_VOTE_MANAGE
+		set 
+		    VOTE_SJ = #{voteTitle}
+		    ,VOTE_DC = #{voteContent}
+		    ,VOTE_KIND = #{voteRadio}
+		    ,VOTE_BGNDE = #{beginDt}
+		    ,VOTE_ENDDE = #{endDt}
+		    ,VOTE_RESULT_SE = #{voteOp1}
+		    ,VOTE_ANNYMTY_SE = #{voteOp2}
+		    ,VOTE_PLURAL_SE = #{voteOp3}
+		    ,VOTE_AUTHOR = #{voteAuthor}
+		    ,SYS_ID = #{sysId}
+		    ,VOTE_CREAT_USID = #{creatId}
+		    ,VOTE_CREAT_USNM = ''
+		    ,VOTE_CREAT_USIP = #{creatIp}
+		    ,VOTE_CREAT_DATE = sysdate
+		where vote_sn =#{voteNm}
+	</update>
+	
+	<!-- 투표했는지 체크 -->
+	<select id="comfirm" parameterType="Map" resultType= "egovMap">
+		SELECT COUNT(*) CNT FROM TAP_VH_VOTE_HIST
+		WHERE VOTE_SN = #{voteNm}
+		AND VOTE_ID =#{userId}
+	</select>
+	
+	<!-- 투표하기 -->
+	<insert id="voteCompt" parameterType="Map">
+		INSERT INTO TAP_VH_VOTE_HIST(
+		    VOTE_SN
+		    ,IEM_SN
+		    ,VOTE_ID
+		    ,VOTE_DE
+		)VALUES(
+		    #{voteNm}
+		    ,#{iemSn}
+		    ,#{userId}
+		    ,SYSDATE
+		)
+	</insert>
+	
+	<!-- 투표자 리스트 투표자 조회(전체 건) -->
+	<sql id="votePrtcpntListSql" >
+		SELECT DISTINCT(VOTE_ID),VOTE_DE 
+		FROM TAP_VH_VOTE_HIST 
+		WHERE VOTE_SN= #{voteNm}
+	</sql>
+	
+	<!-- 투표자리스트조회 -->
+	<select id="votePrtcpntList" parameterType="map" resultType="egovMap">
+		<include refid="votePrtcpntListSql" /> 
+        ORDER BY VOTE_DE DESC
+	</select>
+	
+	<!-- 투표 참여자 수 -->
+	<select id="votePrtcpntListPagingCount" parameterType="map" resultType="int">
+		SELECT COUNT(DISTINCT VOTE_ID)
+		FROM TAP_VH_VOTE_HIST 
+		WHERE VOTE_SN= #{voteNm}
+	</select>
+	
+	<!-- 투표참여자 리스트 페이징 -->
+	<select id="votePrtcpntListPaging" parameterType="map" resultType="egovMap">
+    	SELECT
+    		PL.*
+    	FROM (
+        	SELECT 
+        		PO.*
+        		,rownum as rsn
+			FROM (
+	    		<include refid="votePrtcpntListSql" /> 
+	    		ORDER BY VOTE_SN DESC
+				) PO
+		) PL
+		WHERE
+		<![CDATA[
+  			rsn <= #{maxSn}   
+  			AND rsn > #{minSn}  
+  		]]> 
+    </select>
+	<!-- 투표자 리스트 투표자 조회(전체 건) -->
+	
+	<!-- 투표관리 시스템 리스트 통계 sql -->
+	<sql id="selectVoteState">
+		SELECT COUNT(*) FROM TAP_VM_VOTE_MANAGE WHERE SYS_ID= SM.SYS_ID
+	</sql>
+	
+	<!-- 투표관리 시스템 리스트 sql -->
+	<sql id="selectVoteSmList">
+		SELECT IT.INSTT_CODE
+	          ,IT.INSTT_NM
+	          ,IT.INSTT_TY
+	          ,SM.SYS_ID
+			  ,SM.SYS_NM 
+			  ,( <include refid="selectVoteState" /> ) AS TOTAL_CNT                                                                
+			  ,( <include refid="selectVoteState" /> AND <![CDATA[ TO_CHAR(SYSDATE,'YYYY/MM/DD') < TO_CHAR(VOTE_BGNDE,'YYYY/MM/DD')]]>) AS W_CNT
+			  ,( <include refid="selectVoteState" /> AND <![CDATA[ TO_CHAR(SYSDATE,'YYYY/MM/DD') > TO_CHAR(VOTE_ENDDE,'YYYY/MM/DD')]]>) AS F_CNT
+			  ,( <include refid="selectVoteState" /> AND <![CDATA[ TO_CHAR(SYSDATE,'YYYY/MM/DD') >= TO_CHAR(VOTE_BGNDE,'YYYY/MM/DD') AND TO_CHAR(SYSDATE,'YYYY/MM/DD') <= TO_CHAR(VOTE_ENDDE,'YYYY/MM/DD')]]> ) AS T_CNT
+			  FROM TAP_IM_INSTT_MANAGE IT, TAP_SM_SYS_MANAGE SM 
+			  WHERE IT.INSTT_CODE = SM.INSTT_CODE
+			  AND SM.SYS_STTUS = 'O'
+			
+			<if test='@egovframework.MybatisUtils@isEmpty(author) || author != "master"'>
+	         AND SM.SYS_ID NOT IN ('apple')
+	        </if>
+	        
+	        <if test="@egovframework.MybatisUtils@isNotEmpty(insttCode)">
+		     AND   ( IT.INSTT_CODE =  #{insttCode}
+		     
+	                    OR  IT.UPPER_INSTT_CODE = #{upperInsttCode}
+	                    OR  IT.BSIS_INSTT_CODE = #{bsisInsttCode}
+	                    
+	               	)
+	         </if>
+	         
+		     <if test="@egovframework.MybatisUtils@isNotEmpty(insttGrad)">
+		     AND   ( IT.INSTT_GRAD IS NULL
+		     
+		     		 <if test="@egovframework.MybatisUtils@isNotEmpty(dtnt)">
+		                OR IT.INSTT_GRAD = #{dtnt}
+		             </if>
+		             <if test="@egovframework.MybatisUtils@isNotEmpty(elesch)">
+		                OR IT.INSTT_GRAD = #{elesch}
+		             </if>
+		             <if test="@egovframework.MybatisUtils@isNotEmpty(mskul)">    
+		                OR IT.INSTT_GRAD = #{mskul}
+		             </if> 
+		             <if test="@egovframework.MybatisUtils@isNotEmpty(hgschl)">
+		                OR IT.INSTT_GRAD = #{hgschl}
+		             </if>
+		             <if test="@egovframework.MybatisUtils@isNotEmpty(kndrgr)">     
+		                OR IT.INSTT_GRAD = #{kndrgr}
+		             </if>
+		             <if test="@egovframework.MybatisUtils@isNotEmpty(spcl)">
+		                OR IT.INSTT_GRAD = #{spcl}
+		             </if>
+		             
+		           )
+		     </if>
+	        
+	        <if test="@egovframework.MybatisUtils@isNotEmpty(mberId)">
+		      AND SM.SYS_ID IN (
+					SELECT SYS_ID
+					  FROM TAP_AU_AUTHOR_MBER 
+					 WHERE MBER_ID = #{mberId}
+						   AND SYS_ID != 'apple'
+					   AND AUTHOR_CODE IN (1,2)	
+	        	)
+		     </if>
+		     
+		     <if test="@egovframework.MybatisUtils@isNotEmpty(sysTy)">
+		      AND   SM.SYS_TY = #{sysTy}
+		     </if>
+		     
+		     <if test="@egovframework.MybatisUtils@isNotEmpty(srchTxt)">
+		       AND  (  		 
+       				 SM.SYS_NM like '%'||#{srchTxt}||'%'
+              	  OR SM.SYS_TY like '%'||#{srchTxt}||'%' 
+              	  OR SM.SYS_ID like '%'||#{srchTxt}||'%'
+		       )
+		    </if>
+			 
+			 ORDER BY   IT.INSTT_CODE, IT.INSTT_LEVEL DESC
+	</sql>
+	
+	<!-- 투표관리 시스템 리스트 -->
+	<select id="selectVoteSmList" parameterType="map" resultType="egovMap">
+		<include refid="selectVoteSmList"/>
+	</select>
+	
+	<!-- 투표관리 시스템 페이징 -->
+	<select id="selectVoteSmListPaging" parameterType="map" resultType="egovMap">
+		SELECT
+    		PL.*
+    	FROM (
+        	SELECT 
+        		PO.*
+        		,rownum as rsn
+			FROM (
+	    		<include refid="selectVoteSmList" /> 
+				) PO
+		) PL
+		WHERE
+		<![CDATA[
+			rsn <= #{maxSn} 
+			AND rsn > #{minSn}
+		]]>
+	</select>
+	
+	<!-- 투표관리 시스템 페이징 카운트 -->
+	<select id="selectVoteSmListPagingCount" parameterType="map" resultType="int">
+		SELECT 
+			COUNT(*)
+			FROM TAP_IM_INSTT_MANAGE IT, TAP_SM_SYS_MANAGE SM 
+			  WHERE IT.INSTT_CODE = SM.INSTT_CODE
+			  AND SM.SYS_STTUS = 'O'
+			
+			<if test='@egovframework.MybatisUtils@isEmpty(author) || author != "master"'>
+	         AND SM.SYS_ID NOT IN ('apple')
+	        </if>
+	        
+	        <if test="@egovframework.MybatisUtils@isNotEmpty(insttCode)">
+		     AND   ( IT.INSTT_CODE =  #{insttCode}
+		     
+	                    OR  IT.UPPER_INSTT_CODE = #{upperInsttCode}
+	                    OR  IT.BSIS_INSTT_CODE = #{bsisInsttCode}
+	                    
+	               	)
+	         </if>
+	         
+		     <if test="@egovframework.MybatisUtils@isNotEmpty(insttGrad)">
+		     AND   ( IT.INSTT_GRAD IS NULL
+		     
+		     		 <if test="@egovframework.MybatisUtils@isNotEmpty(dtnt)">
+		                OR IT.INSTT_GRAD = #{dtnt}
+		             </if>
+		             <if test="@egovframework.MybatisUtils@isNotEmpty(elesch)">
+		                OR IT.INSTT_GRAD = #{elesch}
+		             </if>
+		             <if test="@egovframework.MybatisUtils@isNotEmpty(mskul)">    
+		                OR IT.INSTT_GRAD = #{mskul}
+		             </if> 
+		             <if test="@egovframework.MybatisUtils@isNotEmpty(hgschl)">
+		                OR IT.INSTT_GRAD = #{hgschl}
+		             </if>
+		             <if test="@egovframework.MybatisUtils@isNotEmpty(kndrgr)">     
+		                OR IT.INSTT_GRAD = #{kndrgr}
+		             </if>
+		             <if test="@egovframework.MybatisUtils@isNotEmpty(spcl)">
+		                OR IT.INSTT_GRAD = #{spcl}
+		             </if>
+		             
+		           )
+		     </if>
+	        
+	        <if test="@egovframework.MybatisUtils@isNotEmpty(mberId)">
+		      AND SM.SYS_ID IN (
+					SELECT SYS_ID
+					  FROM TAP_AU_AUTHOR_MBER 
+					 WHERE MBER_ID = #{mberId}
+						   AND SYS_ID != 'apple'
+					   AND AUTHOR_CODE IN (1,2)	
+	        	)
+		     </if>
+		     
+		     <if test="@egovframework.MybatisUtils@isNotEmpty(sysTy)">
+		      AND   SM.SYS_TY = #{sysTy}
+		     </if>
+		     
+		     <if test="@egovframework.MybatisUtils@isNotEmpty(srchTxt)">
+		       AND  (  		 
+       				 SM.SYS_NM like '%'||#{srchTxt}||'%'
+              	  OR SM.SYS_TY like '%'||#{srchTxt}||'%' 
+		              	 
+		       )
+		    </if>
+			 
+			 ORDER BY   IT.INSTT_CODE, IT.INSTT_LEVEL DESC
+	</select>	
+	
+	<!-- 인명부 등록 -->
+	<insert id="insertVoteList" parameterType="Map">
+		INSERT INTO TAP_VL_VOTE_LIST(
+		    GRADE
+			,CLAS
+			,NO
+			,NM
+			,SYS_ID
+			,VOTE_SN
+			,ORGINL_ID
+			,FLAG
+		)values(
+			#{grade}
+			,#{clas}
+			,#{no}
+			,#{nm}
+			,#{sysId}
+			<choose>
+		    	<when test="@egovframework.MybatisUtils@isNotEmpty(voteNm)">
+		    		,#{voteNm}
+		    	</when>
+		    	<otherwise>
+		    		,#{voteSn}
+		    	</otherwise>
+		    </choose>
+			,#{orginlId}
+			,'N'
+		)
+	</insert>
+    
+    <!-- 인명부 업데이트 -->
+    <update id="updateVoteListBack" parameterType="Map">
+    	UPDATE TAP_VL_VOTE_LIST
+		SET		FLAG = 'N'
+		WHERE VOTE_SN =#{voteNm}
+    </update>
+    
+    <!-- 인명부 투표 업데이트 -->
+    <update id="updateVoteList" parameterType="Map">
+    	UPDATE TAP_VL_VOTE_LIST
+		SET		FLAG = 'Y'
+		WHERE	VOTE_SN =#{voteNm}
+		AND 	ORGINL_ID = #{orginlId}
+    </update>
+    
+    <!-- 인명부 삭제 -->
+    <delete id="deleteVoteList" parameterType="Map">
+    	DELETE FROM TAP_VL_VOTE_LIST WHERE VOTE_SN = #{voteNm}
+    </delete>
+    
+    <!-- 인명부 조회 -->
+    <select id="uploadVoteList" parameterType="map" resultType="egovMap">
+    	SELECT 
+			GRADE
+			,CLAS
+			,NO
+			,NM
+			,ORGINL_ID
+			,FLAG
+		FROM TAP_VL_VOTE_LIST
+		WHERE SYS_ID = #{sysId}
+		AND VOTE_SN = #{voteSn}
+		ORDER BY ORGINL_ID
+    </select>
+    
+    <!-- 인명부대상인지 확인 -->
+    <select id="voteListChk" parameterType="map" resultType="egovMap">
+    	SELECT *
+		FROM TAP_VL_VOTE_LIST
+		WHERE SYS_ID = #{sysNm}
+		AND VOTE_SN = #{voteNm}
+		AND ORGINL_ID = #{orginlId}
+    </select>
+    
+</mapper>

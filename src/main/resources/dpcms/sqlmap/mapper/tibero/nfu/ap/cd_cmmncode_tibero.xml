@@ -1,0 +1,304 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="cd_cmmncode">
+	
+	<!-- 공통코드 조회 SQL -->
+	<sql id="selectCmmncodeSql" >
+		SELECT
+			*
+		FROM
+			TAP_CD_CMMNCODE_MANAGE
+		WHERE
+			1=1
+			<if test="@egovframework.MybatisUtils@isNotEmpty(srchTxt)">
+			<![CDATA[
+			AND (CMMN_CODE LIKE '%'||#{srchTxt}||'%' OR CMMN_CODE_NM LIKE '%'||#{srchTxt}||'%')
+			]]>
+			</if>
+	</sql>
+	
+	<!-- 공통코드 리스트 조회 -->
+	<select id="selectCmmncodeList" parameterType="map" resultType="egovMap">
+		<include refid="selectCmmncodeSql" /> 
+		ORDER BY
+			CMMN_CODE
+	</select>
+	
+	<!-- 공통코드 단건 조회 -->
+	<select id="selectCmmncodeInfo" parameterType="map" resultType="egovMap">
+		<include refid="selectCmmncodeSql" /> 
+			AND	CMMN_CODE = #{cmmnCode}
+	</select>
+	
+	<!-- 공통코드 리스트 조회(페이징) -->
+    <select id="selectCmmncodeListPaging" parameterType="map" resultType="egovMap">
+    	SELECT
+    		PL.*
+    	FROM (
+        	SELECT 
+        		PO.*
+        		,rownum as rsn
+			FROM (
+	    		<include refid="selectCmmncodeSql" /> 
+	    		ORDER BY
+					CMMN_CODE
+				) PO
+		) PL
+		WHERE
+		<![CDATA[
+			rsn <= #{maxSn} 
+			AND rsn > #{minSn}
+		]]>
+    </select>
+    
+    <!-- 공통코드 리스트 조회(페이징 전체 카운트) -->
+    <select id="selectCmmncodeListPagingCount" parameterType="map" resultType="int">
+    	SELECT
+	    	COUNT(*)
+	    FROM
+	    	TAP_CD_CMMNCODE_MANAGE
+		<if test="@egovframework.MybatisUtils@isNotEmpty(srchTxt)">
+		WHERE
+			AND (CMMN_CODE LIKE '%'||#{srchTxt}||'%' OR CMMN_CODE_NM LIKE '%'||#{srchTxt}||'%')
+		</if>
+    </select>
+    
+    <!-- 공통코드 중복확인 -->
+    <select id="selectCmmncodeExistYn" parameterType="map" resultType="int">
+    	SELECT
+	    	COUNT(*)
+	    FROM
+	    	TAP_CD_CMMNCODE_MANAGE
+	    WHERE
+	    	CMMN_CODE = TRIM(#{cmmnCode})
+    </select>
+    
+    <!-- 공통코드명 중복확인 -->
+    <select id="selectCmmncodeNmExistYn" parameterType="map" resultType="int">
+    	SELECT
+	    	COUNT(*)
+	    FROM
+	    	TAP_CD_CMMNCODE_MANAGE
+	    WHERE
+	    	CMMN_CODE_NM = TRIM(#{cmmnCodeNm})
+	    	<if test="@egovframework.MybatisUtils@isNotEmpty(cmmnCode)">
+	    	AND CMMN_CODE != #{cmmnCode}
+	    	</if>
+    </select>
+    
+    <!-- 공통코드 등록 -->
+    <insert id="insertCmmncodeInfo" parameterType="map">
+    	INSERT INTO
+    	TAP_CD_CMMNCODE_MANAGE
+    	(
+    		CMMN_CODE
+    		,CMMN_CODE_NM
+    		,CMMN_CODE_DC
+    		,USE_AT
+    	) VALUES (
+    		TRIM(#{cmmnCode})
+    		,TRIM(#{cmmnCodeNm})
+    		,#{cmmnCodeDc}
+    		,#{useAt}
+    	)
+    </insert>
+    
+    <!-- 공통코드 수정 -->
+    <update id="updateCmmncodeInfo" parameterType="map">
+    	UPDATE
+    		TAP_CD_CMMNCODE_MANAGE
+    	SET
+    		CMMN_CODE_NM	= TRIM(#{cmmnCodeNm})
+    		,CMMN_CODE_DC	= #{cmmnCodeDc}
+    		,USE_AT			= #{useAt}
+    	WHERE
+    		CMMN_CODE = #{cmmnCode}
+    </update>
+    
+    <!-- 공통코드 삭제 -->
+    <delete id="deleteCmmncodeInfo" parameterType="map">
+    	DELETE FROM
+    		TAP_CD_CMMNCODE_MANAGE
+    	WHERE
+    		CMMN_CODE = #{cmmnCode}
+    </delete>
+    
+    <!-- 공통상세코드 조회 SQL -->
+	<sql id="selectCmmnDetailcodeSql" >
+		SELECT
+			A.*
+			,B.CMMN_CODE_NM
+		FROM
+			TAP_CD_CMMNCODE_DETAIL A,
+			TAP_CD_CMMNCODE_MANAGE B
+		WHERE
+			A.CMMN_CODE = B.CMMN_CODE
+		<if test="@egovframework.MybatisUtils@isNotEmpty(cmmnCode)">
+	    	AND A.CMMN_CODE = #{cmmnCode}
+	    </if>
+		<if test="@egovframework.MybatisUtils@isNotEmpty(srchDetailTxt)">
+			<![CDATA[
+			AND ( 
+				A.CMMN_DETAIL_CODE LIKE '%'||#{srchDetailTxt}||'%' 
+				OR A.CMMN_DETAIL_CODE_NM LIKE '%'||#{srchDetailTxt}||'%'
+				)
+			]]>
+		</if>
+	</sql>
+	
+	<!-- 공통코드 리스트 조회 -->
+	<select id="selectCmmnDetailcodeList" parameterType="map" resultType="egovMap">
+		<include refid="selectCmmnDetailcodeSql" /> 
+		ORDER BY
+			A.CMMN_DETAIL_CODE_ORDR
+	</select>
+	
+	<!-- 공통코드 단건 조회 -->
+	<select id="selectCmmnDetailcodeInfo" parameterType="map" resultType="egovMap">
+		<include refid="selectCmmnDetailcodeSql" /> 
+			AND	A.CMMN_DETAIL_CODE = #{cmmnDetailCode}
+	</select>
+	
+	<!-- 공통상세코드 리스트 조회(페이징) -->
+    <select id="selectCmmnDetailcodeListPaging" parameterType="map" resultType="egovMap">
+    	SELECT
+    		PL.*
+    	FROM (
+        	SELECT 
+        		PO.*
+        		,rownum as rsn
+			FROM (
+	    		<include refid="selectCmmnDetailcodeSql" />
+	    		ORDER BY
+					A.CMMN_DETAIL_CODE_ORDR
+				) PO
+		) PL
+		WHERE
+		<![CDATA[
+			rsn <= #{maxSn} 
+			AND rsn > #{minSn}
+		]]>
+    </select>
+    
+    <!-- 공통상세코드 리스트 조회(페이징 전체 카운트) -->
+    <select id="selectCmmnDetailcodeListPagingCount" parameterType="map" resultType="int">
+    	SELECT
+	    	COUNT(*)
+		FROM
+			TAP_CD_CMMNCODE_DETAIL A,
+			TAP_CD_CMMNCODE_MANAGE B
+		WHERE
+			A.CMMN_CODE = B.CMMN_CODE
+		<if test="@egovframework.MybatisUtils@isNotEmpty(cmmnCode)">
+	    	AND A.CMMN_CODE = #{cmmnCode}
+	    </if>
+		<if test="@egovframework.MybatisUtils@isNotEmpty(srchDetailTxt)">
+			<![CDATA[
+			AND ( 
+				A.CMMN_DETAIL_CODE LIKE '%'||#{srchDetailTxt}||'%' 
+				OR A.CMMN_DETAIL_CODE_NM LIKE '%'||#{srchDetailTxt}||'%'
+				)
+			]]>
+		</if>
+	ORDER BY
+			  A.CMMN_DETAIL_CODE_ORDR
+    </select>
+    
+    <!-- 공통상세코드 중복확인 -->
+    <select id="selectCmmnDetailcodeExistYn" parameterType="map" resultType="int">
+    	SELECT
+	    	COUNT(*)
+	    FROM
+	    	TAP_CD_CMMNCODE_DETAIL
+	    WHERE
+	    	CMMN_CODE = #{cmmnCode}
+	    	AND TRIM(CMMN_DETAIL_CODE) = TRIM(#{cmmnDetailCode})
+    </select>
+    
+    <!-- 공통상세코드명 중복확인 -->
+    <select id="selectCmmnDetailcodeNmExistYn" parameterType="map" resultType="int">
+    	SELECT
+	    	COUNT(*)
+	    FROM
+	    	TAP_CD_CMMNCODE_DETAIL
+	    WHERE
+	    	CMMN_CODE = #{cmmnCode}
+	    	AND TRIM(CMMN_DETAIL_CODE_NM) = TRIM(#{cmmnDetailCodeNm})
+	    	<if test="@egovframework.MybatisUtils@isNotEmpty(cmmnDetailCode)">
+	    	AND CMMN_DETAIL_CODE != #{cmmnDetailCode}
+	    	</if>
+    </select>
+    
+    <!-- 공통상세코드 등록 -->
+    <insert id="insertCmmnDetailcodeInfo" parameterType="map">
+    	INSERT INTO
+    	TAP_CD_CMMNCODE_DETAIL
+    	(
+    		CMMN_CODE
+    		,CMMN_DETAIL_CODE
+    		,CMMN_DETAIL_CODE_NM
+    		,CMMN_DETAIL_CODE_DC
+    		,USE_AT
+    		,CMMN_DETAIL_CODE_ORDR
+    		
+    	) VALUES (
+    		#{cmmnCode}
+    		,TRIM(#{cmmnDetailCode})
+    		,TRIM(#{cmmnDetailCodeNm})
+    		,#{cmmnDetailCodeDc}
+    		,#{useAt}
+    		,#{cmmnDetailCodeOrdr}
+    		
+    	)
+    </insert>
+    
+    <!-- 공통상세코드 수정 -->
+    <update id="updateCmmnDetailcodeInfo" parameterType="map">
+    	UPDATE
+    		TAP_CD_CMMNCODE_DETAIL
+    	SET
+    		CMMN_DETAIL_CODE_NM	= TRIM(#{cmmnDetailCodeNm})
+    		,CMMN_DETAIL_CODE_DC	= #{cmmnDetailCodeDc}
+    		,CMMN_DETAIL_CODE_ORDR	= #{cmmnDetailCodeOrdr}
+    		,USE_AT			= #{useAt}
+    		
+    	WHERE
+    		CMMN_CODE = #{cmmnCode}
+    		AND CMMN_DETAIL_CODE = #{cmmnDetailCode}
+    </update>
+    
+    <!-- 공통상세코드 삭제 -->
+    <delete id="deleteCmmnDetailcodeInfo" parameterType="map">
+    	DELETE FROM
+    		TAP_CD_CMMNCODE_DETAIL
+    	WHERE
+    		CMMN_CODE = #{cmmnCode}
+    		AND CMMN_DETAIL_CODE = #{cmmnDetailCode}
+    </delete>
+    
+    <!-- 공통상세코드 다건삭제 -->
+    <delete id="deleteCmmnDetailcodeList" parameterType="map">
+    	DELETE FROM
+    		TAP_CD_CMMNCODE_DETAIL
+    	WHERE
+    		CMMN_CODE = #{cmmnCode}
+    </delete>
+	
+	<!-- 공통상세코드 리스트조회(사용중인 코드) -->
+	<select id="selectCmmnDetailcodeUseListByCmmnCode" parameterType="map" resultType="egovMap">
+		SELECT
+			A.*
+			,B.CMMN_CODE_NM
+		FROM
+			TAP_CD_CMMNCODE_DETAIL A,
+			TAP_CD_CMMNCODE_MANAGE B
+		WHERE
+			A.CMMN_CODE = B.CMMN_CODE
+			AND A.USE_AT = 'Y'
+			AND B.USE_AT = 'Y'
+	    	AND A.CMMN_CODE = #{cmmnCode}
+	    ORDER BY
+	    	A.CMMN_DETAIL_CODE_ORDR
+	</select>
+</mapper>

@@ -1,0 +1,785 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="sm_sys">
+
+	<!-- 시스템 리스트 조회 -->
+    <select id="selectSysList" parameterType="map" resultType="egovMap">
+        SELECT *
+          FROM TAP_SM_SYS_MANAGE
+         WHERE SYS_STTUS IN ('O','S','D')
+        <if test='@egovframework.MybatisUtils@isEmpty(author) || author != "master"'>
+           AND SYS_ID NOT IN ('apple')
+        </if>	
+        <if test='sysPrpos != null'>	
+    	   AND SYS_PRPOS = #{sysPrpos}
+    	</if>
+      ORDER BY REG_DT
+    </select>
+    
+    <!-- 기관관리 ,시스템 관리 리스트 sql-->
+	<sql id ="selectInsttSmList">
+	   SELECT  IT.INSTT_CODE
+	          ,IT.INSTT_NM
+	          ,IT.INSTT_TY
+	          ,IT.INSTT_GRAD
+	          ,IT.INSTT_LEVEL
+	          ,IT.UPPER_INSTT_CODE
+	          ,IT.UPPER_INSTT_NM
+	          ,IT.BSIS_INSTT_CODE
+	          ,IT.BSIS_INSTT_NM
+	          ,SM.SYS_ID
+	          ,SM.SYS_NM
+	          ,SM.SYS_TY
+			  ,SM.SYS_STTUS
+			  ,SM.TMPLAT_ID
+			  ,SM.TMPLAT_TY
+			  ,SM.INTRO_AT
+			  ,SM.SYS_PRPOS
+			  ,SM.REG_ID
+			  ,SM.REG_NM
+			  ,SM.REG_IP
+			  ,SM.REG_DT
+			  ,SM.ESTBLDE
+			  ,TO_CHAR(SM.UPDT_DE,'YYYY-MM-DD') AS UPDT_DE
+	    FROM   TAP_IM_INSTT_MANAGE IT, TAP_SM_SYS_MANAGE SM
+	   WHERE   IT.INSTT_CODE = SM.INSTT_CODE
+	   <include refid="srchInsttSmList" /> 
+	ORDER BY   IT.INSTT_CODE, IT.INSTT_LEVEL DESC
+	</sql>
+	
+	 <!-- 기관관리 ,시스템 관리 리스트  검색 조건sql-->
+	<sql id ="srchInsttSmList">
+	
+		<if test='@egovframework.MybatisUtils@isEmpty(author) || author != "master"'>
+         AND	SM.SYS_ID NOT IN ('apple')
+        </if>
+        
+		<if test='@egovframework.MybatisUtils@isNotEmpty(srchSysId)'>
+         AND	SM.SYS_ID = #{srchSysId}
+        </if>
+        	
+	     <if test="@egovframework.MybatisUtils@isNotEmpty(insttCode)">
+	     AND   ( IT.INSTT_CODE =  #{insttCode}
+	     
+                    OR  IT.UPPER_INSTT_CODE = #{upperInsttCode}
+                    OR  IT.BSIS_INSTT_CODE = #{bsisInsttCode}
+                    
+               	)
+         </if>
+         
+	     <if test="@egovframework.MybatisUtils@isNotEmpty(insttGrad)">
+		     <if test='insttGrad == "etc" '>
+	     AND IT.INSTT_GRAD NOT IN ('dtnt','univ','hgschl','mskul','elesch','kndrgr','spcl')
+		     </if>
+		     <if test='insttGrad != "etc" '>
+	     AND IT.INSTT_GRAD = #{insttGrad}
+	     	</if>
+	     </if>
+	     
+	     <if test="@egovframework.MybatisUtils@isNotEmpty(mberId)">
+	      AND SM.SYS_ID IN (
+	      
+					SELECT SYS_ID
+					  FROM TAP_AU_AUTHOR_MBER 
+					 WHERE MBER_ID = #{mberId}
+ 					   AND SYS_ID != 'apple'
+					   AND AUTHOR_CODE IN (1,2)	
+						
+        	)
+	     </if>
+	     
+	     <if test="@egovframework.MybatisUtils@isNotEmpty(tmplatId)">
+	      AND   SM.TMPLAT_ID = #{tmplatId}
+	     </if>
+	     
+	     <if test="@egovframework.MybatisUtils@isNotEmpty(sysSttus)">
+	      AND   SM.SYS_STTUS = #{sysSttus}
+	     </if>
+	    
+	     <if test="@egovframework.MybatisUtils@isNotEmpty(sysTy)">
+	      AND   SM.SYS_TY = #{sysTy}
+	     </if>
+	     
+	     <if test="@egovframework.MybatisUtils@isNotEmpty(srchTxt)">
+	       AND  (  		 
+	       				 SM.SYS_NM like '%'||#{srchTxt}||'%'
+	       		  	  OR SM.INSTT_CODE like '%'||#{srchTxt}||'%'
+	              	  OR SM.SYS_TY like '%'||#{srchTxt}||'%' 
+	              	  OR SM.TMPLAT_ID like '%'||#{srchTxt}||'%'
+	            )
+	    </if>
+	    
+	</sql>
+	
+	<!-- 기관관리 ,시스템 관리 리스트 -->
+    <select id="selectInsttSmList" parameterType="egovMap" resultType="egovMap">
+	 	<include refid="selectInsttSmList" /> 
+    </select>
+    
+    <!-- 기관관리 ,시스템 관리 리스트조회(페이징) -->
+    <select id="selectInsttSmListPaging" parameterType="map" resultType="egovMap">
+    	SELECT
+    		PL.*
+    	FROM (
+        	SELECT 
+        		PO.*
+        		,rownum as rsn
+			FROM (
+	    		<include refid="selectInsttSmList" /> 
+				) PO
+		) PL
+		WHERE
+		<![CDATA[
+			rsn <= #{maxSn} 
+			AND rsn > #{minSn}
+		]]>
+    </select>
+    
+    <!-- 기관관리 ,시스템 관리 리스트 조회 (페이징 전체 카운트) -->
+    <select id="selectInsttSmListPagingCount" parameterType="map" resultType="int">
+    	SELECT   COUNT(*)
+	      FROM   TAP_IM_INSTT_MANAGE IT, TAP_SM_SYS_MANAGE SM
+	     WHERE   IT.INSTT_CODE = SM.INSTT_CODE
+	    <include refid="srchInsttSmList" /> 
+    </select>
+    
+    <!-- 기관정보,시스템 정보 조회 -->
+    <!-- 
+    	작업자 : sjLee ( 0715 )
+    	작업안 : SYS_NM 추가 (관리하는 페이지 에서 sysNm 출력을 위해)  
+    -->
+    <select id="selectInstSmInfo" parameterType="map" resultType="egovMap">
+        SELECT 
+        	 SM.SYS_ID
+        	,SM.SYS_NM
+        	,SM.INSTT_CODE
+        	,IM.INSTT_TY
+        	,IM.INSTT_NM
+        	,IM.INSTT_GRAD
+			,SM.SYS_NM
+			,SM.SYS_TY
+			,SM.SYS_STTUS
+			,SM.TMPLAT_ID
+			,SM.TMPLAT_TY
+			,SM.INTRO_AT
+			,SM.SYS_PRPOS
+			,SM.REG_ID
+			,SM.REG_NM
+			,SM.REG_IP
+			,TO_CHAR(SM.REG_DT,'YYYY/MM/DD') AS REG_DT
+			,TO_CHAR(SM.ESTBLDE,'YYYY/MM/DD') AS ESTBLDE
+        FROM 
+        	TAP_SM_SYS_MANAGE SM, TAP_IM_INSTT_MANAGE IM
+        WHERE
+        	SM.INSTT_CODE = IM.INSTT_CODE
+          AND
+        	SM.SYS_ID = #{sysId}
+    </select>
+    
+    <!-- 최상위기관 코드 조회-->
+    <select id="selectBestInstt" parameterType="map" resultType="egovMap">
+        SELECT MIN( SM.INSTT_CODE ) AS INSTT_CODE
+    	  FROM TAP_MM_MBER_TY MT, TAP_SM_SYS_MANAGE SM
+		 WHERE MT.INSTT_CODE = SM.INSTT_CODE
+		   AND MT.MBER_ID = #{mberId} 
+    </select>
+    
+    <!-- 시스템 조회 -->
+    <select id="selectSysListForManage" parameterType="map" resultType="egovMap">
+        SELECT *
+          FROM TAP_SM_SYS_MANAGE
+         WHERE 1=1
+           AND SYS_ID IN (
+				SELECT
+					SYS_ID
+				FROM
+					TAP_AU_AUTHOR_MBER
+				WHERE
+					MBER_ID = #{mberId}
+					AND SYS_ID != 'apple'
+					AND AUTHOR_CODE IN (1,2)
+        	)
+        <if test='sysPrpos != null'>	
+    	   AND SYS_PRPOS = #{sysPrpos}
+    	</if>
+    	   AND SYS_STTUS IN ('O','S','D')
+      ORDER BY REG_DT
+    </select>
+    
+    <!-- 시스템 단건 조회 -->
+    <select id="selectSysInfo" parameterType="map" resultType="egovMap">
+        SELECT 
+        	SM.SYS_ID
+			,SM.SYS_NM
+			,SM.SYS_TY
+			,SM.SYS_STTUS
+			,SM.TMPLAT_ID
+			,SM.TMPLAT_TY
+			,SM.INSTT_CODE
+			,SM.INTRO_AT
+			,SM.SYS_PRPOS
+			,SM.REG_ID
+			,SM.REG_NM
+			,SM.REG_IP
+			,TO_CHAR(SM.REG_DT,'YYYY/MM/DD') AS REG_DT
+			,TO_CHAR(SM.ESTBLDE,'YYYY/MM/DD') AS ESTBLDE
+			,SM.CHARGER
+			,SM.TELNO
+			,SM.UPDT_ID
+			,SM.UPDT_IP
+			,SM.UPDT_DE
+			,TM.TMPLAT_MENU_ID
+        FROM TAP_SM_SYS_MANAGE SM
+        	,TAP_TM_TMPLAT_MANAGE TM
+        WHERE SM.TMPLAT_ID = TM.TMPLAT_ID
+        	AND SYS_ID = #{sysId}
+    </select>
+    
+    <!-- 시스템  등록 -->
+    <insert id="insertSysInfo" parameterType="map" >
+    	INSERT INTO TAP_SM_SYS_MANAGE (
+    		SYS_ID
+    		,SYS_NM
+    		,SYS_TY
+    		,SYS_STTUS
+    		,TMPLAT_ID
+    		,TMPLAT_TY
+    		,INSTT_CODE
+    		,INTRO_AT
+    		,SYS_PRPOS
+    		,REG_ID
+    		,REG_NM
+    		,REG_IP
+    		,REG_DT
+    		,ESTBLDE
+    		,CHARGER
+			,TELNO
+    	) VALUES (
+    		#{sysId}
+    		,#{sysNm}
+    		,#{sysTy}
+    		,#{sysSttus}
+    		,#{tmplatId}
+    		,#{tmplatTy}
+    		,#{insttCode}
+    		,#{introAt}
+    		,#{sysPrpos}
+    		,#{regId}
+    		,#{regNm}
+    		,#{regIp}
+    		,SYSDATE
+    		,#{estblde}
+    		,#{charger}
+    		,#{telno}
+    	)
+    </insert>
+    
+    <!-- 시스템  수정 -->
+    <update id="updateSysInfo" parameterType="map" >
+    	UPDATE TAP_SM_SYS_MANAGE SET
+    		SYS_NM = #{sysNm}
+    		,SYS_TY = #{sysTy}
+    		,SYS_STTUS = #{sysSttus}
+    		,INSTT_CODE = #{insttCode}
+    		,INTRO_AT = #{introAt}
+    		,SYS_PRPOS = #{sysPrpos}
+    		,ESTBLDE = #{estblde}
+    		,CHARGER = #{charger}
+    		,TELNO = #{telno}
+    		,UPDT_ID = #{updtId}
+    		,UPDT_IP = #{updtIp}
+    		,UPDT_DE = SYSDATE
+    	WHERE
+    		SYS_ID = #{sysId}
+    </update>
+    
+    <!-- 배너기관관리 홈페이지명 수정 -->
+    <update id="updateBannerSys" parameterType="egovMap">
+		UPDATE  TAP_BA_BANNER_INSTT
+		   SET  SYS_NM = #{sysNm} 
+		 WHERE  SYS_ID = #{sysId}
+    </update>
+    
+    <!-- 메뉴관리 홈페이지명 수정 -->
+    <update id="updateMenuSys" parameterType="egovMap">
+		UPDATE  TAP_MN_MENU_MANAGE
+		   SET  SYS_NM = #{sysNm}   
+		 WHERE  SYS_ID = #{sysId}
+    </update>
+    
+    <!-- 메뉴이력관리 홈페이지명 수정 -->
+    <update id="updateMenuHistSys" parameterType="egovMap">
+		UPDATE  TAP_MN_MENU_HIST
+		   SET  SYS_NM = #{sysNm}        
+		 WHERE  SYS_ID = #{sysId}
+    </update>
+    
+    <!-- 팝업기관관리 홈페이지명 수정 -->
+    <update id="updatePopupSys" parameterType="egovMap">
+		UPDATE  TAP_PM_POPUP_INSTT
+		   SET  SYS_NM = #{sysNm}     
+		 WHERE  SYS_ID = #{sysId}
+    </update>
+    
+    <!-- 시스템 템플릿 변경 -->
+    <update id="updateSysTmplat" parameterType="map" >
+    	UPDATE TAP_SM_SYS_MANAGE SET
+    		TMPLAT_ID = #{tmplatId}
+    		,TMPLAT_TY = #{tmplatTy}
+    	WHERE
+    		SYS_ID = #{sysId}
+    </update>
+    
+    <!-- 시스템  이력 등록 -->
+    <insert id="insertSysHist" parameterType="map" >
+    	INSERT INTO TAP_SM_SYS_MANAGE (
+    		HIST_SN
+			,HIST_TY
+			,HIST_COLUMN
+			,HIST_ID
+			,HIST_NM
+			,HIST_IP
+			,HIST_DT
+    		,SYS_ID
+    		,SYS_NM
+    		,SYS_TY
+    		,SYS_STTUS
+    		,TMPLAT_ID
+    		,TMPLAT_TY
+    		,INSTT_CODE
+    		,INTRO_AT
+    	) VALUES (
+    		#{histSn}
+    		,#{{histTy}
+    		,#{histColumn}
+    		,#{histId}
+    		,#{histNm}
+    		,#{histIp}
+    		,SYSDATE
+    		,#{sysId}
+    		,#{sysNm}
+    		,#{sysTy}
+    		,#{sysSttus}
+    		,#{tmplatId}
+    		,#{tmplatTy}
+    		,#{insttCode}
+    		,#{introAt}
+    	)
+    </insert>
+    
+    <!-- 시스템별 도메인 리스트 조회 -->
+    <select id="selectSysDomainList" parameterType="map" resultType="egovMap">
+        SELECT 
+        	*
+        FROM 
+        	TAP_SM_SYS_DOMN
+        WHERE
+        	SYS_ID = #{sysId}
+        ORDER BY
+        	DOMN_SN
+    </select>
+    
+    <!-- 시스템별 도메인 조회 -->
+    <select id="selectSysDomainInfo" parameterType="map" resultType="egovMap">
+        SELECT 
+        	*
+        FROM 
+        	TAP_SM_SYS_DOMN
+        WHERE
+        	SYS_DOMN = #{sysDomn}
+    </select>
+    
+    <!-- 시스템별 도메인 등록 -->
+    <insert id="insertSysDomainInfo" parameterType="map" >
+    	INSERT INTO TAP_SM_SYS_DOMN (
+    		DOMN_SN
+    		,SYS_ID
+    		,SYS_DOMN
+    		,USE_AT
+    	) VALUES (
+    		SEQ_DOMN_SN.NEXTVAL
+    		,#{sysId}
+    		,#{sysDomn}
+    		,UPPER(#{useAt})
+    	)
+    </insert>
+    
+    <!-- 시스템별 도메인 수정 -->
+    <update id="updateSysDomainInfo" parameterType="map" >
+    	UPDATE TAP_SM_SYS_DOMN SET 
+    		SYS_DOMN = #{sysDomn}
+    		,USE_AT = UPPER(#{useAt})
+    	WHERE
+    		DOMN_SN = #{domnSn}
+    </update>
+    
+    <!-- 시스템별 도메인 삭제 -->
+    <update id="deleteSysDomainInfo" parameterType="map" >
+    	DELETE 
+    		TAP_SM_SYS_DOMN 
+    	WHERE
+    		DOMN_SN = #{domnSn}
+    </update>
+    
+    <!-- 시스템별 도메인 이력 등록 -->
+    <insert id="insertSysDomainHist" parameterType="map" >
+    	INSERT INTO TAP_SM_SYS_DOMN (
+    		HIST_SN
+			,HIST_TY
+			,HIST_COLUMN
+			,HIST_ID
+			,HIST_NM
+			,HIST_IP
+			,HIST_DT
+    		,DOMN_SN
+    		,SYS_ID
+    		,SYS_DOMN
+    		,USE_AT
+    	) VALUES (
+    		#{histSn}
+    		,#{histTy}
+    		,#{histColumn}
+    		,#{histId}
+    		,#{histNm}
+    		,#{histIp}
+    		,SYSDATE
+    		,#{domnSn}
+    		,#{sysId}
+    		,#{sysDomn}
+    		,#{useAt}
+    	)
+    </insert>
+    
+    <!-- 시스템 아이디 존재 확인 -->
+    <select id="selectSysIdDup" parameterType="map" resultType="int">
+    	SELECT
+    		COUNT(*)
+    	FROM
+    		TAP_SM_SYS_MANAGE
+    	WHERE
+    	<if test='dupType == "sysId"'>	
+    		SYS_ID = #{sysId}
+    	</if>
+    	<if test='dupType == "sysNm"'>	
+    		SYS_NM = #{sysNm}
+    		<if test="@egovframework.MybatisUtils@isNotEmpty(oriSysNm)">
+	      		AND   SYS_NM NOT IN ( 
+	      								  SELECT 
+	      								  		SYS_NM
+	      								    FROM 
+	      								    	TAP_SM_SYS_MANAGE
+	      								   WHERE 
+	      								   		SYS_NM =  #{oriSysNm} 
+	      							 )
+	     	 </if>
+    	</if>
+    	<if test='dupType == "insttCode"'>	
+    		INSTT_CODE = #{insttCode}
+    		 <if test="@egovframework.MybatisUtils@isNotEmpty(oriInsttCode)">
+	      		AND   INSTT_CODE NOT IN ( 
+	      								  SELECT 
+	      								  		INSTT_CODE
+	      								    FROM 
+	      								    	TAP_SM_SYS_MANAGE
+	      								   WHERE 
+	      								   		INSTT_CODE =  #{oriInsttCode} 
+	      								)
+	     	 </if>
+	     
+    	</if>
+    		AND SYS_STTUS IN ('O','S','D')
+    </select>
+    
+    <!-- 시스템  삭제 -->
+    <delete id="deleteSysInfo" parameterType="map" >
+    	DELETE TAP_SM_SYS_MANAGE
+    	 WHERE SYS_ID = #{sysId}
+    </delete>
+
+    <!-- 시스템 등록시 권한 초기화-->
+	<insert id="insertAuthorInfoBySysInsert" parameterType="map" >
+    <![CDATA[
+    	INSERT INTO TAP_AU_AUTHOR_MANAGE (
+	    	AUTHOR_SEQ
+	    	,AUTHOR_CODE  
+	    	,AUTHOR_NM
+	    	,SYS_ID
+    	) VALUES (
+	    	SEQ_AUTHOR_SN.NEXTVAL
+	    	,#{authorSn}
+	   		,#{authorNm}
+	        ,#{sysId}
+        )
+    ]]>       	   
+    </insert>  
+    
+    <!-- 시스템 등록 오류 및 삭제시 권한삭제 -->
+	<delete id="deleteAuthorListBySysId" parameterType="map" >
+    	DELETE TAP_AU_AUTHOR_MANAGE
+    	WHERE SYS_ID = #{sysId}
+    </delete> 
+    
+    <!-- 메뉴 시스템 리스트 조회 (sql) -->
+	<sql id="selectMenuSysList">
+	
+		SELECT 
+			SM.SYS_ID,
+			   SM.SYS_NM,
+			   SM.SYS_TY,
+			   SM.SYS_STTUS,
+			   SM.TMPLAT_ID,
+			   SM.TMPLAT_TY,
+			   SM.INSTT_CODE,
+			   SM.INTRO_AT,
+			   SM.SYS_PRPOS,
+			   SM.REG_ID,
+			   SM.REG_NM,
+			   SM.REG_IP,
+			   SM.REG_DT,
+			   (SELECT COUNT(*) FROM TAP_MN_MENU_MANAGE WHERE SYS_ID = SM.SYS_ID) AS MENU_COUNT,
+			   (SELECT COUNT(*) FROM TAP_MN_MENU_MANAGE WHERE SYS_ID = SM.SYS_ID AND USE_AT = 'Y') AS MENU_USE_COUNT
+			  FROM TAP_IM_INSTT_MANAGE IT, TAP_SM_SYS_MANAGE SM 
+			  WHERE IT.INSTT_CODE = SM.INSTT_CODE
+			  AND SM.SYS_STTUS = 'O'
+			
+			<if test='@egovframework.MybatisUtils@isEmpty(author) || author != "master"'>
+	         AND SM.SYS_ID NOT IN ('apple')
+	        </if>
+	        
+	        <if test="@egovframework.MybatisUtils@isNotEmpty(insttCode)">
+		     AND   ( IT.INSTT_CODE =  #{insttCode}
+		     
+	                    OR  IT.UPPER_INSTT_CODE = #{upperInsttCode}
+	                    OR  IT.BSIS_INSTT_CODE = #{bsisInsttCode}
+	                    
+	               	)
+	         </if>
+	         
+		     <if test="@egovframework.MybatisUtils@isNotEmpty(srchSj)">
+		       AND  (  		 
+       				 SM.SYS_NM like '%'||#{srchSj}||'%'
+              	  OR SM.SYS_TY like '%'||#{srchSj}||'%' 
+              	  OR SM.SYS_ID like '%'||#{srchSj}||'%'
+		       )
+		    </if>
+			 
+			 ORDER BY   IT.INSTT_CODE, IT.INSTT_LEVEL DESC
+	</sql>
+	
+	<!-- 메뉴 시스템 리스트 (페이징) -->
+    <select id="selectMenuSysListPaging" parameterType="map" resultType="egovMap">
+		SELECT PL.*
+		  FROM ( SELECT PO.* 
+		  		 	   ,ROWNUM AS RSN
+		           FROM ( <include refid="selectMenuSysList" /> ) PO ) PL
+		 WHERE 1 = 1 
+		 <![CDATA[ 
+		   AND RSN <= #{maxSn}
+		   AND RSN > #{minSn} 
+		 ]]>		
+    </select>
+    
+    <!-- 메뉴 시스템 리스트 (페이징 전체 카운트) -->
+    <select id="selectMenuSysListPagingCount" parameterType="map" resultType="int">
+    	SELECT COUNT(*)
+			  FROM TAP_IM_INSTT_MANAGE IT, TAP_SM_SYS_MANAGE SM 
+			  WHERE IT.INSTT_CODE = SM.INSTT_CODE
+			  AND SM.SYS_STTUS = 'O'
+			
+			<if test='@egovframework.MybatisUtils@isEmpty(author) || author != "master"'>
+	         AND SM.SYS_ID NOT IN ('apple')
+	        </if>
+	        
+	        <if test="@egovframework.MybatisUtils@isNotEmpty(insttCode)">
+		     AND   ( IT.INSTT_CODE =  #{insttCode}
+		     
+	                    OR  IT.UPPER_INSTT_CODE = #{upperInsttCode}
+	                    OR  IT.BSIS_INSTT_CODE = #{bsisInsttCode}
+	                    
+	               	)
+	         </if>
+	         
+		     <if test="@egovframework.MybatisUtils@isNotEmpty(srchSj)">
+		       AND  (  		 
+       				 SM.SYS_NM like '%'||#{srchSj}||'%'
+              	  OR SM.SYS_TY like '%'||#{srchSj}||'%' 
+              	  OR SM.SYS_ID like '%'||#{srchSj}||'%'
+		       )
+		    </if>
+			 
+			 ORDER BY   IT.INSTT_CODE, IT.INSTT_LEVEL DESC
+    </select>
+    
+    <!-- 게시판 시스템 목록 조회 -->
+    <sql id="selectBbsSysList">
+      SELECT SM.*,
+             (SELECT COUNT(*) FROM TAP_BM_BBS_MANAGE WHERE SYS_ID = SM.SYS_ID AND BBS_TY = 'NORMAL' AND BBS_USE_AT = 'Y') AS NORMAL_COUNT,
+             (SELECT COUNT(*) FROM TAP_BM_BBS_MANAGE WHERE SYS_ID = SM.SYS_ID AND BBS_TY = 'GAL' AND BBS_USE_AT = 'Y') AS GAL_COUNT,
+             (SELECT COUNT(*) FROM TAP_BM_BBS_MANAGE WHERE SYS_ID = SM.SYS_ID AND BBS_TY = 'FAQ' AND BBS_USE_AT = 'Y') AS FAQ_COUNT,
+             (SELECT COUNT(*) FROM TAP_BM_BBS_MANAGE WHERE SYS_ID = SM.SYS_ID AND BBS_TY = 'VOD' AND BBS_USE_AT = 'Y') AS VOD_COUNT,
+             (SELECT COUNT(*) FROM TAP_BM_BBS_MANAGE WHERE SYS_ID = SM.SYS_ID AND BBS_TY = 'PIC' AND BBS_USE_AT = 'Y') AS PIC_COUNT,
+			 (SELECT COUNT(*) FROM TCO_NA_NTT_MANAGE WHERE BBS_ID IN (SELECT BBS_ID FROM TAP_BM_BBS_MANAGE WHERE SYS_ID = SM.SYS_ID AND STTUS_USE_AT = 'Y') AND NTT_STTUS = 'W') AS NTT_WAIT,
+             (SELECT COUNT(*) FROM TCO_NA_NTT_MANAGE WHERE BBS_ID IN (SELECT BBS_ID FROM TAP_BM_BBS_MANAGE WHERE SYS_ID = SM.SYS_ID AND STTUS_USE_AT = 'Y') AND NTT_STTUS = 'R') AS NTT_RCEPT,
+             (SELECT COUNT(*) FROM TCO_NA_NTT_MANAGE WHERE BBS_ID IN (SELECT BBS_ID FROM TAP_BM_BBS_MANAGE WHERE SYS_ID = SM.SYS_ID AND STTUS_USE_AT = 'Y') AND NTT_STTUS = 'C') AS NTT_COMPT,             
+             (SELECT COUNT(*) FROM TAP_BM_BBS_MANAGE WHERE SYS_ID = SM.SYS_ID AND BBS_USE_AT = 'Y') AS TOTAL_COUNT
+             ,ROW_NUMBER() OVER(ORDER BY SYS_ID) AS RSN
+        FROM TAP_SM_SYS_MANAGE SM
+       WHERE 1 = 1
+		<!-- 옵티마이저?속이기 다중조건 수행  지저분함 -->
+<!-- 		AND  -->
+<!--         	('0',SYS_ID) in -->
+<!-- 			<foreach collection="sysList" item="sysId" index="index" open="(" close=")" separator=","> -->
+<!-- 				('0',#{sysId}) -->
+<!--        		</foreach> -->        
+         <!-- 1000개 이상 넘어갈 시 조건구문추가 -->
+         AND ( SYS_ID IN 
+		<foreach collection="sysList" item="sysId" index="index" open="(" close=")">
+			<if test="index != 0"> 
+	     		<choose> 
+	     			<when test="index % 1000 == 999">
+	     				) OR SYS_ID IN (
+	     			</when> 
+	     			<otherwise>
+	     				,
+	     			</otherwise> 
+	     		</choose> 
+	     	</if> 
+			#{sysId}
+		</foreach>
+		)
+    	<if test="@egovframework.MybatisUtils@isNotEmpty(srchSj)">
+    	 AND SYS_NM LIKE '%'||#{srchSj}||'%'
+    	</if>		     
+    <!-- ORDER BY SYS_ID   	 -->	   	  
+    </sql>
+    
+	<!-- 게시판 시스템 목록 조회 (페이징) -->
+    <select id="selectBbsSysListPaging" parameterType="map" resultType="egovMap">
+		SELECT PL.*
+		  FROM ( SELECT PO.* 
+		           FROM ( <include refid="selectBbsSysList" /> ) PO ) PL
+		 WHERE 1 = 1 
+		 <![CDATA[ 
+		   AND RSN <= #{maxSn}
+		   AND RSN > #{minSn} 
+		 ]]>		
+    </select>
+    
+    <!-- 게시판 시스템 목록 조회 (페이징 전체 카운트) -->
+    <select id="selectBbsSysListPagingCount" parameterType="map" resultType="int">
+      SELECT COUNT(*)
+        FROM TAP_SM_SYS_MANAGE
+       WHERE 1 = 1
+		<!-- 옵티마이저?속이기 다중조건 수행  지저분함 -->
+<!-- 		AND  -->
+<!--         	('0',SYS_ID) in -->
+<!-- 			<foreach collection="sysList" item="sysId" index="index" open="(" close=")" separator=","> -->
+<!-- 				('0',#{sysId}) -->
+<!--        		</foreach> -->         
+			<!-- trim suffixOverrides 맨끝에 있는 구문 제거 , prefixOverrides 맨앞에 있는 구문 삭제 -->
+<!-- 		<trim suffixOverrides=" OR SYS_ID IN ()">  -->
+	         AND ( SYS_ID IN 
+			<foreach collection="sysList" item="sysId" index="index" open="(" close=")">
+				<if test="index != 0"> 
+		     		<choose> 
+		     			<when test="index % 1000 == 999">
+		     				) OR SYS_ID IN (
+		     			</when> 
+		     			<otherwise>
+		     				,
+		     			</otherwise> 
+		     		</choose> 
+		     	</if> 
+				#{sysId} 
+			</foreach>
+			)
+<!-- 		</trim>	 -->
+		
+    	<if test="@egovframework.MybatisUtils@isNotEmpty(srchSj)">
+    	 AND SYS_NM LIKE '%'||#{srchSj}||'%'
+    	</if>	      
+    ORDER BY SYS_ID     	    		   	  
+    </select>  
+    
+    <!-- 사용자 정보(진급) 시스템 목록 조회 -->
+    <sql id="selectPrmotSysList">
+	  SELECT SM.*,
+	         (SELECT COUNT(*) FROM TAP_MM_MBER_TY WHERE INSTT_CODE = SM.INSTT_CODE AND MBER_TY = 5) AS STDNT_COUNT,
+	         (SELECT COUNT(*) FROM TAP_MM_MBER_TY WHERE INSTT_CODE = SM.INSTT_CODE AND MBER_TY = 7) AS GRDT_COUNT
+	    FROM TAP_SM_SYS_MANAGE SM
+       WHERE 1 = 1
+		<!-- 옵티마이저?속이기 다중조건 수행  지저분함 -->
+<!-- 		AND  -->
+<!--         	('0',SYS_ID) in -->
+<!-- 			<foreach collection="sysList" item="sysId" index="index" open="(" close=")" separator=","> -->
+<!-- 				('0',#{sysId}) -->
+<!--        		</foreach> -->
+		<!-- 조건문으로 나누기 반복문을 한번만 쓰고 인텍스로 조건문 추가 -->	
+         AND ( SYS_ID IN 
+		<foreach collection="sysList" item="sysId" index="index" open="(" close=")">
+			<if test="index != 0"> 
+	     		<choose> 
+	     			<when test="index % 1000 == 999">
+	     				) OR SYS_ID IN (
+	     			</when> 
+	     			<otherwise>
+	     				,
+	     			</otherwise> 
+	     		</choose> 
+	     	</if> 
+			#{sysId}
+		</foreach>
+		)
+    	<if test="@egovframework.MybatisUtils@isNotEmpty(srchSj)">
+    	 AND SYS_NM LIKE '%'||#{srchSj}||'%'
+    	</if>		     
+    ORDER BY SYS_ID   		   	  
+    </sql>
+    
+	<!-- 사용자 정보(진급) 시스템 목록 조회 (페이징) -->
+    <select id="selectPrmotSysListPaging" parameterType="map" resultType="egovMap">
+		SELECT PL.*
+		  FROM ( SELECT PO.* 
+		  		 	   ,ROWNUM AS RSN
+		           FROM ( <include refid="selectPrmotSysList" /> ) PO ) PL
+		 WHERE 1 = 1 
+		 <![CDATA[ 
+		   AND RSN <= #{maxSn}
+		   AND RSN > #{minSn} 
+		 ]]>		
+    </select>
+    
+    <!-- 사용자 정보(진급) 시스템 목록 조회 (페이징 전체 카운트) -->
+    <select id="selectPrmotSysListPagingCount" parameterType="map" resultType="int">
+      SELECT COUNT(*)
+        FROM TAP_SM_SYS_MANAGE
+       WHERE 1 = 1
+		<!-- 두번째 -->
+<!-- 		AND  -->
+<!--         	('0',SYS_ID) in -->
+<!-- 			<foreach collection="sysList" item="sysId" index="index" open="(" close=")" separator=","> -->
+<!-- 				('0',#{sysId})  -->
+<!--        		</foreach> -->
+         AND ( SYS_ID IN 
+		<foreach collection="sysList" item="sysId" index="index" open="(" close=")">
+			<if test="index != 0"> 
+	     		<choose> 
+	     			<when test="index % 1000 == 999">
+	     				) OR SYS_ID IN (
+	     			</when> 
+	     			<otherwise>
+	     				,
+	     			</otherwise> 
+	     		</choose> 
+	     	</if> 
+			#{sysId}
+		</foreach>
+		)
+    	<if test="@egovframework.MybatisUtils@isNotEmpty(srchSj)">
+    	 AND SYS_NM LIKE '%'||#{srchSj}||'%'
+    	</if>	      
+    ORDER BY SYS_ID     	    		   	  
+    </select>           
+
+</mapper>

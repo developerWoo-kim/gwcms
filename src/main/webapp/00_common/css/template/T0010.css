@@ -1,0 +1,45 @@
+﻿/* 메인 컨테이너 */
+#container { position:relative; z-index:2; width:100%; }
+#container *{ scrollbar-arrow-color: #ddd; scrollbar-Track-Color: #ddd; scrollbar-base-color: #aaa; scrollbar-Face-Color: #aaa; scrollbar-3dLight-Color: #aaa; scrollbar-DarkShadow-Color: #aaa; scrollbar-Highlight-Color: #aaa; scrollbar-Shadow-Color: #aaa;}
+#container ::-webkit-scrollbar { width: 5px; }
+#container ::-webkit-scrollbar-thumb { background-color: #aaa; border-radius:10px; }
+#container ::-webkit-scrollbar-track { background-color: #ddd; border-radius:10px; }
+
+.MC_wrap1 { position:relative; background: #fdf1d3; z-index: -1; }
+.MC_wrap1 .container{max-width: 95rem;}
+.MC_wrap2 { position:relative; height: auto; }
+.MC_wrap2 .con_wrap{margin-bottom: 2rem;}
+.MC_wrap2 .con_wrap::after {content: ''; display: block; clear: both;}
+
+.MC_box1 { position:relative; height:20.5rem; } /* 메인비주얼 */
+.MC_box2 { position:relative; height: 14rem; } /* 게시판 */
+.MC_box3 { position:relative; height: 7.5rem; margin: 2rem 0 ; } /* 바로가기1 */
+.MC_box4 { position:relative; width: 30%; height: 14.25rem; float: left; } /* 팝업존 */
+.MC_box5 { position:relative; width: 30%; height:14.25rem; float: left; margin: 0 5%; } /* 식단 */
+.MC_box6 { position:relative; width: 30%; height:14.25rem; float: left; } /* 캘린더 */
+.MC_box7 { position:relative; height: 16rem;} /* 갤러리 */
+.MC_box7::before { content: ''; display: block; width: 100vw; position: absolute; left: 50%; bottom: 0; top: 4rem; background: #f3f3f3; z-index: -1; transform: translateX(-50%);}
+
+
+@media (max-width: 1050px) {
+    .MC_box1{height: auto;}/*메인비주얼*/
+}
+
+
+@media (max-width: 768px) {
+    .MC_wrap2 .con_wrap{margin-bottom: 1rem;}
+
+    .MC_box2 {height: auto;}/*게시판*/
+    .MC_box3 {height: auto; margin: 1rem 0;}/*바로가기*/
+    .MC_box4 {width: 100%; height: auto; margin-bottom: 1rem; } /* 팝업존 */
+    .MC_box5 { margin: 0; width: 48%; height: 13.35rem; } /* 식단 */
+    .MC_box6 { width: 48%; height: 13.35rem; float: right;} /* 캘린더 */
+    .MC_box7 {height: auto;}/*갤러리*/
+}
+
+@media (max-width:580px){
+
+    .MC_box5 { width: 100%; height: auto; margin-bottom: 1rem;} /* 식단 */
+    .MC_box6 { width: 100%; height: auto;} /* 캘린더 */
+
+}

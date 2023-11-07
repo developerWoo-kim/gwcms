@@ -1,0 +1,82 @@
+﻿/* 메인 컨테이너 */
+#container { position:relative; z-index:2; width:100%; }
+#container *{ scrollbar-arrow-color: #ddd; scrollbar-Track-Color: #ddd; scrollbar-base-color: #aaa; scrollbar-Face-Color: #aaa; scrollbar-3dLight-Color: #aaa; scrollbar-DarkShadow-Color: #aaa; scrollbar-Highlight-Color: #aaa; scrollbar-Shadow-Color: #aaa;}
+#container ::-webkit-scrollbar { width: 5px; height: 5px; }
+#container ::-webkit-scrollbar-thumb { background-color: #aaa; border-radius:10px; }
+#container ::-webkit-scrollbar-track { background-color: #ddd; border-radius:10px; }
+
+.MC_wrap1 {max-width: 1920px; margin: 0 auto; padding-bottom: 1.8rem; position: relative;}
+.MC_wrap1:before {content: ""; display: block; width: 150%; height: 12.9rem; border-radius: 7.5rem 0 0 1rem; background: #fff8f8; position: absolute; left: 50%; margin-left: -36rem; bottom: 0; z-index: -1;}
+.MC_wrap2 {display: flex; width: 60rem; margin: 2rem auto 0;}
+.MC_wrap2:after {content: ""; display: block; clear: both; visibility: hidden;}
+.MC_wrap3 {margin-top: 2.2rem; background: #e8eeff; padding: 1.5rem 0 1.25rem;}
+
+.con_wrap { position: relative; float: left; width: 17.5rem; }
+
+.MC_box1 {float: right; width: calc(50% - 1.05rem);} /* 메인비주얼 */
+.MC_box2 {float: left; width: calc(50% - 1.5rem); margin-top: 1.7rem; padding-left: calc(50% - 30rem);} /* 식단 */
+.MC_box3 {float: left; width: calc(50% - 1.5rem); margin-top: 1.1rem; padding-left: calc(50% - 30rem);} /* 게시판 */
+.MC_box4 {clear: both; width: 60rem; margin: 0 auto; padding-top: 1.5rem;} /* 바로가기1 */
+.MC_box5 {width: 20.7rem; margin-right: 2rem;} /* 팝업존 */
+.MC_box6 {width: calc(100% - 22.7rem);} /* 캘린더 */
+.MC_box7 {width: 60rem; margin: 0 auto;} /* 갤러리 */
+
+
+@media (max-width:1256px){
+
+    .MC_wrap1 {padding-bottom: 2.5rem;}
+    .MC_wrap1:before {width: calc(100% + 1.9rem); height: 17.8rem; border-radius: 8.9rem 0 0 0; left: -1.9rem; margin-left: 0;}
+    .MC_wrap1:after {content: ""; display: block; clear: both; visibility: hidden;}
+    .MC_wrap2 {width: 100%; margin: 1.1rem 0 0; padding: 0 1rem;}
+    .MC_wrap3 {margin-top: 2rem; padding: 1.7rem 1rem 2.25rem;}
+
+    .MC_box1 {width: calc(100% - 20rem);}
+    .MC_box2,
+    .MC_box3 {width: 18.5rem; margin-top: 1.5rem; padding-left: 1rem;}
+    .MC_box4 {clear: none; float: right; width: calc(100% - 20rem); margin: 0; padding-top: 1.225rem;}
+    .MC_box5 {width: 17.5rem; margin-right: 1.5rem;}
+    .MC_box6 {width: calc(100% - 19rem);}
+    .MC_box7 {width: 100%; margin: 0;}
+}
+
+@media (max-width:1024px){
+
+    #container {padding-top: 3.3rem;}
+
+    .MC_wrap1 {padding-bottom: 0;}
+    .MC_wrap1:before {display: none;}
+
+    .MC_box1 {float: none; width: 100%; padding-left: 1rem;}
+    .MC_box2 {float: left; width: 18.5rem; margin-right: 1.5rem;}
+    .MC_box3 {float: left; width: calc(100% - 20rem); padding-left: 0; padding-right: 1rem;}
+    .MC_box4 {margin-top: 2.25rem; width: 100%; background: #fff8f8; padding: 1.5rem 1rem;}
+}
+
+@media (max-width:840px){
+}
+
+@media (max-width:768px){
+
+    .MC_wrap2 {margin-top: 1.5rem; display: block;}
+
+    .MC_box2,
+    .MC_box3 {float: none; width: 100%; padding: 0 1rem;}
+    .MC_box5 {width: 100%; margin-right: 0;}
+    .MC_box6 {margin-top: 1.5rem; width: 100%;}
+}
+
+@media (max-width:640px){
+}
+
+@media (max-width:560px){
+}
+
+@media (max-width:460px){
+
+    .MC_wrap3 {margin-top: 1.5rem; padding: 1.5rem 1rem .75rem;}
+}
+
+@media (max-width:380px){
+
+    .MC_wrap3 {margin-top: 2.25rem;}
+}

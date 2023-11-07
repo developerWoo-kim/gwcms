@@ -1,0 +1,111 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="qr_qrspns">
+	<!-- 설문결과 시퀀스 획득 -->
+	<select id="selectQrspnsSnInfo" resultType="egovMap">
+        SELECT SEQ_QRSPNS_RESULT_SN.NEXTVAL FROM DUAL
+    </select>
+	
+	<!-- 설문 결과(응답) 리스트 -->
+	<select id="selectQrspnsList" resultType="egovMap">
+         SELECT   ROWNUM AS QESITM_RSN      
+                 ,QU.QUSTNR_SN
+                 ,QU.SYS_ID
+                 ,QE.QESTNR_SN
+                 ,QS.QESITM_SN
+                 ,QS.QESSNTL_AT
+                 ,QI.QIEM_SN
+                 ,QI.QIEM_TITLE
+                 ,QI.QETC_AT
+                 ,QS.QESITM_ORDR
+                 ,QS.QRSPNS_TY
+                 ,( SELECT COUNT(*) FROM TAP_QR_QRSPNS_RESULT QR WHERE QI.QIEM_SN = QR.QIEM_SN  AND QR.QUSTNR_SN = QU.QUSTNR_SN And QR.QESITM_SN = QS.QESITM_SN ) AS CNT
+                 ,( SELECT SUM(QUSTNR_SCORE) FROM TAP_QR_QRSPNS_RESULT QR WHERE QI.QIEM_SN = QR.QIEM_SN  AND QR.QUSTNR_SN = QU.QUSTNR_SN And QR.QESITM_SN = QS.QESITM_SN ) AS SCORE
+                 ,( SELECT SUM(QUSTNR_SCORE) FROM TAP_QR_QRSPNS_RESULT QR ,TAP_QS_QESITM_IEM QI WHERE QI.QIEM_SN = QR.QIEM_SN AND QR.QUSTNR_SN = #{qustnrSn} AND  QESTNR_SN = #{qestnrSn} And QR.QESITM_SN = #{qesitmSn}) AS TOTAL
+           FROM   TAP_QS_QESITM_MANAGE QS
+                 ,TAP_QS_QESITM_IEM QI
+                 ,TAP_QS_QESTNR_MANAGE QE
+                 ,TAP_QS_QUSTNR_MANAGE QU 
+	      WHERE  QU.QUSTNR_SN = #{qustnrSn}  
+            AND  QE.QESTNR_SN = #{qestnrSn}  
+            AND  QS.QESITM_SN = #{qesitmSn}
+            AND  QE.QESTNR_SN = QS.QESTNR_SN
+            AND  QU.QESTNR_SN = QE.QESTNR_SN
+            AND  QS.QESITM_SN = QI.QESITM_SN
+	   ORDER BY  QS.QESITM_ORDR, QI.QIEM_SN
+    </select>
+	
+	<!--설문 기타 내용 리스트-->
+	<select id="selectQetcList" resultType="egovMap">
+		SELECT QUSTNR_ETC
+		  FROM TAP_QR_QRSPNS_RESULT
+		 WHERE QIEM_SN = #{qiemSn} 
+		 AND  QUSTNR_SN = #{qustnrSn}  
+	</select>
+	
+    <!-- 설문 결과(응답) 입력 -->
+    <insert id="insertQrspnsInfo" parameterType="egovMap">
+		INSERT INTO TAP_QR_QRSPNS_RESULT
+		 (
+			 QRT_SN
+			,QUSTNR_SN
+			,QESTNR_SN
+			,QESITM_SN
+			,QIEM_SN
+			,QUSTNR_SCORE
+			,QUSTNR_ETC
+		 )
+		VALUES
+		 (
+			 #{qrtSn}
+			,#{qustnrSn}
+			,#{qestnrSn}
+			,#{qesitmSn}
+			,#{qiemSn}
+			,#{qustnrScore}
+			,#{qustnrEtc}
+		 )    	
+    </insert>
+    
+    <!-- 설문 응답자 입력 -->
+    <insert id="insertQrspnsMberInfo" parameterType="egovMap">
+		INSERT INTO TAP_QR_QRSPNS_MBER
+		 (
+			 QMR_SN
+			,QRT_SN
+			,QMR_USID
+			,QMR_USNM
+			,QMR_USIP
+			,QMR_USDT
+			,QMR_USPNUM
+		)
+		VALUES
+		 (
+			 SEQ_QRSPNS_MBER_SN.NEXTVAL
+			,#{qrtSn}
+			,#{qmrUsId}
+			,#{qmrUsNm}
+			,#{qmrUsIp}
+			,SYSDATE
+			,#{qmrUsPnum}
+		 )    	
+    </insert>
+    
+     <!-- 결과 삭제-->
+    <delete id="deleteQrspnsInfo" parameterType="egovMap">
+    	DELETE FROM TAP_QR_QRSPNS_RESULT
+    	 WHERE QUSTNR_SN = #{qustnrSn} 
+    </delete>
+    
+    <!-- 응답했는지 체크하기 위한 조회 -->
+    <select id="selectQestChk" parameterType="egovMap" resultType="int">
+    	SELECT COUNT(*)
+		FROM TAP_QR_QRSPNS_MBER A
+		     ,TAP_QR_QRSPNS_RESULT B
+		WHERE A.QRT_SN = B.QRT_SN
+		AND B.QUSTNR_SN = #{qustnrSn} 
+		AND A.QMR_USID = #{userId} 
+    </select>
+    
+</mapper>

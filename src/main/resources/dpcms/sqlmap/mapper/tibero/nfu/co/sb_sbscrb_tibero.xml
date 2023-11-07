@@ -1,0 +1,630 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="sb_sbscrb">
+
+	<!--회원 정보 조회 -->
+    <select id="selectMberInfo" parameterType="map" resultType="egovMap">
+       SELECT MM.MBER_SEQ
+		      ,MT.INSTT_NM
+		      ,MT.INSTT_CODE
+		      ,MM.MBER_ID
+		      ,MM.MBER_NM
+		      ,MM.MBER_PASSWORD
+		      ,MM.MBTLNUM
+		      ,MM.TELNO
+		      ,MM.EMAIL
+		      ,MM.DI_KEY
+		      ,MM.CI_KEY
+		      ,MM.CERTI_KEY
+		      ,MT.MBER_TY_SEQ
+		      ,MT.MBER_TY
+		      ,MT.CLSF
+		      ,MT.DEPT
+		      ,MT.PRTCTOR_NM
+		      ,MT.STDNT_NO
+		      ,MT.CONFM_YN
+		      ,MT.CONFM_MBER_NM
+		      ,MT.CONFM_MBER_ID
+		      ,MT.CONFM_DATE
+		      ,MT.INSTT_TY
+		      ,MT.SKLSTF_TY
+		FROM  V_TAP_MM_MBER_MANAGE MM, TAP_MM_MBER_TY MT
+	    WHERE
+	          MM.MBER_ID = MT.MBER_ID
+	      <if test="@egovframework.MybatisUtils@isNotEmpty(mberTySeq)">
+	      AND MT.MBER_TY_SEQ = #{mberTySeq}
+	      </if>
+	      <if test="@egovframework.MybatisUtils@isEmpty(mberTySeq)">
+	      AND MM.MBER_SEQ = #{mberSeq}
+	      </if>
+    </select>
+
+	<!--회원 소속 홈페이지 리스트 조회 -->
+    <select id="selectMberSysList" parameterType="map" resultType="egovMap">
+       	  SELECT MM.MBER_SEQ
+		      	,MT.INSTT_NM
+		      	,MT.INSTT_CODE
+		      	,MM.MBER_ID
+		      	,MM.MBER_NM
+		      	,MM.MBER_PASSWORD
+		      	,MM.MBTLNUM
+		      	,MM.TELNO
+		      	,MM.EMAIL
+		      	,MM.DI_KEY
+		      	,MM.CI_KEY
+		      	,MM.CERTI_KEY
+		      	,TO_CHAR(MM.CREAT_DT, 'YYYY/MM/DD') AS CREAT_DT
+		      	,MM.CREAT_USIP
+		     	,MT.MBER_TY_SEQ
+		      	,MT.MBER_TY
+		      	,MT.CLSF
+		      	,MT.DEPT
+		      	,MT.PRTCTOR_NM
+		      	,MT.STDNT_NO
+		      	,MT.CONFM_YN
+		      	,MT.CONFM_MBER_NM
+		      	,MT.CONFM_MBER_ID
+		      	,MT.CONFM_DATE
+		      	,MT.SKLSTF_TY
+		      	,SM.SYS_ID
+		      	,SM.SYS_NM
+		   FROM V_TAP_MM_MBER_MANAGE MM, TAP_MM_MBER_TY MT, TAP_SM_SYS_MANAGE SM
+		  WHERE MT.INSTT_CODE = SM.INSTT_CODE
+		    AND MM.MBER_ID = MT.MBER_ID
+		    AND MM.MBER_ID = #{mberId}
+    </select>
+
+     <!--회원정보 수정 -->
+    <update id="updateMberInfo" parameterType ="map">
+		UPDATE
+	  		TAP_MM_MBER_MANAGE
+		SET
+	    <if test='@egovframework.MybatisUtils@isNotEmpty(realServerEncAt)'>
+	    	MBTLNUM = SCH23DBSEC.SDB_CRYPTO2.ENCRYPT(#{mbtlnum},'SCH23DBSEC.M_KEY.ARIA256'),
+	     	TELNO = SCH23DBSEC.SDB_CRYPTO2.ENCRYPT(#{telno},'SCH23DBSEC.M_KEY.ARIA256'),
+	     	EMAIL = SCH23DBSEC.SDB_CRYPTO2.ENCRYPT(#{email},'SCH23DBSEC.M_KEY.ARIA256')
+	    </if>
+	    <if test='@egovframework.MybatisUtils@isEmpty(realServerEncAt)'>
+			MBTLNUM = #{mbtlnum},
+			TELNO = #{telno},
+			EMAIL = #{email}
+	     </if>
+	   WHERE MBER_SEQ = #{mberSeq}
+	</update>
+
+     <!--로그인 시도 숫자 업데이트 -->
+    <update id="updateMberLoginCnt" parameterType ="map">
+		UPDATE
+			TAP_MM_MBER_MANAGE
+		SET
+			LOGIN_CNT = #{loginCnt}
+			<if test='@egovframework.MybatisUtils@isNotEmpty(updateCertiInfo)'>
+			,CI_KEY = #{ciKey}
+			,DI_KEY = #{diKey}
+			</if>
+	    WHERE
+	    	MBER_ID = #{mberId}
+	</update>
+
+     <!--사용자구분 (소속기관) 수정 -->
+     <update id="updateMberTyInfo" parameterType ="map">
+	   UPDATE  TAP_MM_MBER_TY
+		  SET  INSTT_NM       = #{insttNm}
+			  ,INSTT_CODE     = #{insttCode}
+			  ,MBER_TY        = #{mberTy}
+			  ,CLSF           = #{clsf}
+			  ,DEPT           = #{dept}
+			  ,PRTCTOR_NM	  = #{prtctorNm}
+			  ,STDNT_NO       = #{stdntNo}
+	    WHERE  MBER_TY_SEQ = #{mberTySeq}
+	</update>
+
+     <!-- 자녀 정보 수정 -->
+     <update id="updateChldrnInfo" parameterType ="map">
+	   UPDATE  TAP_MM_STDNPRNT_CHLDRN
+		  SET  CHLDRN_GRADE = #{chldrnGrade},
+		       CHLDRN_CLAS  = #{chldrnClas},
+		       CHLDRN_NM    = #{chldrnNm}
+	    WHERE  STDNPRNT_SN = #{stdnprntSn}
+	</update>
+
+    <!-- 회원가입 사용자 정보 입력 -->
+	<insert id="insertMberInfo" parameterType="map" >
+		INSERT INTO TAP_MM_MBER_MANAGE (
+		    MBER_SEQ
+		   ,MBER_ID
+		   ,MBER_NM
+		   ,MBER_PASSWORD
+		   ,MBTLNUM
+		   ,TELNO
+		   ,EMAIL
+		   ,DI_KEY
+		   ,CI_KEY
+		   ,CERTI_KEY
+		   ,CREAT_DT
+		   ,CREAT_USIP
+		   ,PW_SALT
+		) VALUES (
+		    SEQ_MBER_SN.NEXTVAL
+		   ,#{mberId}
+		   ,#{mberNm}
+		   <if test='@egovframework.MybatisUtils@isNotEmpty(realServerEncAt)'>
+		   ,SCH23DBSEC.SDB_CRYPTO2.ENCRYPT(#{mberPassword},'SCH23DBSEC.M_KEY.SHA256')
+		   ,SCH23DBSEC.SDB_CRYPTO2.ENCRYPT(#{mbtlnum},'SCH23DBSEC.M_KEY.ARIA256')
+		   ,SCH23DBSEC.SDB_CRYPTO2.ENCRYPT(#{telno},'SCH23DBSEC.M_KEY.ARIA256')
+		   ,SCH23DBSEC.SDB_CRYPTO2.ENCRYPT(#{email},'SCH23DBSEC.M_KEY.ARIA256')
+		   </if>
+		   <if test='@egovframework.MybatisUtils@isEmpty(realServerEncAt)'>
+		   ,#{mberPassword}
+		   ,#{mbtlnum}
+		   ,#{telno}
+		   ,#{email}
+		   </if>
+		   ,#{diKey}
+		   ,#{ciKey}
+		   ,#{certiKey}
+		   ,sysdate
+		   ,#{creatUsip}
+		   ,#{pwSalt}
+		)
+	</insert>
+
+    <!-- 학부모 자녀관리 등록 -->
+	<insert id="insertChldrnInfo" parameterType="map" >
+		INSERT INTO TAP_MM_STDNPRNT_CHLDRN (
+		    SYS_ID
+		   ,STDNPRNT_SN
+		   ,MBER_ID
+		   ,CHLDRN_GRADE
+		   ,CHLDRN_CLAS
+		   ,CHLDRN_NM
+		   ,CREAT_USID
+		   ,CREAT_USNM
+		   ,CREAT_USIP
+		   ,CREAT_DT
+
+		) VALUES (
+			#{sysId}
+		   ,SEQ_MM_STDNPRNT_SN.NEXTVAL
+		   ,#{mberId}
+		   ,#{chldrnGrade}
+		   ,#{chldrnClas}
+		   ,#{chldrnNm}
+		   ,#{creatUsid}
+		   ,#{creatUsnm}
+		   ,#{creatUsip}
+		   ,sysdate
+		)
+	</insert>
+
+	 <!-- 회원가입 사용자 구분 입력 -->
+     <insert id="insertMberTyInfo" parameterType="map" >
+		  INSERT INTO TAP_MM_MBER_TY (
+		      MBER_TY_SEQ
+		     ,MBER_ID
+		     ,MBER_TY
+		     ,CONFM_YN
+		     ,INSTT_TY
+		     ,INSTT_NM
+		     ,INSTT_CODE
+		     ,CLSF
+		     ,DEPT
+		     ,SKLSTF_TY
+		     ,PRTCTOR_NM
+		     ,STDNT_NO
+		     ,CONFM_MBER_ID
+		     ,CONFM_MBER_NM
+		     ,CONFM_DATE
+		) VALUES (
+		      SEQ_MBER_TY_SN.NEXTVAL
+		     ,#{mberId}
+		     ,#{mberTy}
+		     ,#{confmYn}
+		     ,#{insttTy}
+		     ,#{insttNm}
+		     ,#{insttCode}
+		     ,#{clsf}
+		     ,#{dept}
+		     ,#{sklstfTy}
+		     ,#{prtctorNm}
+		     ,#{stdntNo}
+		     ,#{creatUsid}
+		     ,#{creatUsnm}
+		     ,sysdate
+		)
+	 </insert>
+
+	 <!-- 개인정보 제공 동의 이력 등록 -->
+     <insert id="insertAgreHistInfo" parameterType="map" >
+		  INSERT INTO TAP_MM_AGRE_HIST (
+		      MBER_ID
+			 ,MBER_TY
+			 ,INSTT_NM
+			 ,INSTT_CODE
+			 ,MBTLNUM
+			 ,EMAIL
+			 ,AGRE_AT
+			 ,HIST_SN
+			 ,HIST_GROUP_SN
+			 ,HIST_USID
+			 ,HIST_USNM
+			 ,HIST_USIP
+			 ,HIST_DT
+			 ,HIST_TY
+
+		) VALUES (
+		      #{mberId}
+			 ,#{mberTy}
+			 ,#{insttNm}
+			 ,#{insttCode}
+			 ,#{mbtlnum}
+			 ,#{email}
+			 ,#{agreAt}
+			 ,SEQ_MM_AGRE_HIST_SN.NEXTVAL
+			 ,SEQ_HIST_GROUP_SEQ.NEXTVAL
+			 ,#{histUsid}
+			 ,#{histUsnm}
+			 ,#{histUsip}
+			 ,sysdate
+			 ,#{histTy}
+
+		)
+	 </insert>
+
+	 <!--  학급홈페이지 회원 탈퇴-->
+     <delete id="deleteClasMberInfo" parameterType="map" >
+		DELETE FROM TAP_CL_CLAS_MBER
+		 WHERE CLAS_MBER_ID IN (
+
+				SELECT CM.CLAS_MBER_ID
+				  FROM TAP_CL_CLAS_HMPG CH, TAP_CL_CLAS_MBER CM
+				 WHERE CH.CLAS_HMPG_ID = CM.CLAS_HMPG_ID
+				 <if test="@egovframework.MybatisUtils@isNotEmpty(sysId)">
+				   AND CH.SYS_ID = #{sysId}
+				 </if>
+				   AND CM.CLAS_MBER_ID = #{mberId}
+
+		)
+     </delete>
+
+     <!-- 자녀정보 삭제 -->
+     <delete id="deleteChldrnInfo" parameterType="map" >
+         DELETE
+           FROM TAP_MM_STDNPRNT_CHLDRN
+          WHERE  STDNPRNT_SN = #{stdnprntSn}
+     </delete>
+
+     <!-- 자녀정보 전체삭제(학부모기준) -->
+     <delete id="deleteAllChldrnInfo" parameterType="map" >
+         DELETE
+         FROM TAP_MM_STDNPRNT_CHLDRN
+         WHERE  MBER_ID = #{mberId}
+	     <if test="@egovframework.MybatisUtils@isNotEmpty(sysId)">
+		 AND SYS_ID = #{sysId}
+		 </if>
+     </delete>
+
+     <!--  그룹 회원 탈퇴-->
+     <delete id="deleteMberGrpInfo" parameterType="map" >
+         DELETE
+           FROM TAP_GR_GROUP_MBER
+          WHERE MBER_ID = #{mberId}
+         <if test="@egovframework.MybatisUtils@isNotEmpty(sysId)">
+    	   AND SYS_ID = #{sysId}
+    	</if>
+     </delete>
+
+     <!-- 사용자 권한 회수 -->
+     <delete id="deleteAuthorMbrInfo" parameterType="map" >
+    	DELETE
+    	  FROM TAP_AU_AUTHOR_MBER
+    	 WHERE MBER_ID = #{mberId}
+    	 <if test="@egovframework.MybatisUtils@isNotEmpty(sysId)">
+    	   AND SYS_ID = #{sysId}
+    	</if>
+    </delete>
+
+    <!--아이디 중복 검사 -->
+    <select id="selectMberIdInfo" parameterType="map" resultType="egovMap">
+       	  SELECT  COUNT(*) AS MBER_CNT
+		    FROM  TAP_MM_MBER_MANAGE
+		   WHERE  MBER_ID = #{mberId}
+    </select>
+
+    <!-- 학부모 회원가입 시 자녀 검색 -->
+    <select id="findChldrnInfo" parameterType="map" resultType="egovMap">
+	    SELECT
+			A.MBER_SEQ,
+			A.MBER_ID,
+			A.MBER_NM,
+			B.MBER_TY,
+			B.CLSF,
+			B.DEPT,
+			B.INSTT_NM,
+			B.INSTT_CODE
+		FROM
+			TAP_MM_MBER_MANAGE A,
+			TAP_MM_MBER_TY B
+		WHERE
+			A.MBER_ID = B.MBER_ID
+		AND
+			INSTT_CODE = #{insttCode}
+		AND
+			B.MBER_TY = '5'
+		AND
+			MBER_NM LIKE '%'||#{findChldrnNm}||'%'
+    </select>
+
+    <insert id="insertPrntCertInfo" parameterType="map">
+    	INSERT INTO
+    		TAP_MM_PRNT_CERT_MNAGE(
+    			PRNT_CERT_SN,
+    			PRNT_DI_KEY,
+    			MBER_ID
+    		)
+    		VALUES(
+    			#{diKey},
+    			#{prntCertKey},
+    			#{mberId}
+    		)
+    </insert>
+    <select id="selectPrntCertSeq" parameterType="map" resultType="String">
+    	SELECT SEQ_PRNT_CERT_SN.NEXTVAL FROM DUAL
+    </select>
+
+    <!-- 해당 홈페이지 가입 회원 체크(CI값) -->
+    <select id="selectMberCiKeyIsDupAtSys" parameterType="map" resultType="int">
+    	SELECT
+    		COUNT(*)
+   		FROM
+   			TAP_MM_MBER_MANAGE MM, TAP_MM_MBER_TY MT, TAP_SM_SYS_MANAGE SM
+   		WHERE
+   			MT.INSTT_CODE = SM.INSTT_CODE
+		AND
+			MM.MBER_ID = MT.MBER_ID
+		AND
+			SM.SYS_ID = #{sysId}
+		AND
+			MM.DI_KEY = #{diKey}
+    </select>
+	<update id="updateCertiKey" parameterType="map">
+		UPDATE
+			TAP_MM_MBER_MANAGE
+		SET
+			CERTI_KEY = #{certiKey}
+		WHERE
+			MBER_ID = #{mberId}
+	</update>
+    <!-- 전체 홈페이지 가입 회원 체크 (CI값) -->
+    <select id="selectJoinMberCheck" parameterType="map" resultType="egovMap">
+   		SELECT
+			MM.MBER_ID,
+		  	MM.MBER_NM,
+		  	MM.MBER_PASSWORD,
+		  	MM.MBTLNUM,
+		  	MM.TELNO,
+		  	MM.EMAIL
+		FROM
+			V_TAP_MM_MBER_MANAGE MM,
+			TAP_MM_MBER_TY MT,
+			TAP_SM_SYS_MANAGE SM
+		WHERE
+			MM.MBER_ID = MT.MBER_ID
+		AND
+			MT.INSTT_CODE = SM.INSTT_CODE
+		AND
+			MM.DI_KEY = #{diKey}
+		GROUP BY
+			MM.MBER_ID, MM.MBER_NM, MM.MBER_PASSWORD, MM.MBTLNUM, MM.TELNO, MM.EMAIL
+    </select>
+
+    <!-- 교직원 회원 체크(DN값) -->
+    <select id="selectMberCetiKeyIsDupAt" parameterType="map" resultType="int">
+    	SELECT
+    		COUNT(*)
+   		FROM
+   			TAP_MM_MBER_MANAGE MM, TAP_MM_MBER_TY MT, TAP_SM_SYS_MANAGE SM
+   		WHERE
+   			MT.INSTT_CODE = SM.INSTT_CODE
+		AND
+			MM.MBER_ID = MT.MBER_ID
+		AND
+			SM.SYS_ID = #{sysId}
+		AND
+			MM.CERTI_KEY = #{certiKey}
+    </select>
+
+
+	<!-- SNS 회원정보 중복 체크 -->
+	<select id="linkageMberDupleCheck" parameterType="map" resultType="int">
+		SELECT
+			COUNT(*)
+		FROM
+			TAP_MM_MBER_MANAGE MM, TAP_MM_MBER_TY MT, TAP_SM_SYS_MANAGE SM
+		WHERE
+			MT.INSTT_CODE = SM.INSTT_CODE
+		AND
+			MM.MBER_ID = MT.MBER_ID
+		AND
+			SM.SYS_ID = #{sysId}
+		AND
+			MM.MBER_ID IN (
+				SELECT
+					MBER_ID
+				FROM
+					TAP_MM_MBER_SNS_LINKAGE
+				WHERE
+					LINKAGE_KEY = #{linkageKey}
+				AND
+					LINKAGE_TY = #{linkageTy}
+			)
+	</select>
+
+	<!-- SNS 회원정보 연동 -->
+	<insert id="likageMber" parameterType="map">
+		INSERT INTO
+			TAP_MM_MBER_SNS_LINKAGE(
+				LINKAGE_SN,
+       			MBER_ID,
+       			LINKAGE_KEY,
+       			LINKAGE_TY,
+       			LINKAGE_DT
+			) VALUES(
+				SEQ_LINKAGE_SN.NEXTVAL,
+				#{mberId},
+				#{linkageKey},
+				#{linkageTy},
+				SYSDATE
+			)
+	</insert>
+
+	<!--사용자 이관 여부 확인 -->
+    <select id="selectMberSaltInfo" parameterType="map" resultType="egovMap">
+		SELECT
+			MM.PW_SALT
+		FROM
+			TAP_MM_MBER_MANAGE MM, TAP_MM_MBER_TY MT, TAP_SM_SYS_MANAGE SM
+		WHERE
+			MT.INSTT_CODE = SM.INSTT_CODE
+		AND
+			MM.MBER_ID = MT.MBER_ID
+		AND
+			MM.MBER_ID = #{mberId}
+		AND
+			SM.SYS_ID = #{sysId}
+    </select>
+
+	<!--사용자 정보 조회 (아이디, 비밀번호) -->
+    <select id="selectMberBaseInfo" parameterType="map" resultType="egovMap">
+       	  SELECT  MM.MBER_SEQ
+		      	 ,MM.MBER_ID
+		      	 ,MM.MBER_NM
+		      	 ,MM.MBER_PASSWORD
+		      	 ,MM.MBTLNUM
+		      	 ,MM.TELNO
+		      	 ,MM.EMAIL
+		      	 ,MM.DI_KEY
+		      	 ,MM.CERTI_KEY
+		      	 ,TO_CHAR(MM.CREAT_DT, 'YYYY/MM/DD') AS CREAT_DT
+		      	 ,MM.CREAT_USIP
+		      	 ,MT.CLSF
+		      	 ,MT.DEPT
+		      	 ,MT.INSTT_NM
+		      	 ,MT.INSTT_CODE
+		    FROM V_TAP_MM_MBER_MANAGE MM, TAP_MM_MBER_TY MT, TAP_SM_SYS_MANAGE SM
+		   WHERE MT.INSTT_CODE = SM.INSTT_CODE
+		     AND MM.MBER_ID = MT.MBER_ID
+		     AND MM.MBER_ID = #{mberId}
+		     AND SM.SYS_ID = #{sysId}
+		     <if test='@egovframework.MybatisUtils@isNotEmpty(realServerEncAt)'>
+			 	AND MM.MBER_PASSWORD = SCH23DBSEC.SDB_CRYPTO2.ENCRYPT(#{mberPassword},'SCH23DBSEC.M_KEY.SHA256')
+			 </if>
+			 <if test='@egovframework.MybatisUtils@isEmpty(realServerEncAt)'>
+			 	AND MM.MBER_PASSWORD = #{mberPassword}
+			 </if>
+    </select>
+
+    <!-- 승인 요청 문자 메시지 수신자 조회(홈페이지 관리자 중 등록된 회원) -->
+    <select id="selectHomePageConfmSmsReceiver" parameterType="map" resultType="egovMap">
+    	SELECT
+			AMB.SYS_ID,
+			AMB.AUTHOR_CODE,
+			AMB.MBER_ID,
+			MM.MBER_NM,
+			MM.MBTLNUM
+		FROM
+			TAP_AU_AUTHOR_MBER AMB,
+			TAP_MM_MBER_CONFM_SMS_RECEIVER MCS,
+			V_TAP_MM_MBER_MANAGE MM
+		WHERE
+			AMB.MBER_ID = MCS.MBER_ID
+		AND
+			MCS.MBER_ID = MM.MBER_ID
+		AND
+			AMB.SYS_ID = #{sysId}
+    </select>
+
+    <!-- 휴면 계정 해제 -->
+    <update id="updateDormantMber" parameterType="map">
+    	UPDATE
+    		TAP_MM_MBER_TY
+    	SET
+    		CONFM_YN = 'Y'
+    	WHERE
+    		MBER_ID = #{checkStr}
+    </update>
+
+    <!-- START ============= 자녀 정보 수정 승인 관련 기능  =============== -->
+
+    <!-- SEQ로 자녀 정보 조회  -->
+    <select id="selectChildBySn" parameterType="map" resultType="egovMap">
+    	SELECT
+			CHLDRN_GRADE AS BEFORE_CHLDRN_GRADE,
+			CHLDRN_CLAS AS BEFORE_CHLDRN_CLAS,
+			CHLDRN_NM AS BEFORE_CHLDRN_NM
+		FROM
+			TAP_MM_STDNPRNT_CHLDRN
+		WHERE
+			STDNPRNT_SN = #{stdnprntSn}
+    </select>
+
+     <!-- SEQ로 자녀정보 변경 승인 요청 정보 조회  -->
+    <select id="selectChildConfmBySn" parameterType="map" resultType="egovMap">
+    	SELECT
+    		STDNPRNT_SN,
+	       	AFTER_CHLDRN_GRADE AS CHLDRN_GRADE,
+	       	AFTER_CHLDRN_CLAS AS CHLDRN_CLAS,
+	       	AFTER_CHLDRN_NM AS CHLDRN_NM
+		FROM
+			TAP_MM_STDNPRNT_CHLDRN_CONFM
+		WHERE
+			CHLDRN_CONM_SN = #{chldrnConmSn}
+    </select>
+
+    <!-- 자녀정보 수정 승인 요청 -->
+    <insert id="insertChildUpdateApply" parameterType="map">
+    	INSERT INTO
+			TAP_MM_STDNPRNT_CHLDRN_CONFM
+			(
+				CHLDRN_CONM_SN,
+		        STDNPRNT_SN,
+		        BEFORE_CHLDRN_GRADE,
+		        BEFORE_CHLDRN_CLAS,
+		        BEFORE_CHLDRN_NM,
+		        AFTER_CHLDRN_GRADE,
+		        AFTER_CHLDRN_CLAS,
+		        AFTER_CHLDRN_NM,
+		        CONFM_AT,
+		        UPDT_MBER_ID,
+		        UPDT_MBER_NM,
+		        UPDT_IP,
+		        UPDT_DT
+			) VALUES(
+				CHLDRN_CONM_SN_SEQ.NEXTVAL,
+		        #{stdnprntSn},
+		        #{beforeChldrnGrade},
+		        #{beforeChldrnClas},
+		        #{beforeChldrnNm},
+				#{chldrnGrade},
+		        #{chldrnClas},
+		        #{chldrnNm},
+		        'W',
+		        #{mberId},
+		        #{mberNm},
+		        #{updtIp},
+		        SYSDATE
+			)
+    </insert>
+
+    <!-- 승인 상태 값 반영  -->
+    <update id="updateChldrnConfmAt" parameterType ="map">
+		UPDATE
+			TAP_MM_STDNPRNT_CHLDRN_CONFM
+		SET
+			CONFM_AT = #{comfirmAt}
+	    WHERE
+	    	CHLDRN_CONM_SN = #{chldrnConmSn}
+	</update>
+    <!-- END   ============= 자녀 정보 수정 승인 관련 기능  =============== -->
+
+ </mapper>

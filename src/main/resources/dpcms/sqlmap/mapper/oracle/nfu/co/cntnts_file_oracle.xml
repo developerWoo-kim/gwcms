@@ -1,0 +1,345 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="cntnts_file">
+	<!-- 컨텐츠 등록된 파일 확장자 리스트 -->
+
+	<select id="selectCntntsFileExt" parameterType="map" resultType="egovMap">
+		SELECT
+		 FILE_EXTSN
+		FROM TCO_CF_CNTNTS_FILE
+		WHERE USE_AT = 'Y'
+		AND SYS_ID = #{sysId}
+		GROUP BY FILE_EXTSN
+	</select>
+
+	<!-- 컨텐츠 파일 리스트 (sql) -->
+	<sql id="selectCntntsFileList">
+		SELECT CF.FILE_ID
+				,CF.SYS_ID
+				,CF.FILE_STRE_COURS
+				,CF.FILE_TTL
+				,CF.ORIGNL_FILE_NM
+				,CF.FILE_EXTSN
+				,CF.USE_AT
+				,CF.CREAT_USID
+				,CF.CREAT_USNM
+				,CF.CREAT_DT
+				,(SELECT FILE_SN FROM TSA_ATCH_FILE_DETAIL WHERE FILE_ID = CF.FILE_ID ) as FILE_SN
+				,ROW_NUMBER() OVER(ORDER BY CF.FILE_ID DESC) AS RSN
+				,CF.DWLD_URL
+		FROM TCO_CF_CNTNTS_FILE CF
+		WHERE CF.USE_AT = 'Y'
+			AND CF.SYS_ID = #{sysId}
+		<if test="@egovframework.MybatisUtils@isNotEmpty(srchTxtCntntsFile)">
+			 AND ORIGNL_FILE_NM LIKE '%'||#{srchTxtCntntsFile}||'%'
+		</if>
+		<if test="@egovframework.MybatisUtils@isNotEmpty(srchTxtCntntsFileExt)">
+			 AND FILE_EXTSN LIKE '%'||#{srchTxtCntntsFileExt}||'%'
+		</if>
+<!-- 		ORDER BY RSN -->
+    </sql>
+
+	<!-- 컨텐츠 파일 리스트 조회 -->
+    <select id="selectCntntsFileList" parameterType="map" resultType="egovMap">
+		<include refid="selectCntntsFileList" />
+    </select>
+
+	<!-- 컨텐츠 파일 리스트 (페이징) -->
+    <select id="selectCntntsFileListPaging" parameterType="map" resultType="egovMap">
+		SELECT PL.*
+		  FROM (SELECT PO.*
+		  			  <!-- ,ROWNUM AS RSN -->
+		          FROM ( <include refid="selectCntntsFileList" /> ) PO ) PL
+		 WHERE 1 = 1
+		 <![CDATA[
+		   AND RSN <= #{maxSn}
+		   AND RSN > #{minSn}
+		 ]]>
+    </select>
+
+    <!-- 컨텐츠 파일 리스트 (페이징 전체 카운트) -->
+    <select id="selectCntntsFileListPagingCount" parameterType="map" resultType="int">
+		  SELECT COUNT(*)
+		    FROM TCO_CF_CNTNTS_FILE
+		   WHERE 1 = 1
+		     AND USE_AT = 'Y'
+		     AND SYS_ID = #{sysId}
+			<if test="@egovframework.MybatisUtils@isNotEmpty(srchTxtCntntsFile)">
+			 	AND ORIGNL_FILE_NM LIKE '%'||#{srchTxtCntntsFile}||'%'
+			</if>
+			<if test="@egovframework.MybatisUtils@isNotEmpty(srchTxtCntntsFileExt)">
+				AND FILE_EXTSN LIKE '%'||#{srchTxtCntntsFileExt}||'%'
+			</if>
+    </select>
+
+<!-- 시스템 리스트 -->
+    <!-- 콘테츠 시스템 리스트 통계 sql -->
+	<sql id="selectCntntsFileState">
+		SELECT COUNT(*) AS CNT
+		FROM TCO_CF_CNTNTS_FILE
+		WHERE SYS_ID = SM.SYS_ID
+		AND USE_AT = 'Y'
+	</sql>
+
+	<!-- 콘테츠 시스템 리스트 sql -->
+	<sql id="selectCntFileSysTotalList">
+		SELECT IT.INSTT_CODE
+	          ,IT.INSTT_NM
+	          ,IT.INSTT_TY
+	          ,SM.SYS_ID
+			  ,SM.SYS_NM
+			  ,( <include refid="selectCntntsFileState" /> ) AS TOTAL_CNT
+			   ,ROW_NUMBER() OVER(ORDER BY IT.INSTT_CODE, IT.INSTT_LEVEL DESC) AS RSN
+			  FROM TAP_IM_INSTT_MANAGE IT, TAP_SM_SYS_MANAGE SM
+			  WHERE IT.INSTT_CODE = SM.INSTT_CODE
+			  AND SM.SYS_STTUS = 'O'
+
+			<if test='@egovframework.MybatisUtils@isEmpty(author) || author != "master"'>
+	         AND SM.SYS_ID NOT IN ('apple')
+	        </if>
+
+	        <if test='@egovframework.MybatisUtils@isNotEmpty(srchSysId)'>
+        	 AND SM.SYS_ID = #{srchSysId}
+       		</if>
+
+	        <if test="@egovframework.MybatisUtils@isNotEmpty(mberId)">
+		      AND SM.SYS_ID IN (
+					SELECT SYS_ID
+					  FROM TAP_AU_AUTHOR_MBER
+					 WHERE MBER_ID = #{mberId}
+						   AND SYS_ID != 'apple'
+					   AND AUTHOR_CODE IN (1,2)
+	        	)
+		     </if>
+
+	        <if test="@egovframework.MybatisUtils@isNotEmpty(insttCode)">
+		     AND   ( IT.INSTT_CODE =  #{insttCode}
+
+	                    OR  IT.UPPER_INSTT_CODE = #{upperInsttCode}
+	                    OR  IT.BSIS_INSTT_CODE = #{bsisInsttCode}
+
+	               	)
+	         </if>
+
+		     <if test="@egovframework.MybatisUtils@isNotEmpty(insttGrad)">
+		     AND   ( IT.INSTT_GRAD IS NULL
+
+		     		 <if test="@egovframework.MybatisUtils@isNotEmpty(dtnt)">
+		                OR IT.INSTT_GRAD = #{dtnt}
+		             </if>
+		             <if test="@egovframework.MybatisUtils@isNotEmpty(elesch)">
+		                OR IT.INSTT_GRAD = #{elesch}
+		             </if>
+		             <if test="@egovframework.MybatisUtils@isNotEmpty(mskul)">
+		                OR IT.INSTT_GRAD = #{mskul}
+		             </if>
+		             <if test="@egovframework.MybatisUtils@isNotEmpty(hgschl)">
+		                OR IT.INSTT_GRAD = #{hgschl}
+		             </if>
+		             <if test="@egovframework.MybatisUtils@isNotEmpty(kndrgr)">
+		                OR IT.INSTT_GRAD = #{kndrgr}
+		             </if>
+		             <if test="@egovframework.MybatisUtils@isNotEmpty(spcl)">
+		                OR IT.INSTT_GRAD = #{spcl}
+		             </if>
+
+		           )
+		     </if>
+
+		     <if test="@egovframework.MybatisUtils@isNotEmpty(sysTy)">
+		      AND   SM.SYS_TY = #{sysTy}
+		     </if>
+
+		     <if test="@egovframework.MybatisUtils@isNotEmpty(srchTxt)">
+		       AND  (
+       				 SM.SYS_NM LIKE '%'||#{srchTxt}||'%'
+              	  OR SM.SYS_TY LIKE '%'||#{srchTxt}||'%'
+		       )
+		    </if>
+
+<!-- 			 ORDER BY   IT.INSTT_CODE, IT.INSTT_LEVEL DESC -->
+	</sql>
+
+	<!-- 콘테츠 시스템 리스트 -->
+	<select id="selectCntFileSysTotalList" parameterType="map" resultType="egovMap">
+		<include refid="selectCntFileSysTotalList"/>
+	</select>
+
+	<!-- 콘테츠 시스템 페이징 -->
+	<select id="selectCntFileSysTotalListPaging" parameterType="map" resultType="egovMap">
+		SELECT
+    		PL.*
+    	FROM (
+        	SELECT
+        		PO.*
+
+			FROM (
+	    		<include refid="selectCntFileSysTotalList" />
+				) PO
+		) PL
+		WHERE
+		<![CDATA[
+			rsn <= #{maxSn}
+			AND rsn > #{minSn}
+		]]>
+	</select>
+
+	<!-- 콘테츠 시스템 페이징 카운트 -->
+	<select id="selectCntFileSysTotalListPagingCount" parameterType="map" resultType="int">
+		SELECT
+			COUNT(*)
+			FROM TAP_IM_INSTT_MANAGE IT, TAP_SM_SYS_MANAGE SM
+			  WHERE IT.INSTT_CODE = SM.INSTT_CODE
+			  AND SM.SYS_STTUS = 'O'
+
+			<if test='@egovframework.MybatisUtils@isEmpty(author) || author != "master"'>
+	         AND SM.SYS_ID NOT IN ('apple')
+	        </if>
+
+	        <if test="@egovframework.MybatisUtils@isNotEmpty(insttCode)">
+		     AND   ( IT.INSTT_CODE =  #{insttCode}
+
+	                    OR  IT.UPPER_INSTT_CODE = #{upperInsttCode}
+	                    OR  IT.BSIS_INSTT_CODE = #{bsisInsttCode}
+
+	               	)
+	         </if>
+
+		     <if test="@egovframework.MybatisUtils@isNotEmpty(insttGrad)">
+		     AND   ( IT.INSTT_GRAD IS NULL
+
+		     		 <if test="@egovframework.MybatisUtils@isNotEmpty(dtnt)">
+		                OR IT.INSTT_GRAD = #{dtnt}
+		             </if>
+		             <if test="@egovframework.MybatisUtils@isNotEmpty(elesch)">
+		                OR IT.INSTT_GRAD = #{elesch}
+		             </if>
+		             <if test="@egovframework.MybatisUtils@isNotEmpty(mskul)">
+		                OR IT.INSTT_GRAD = #{mskul}
+		             </if>
+		             <if test="@egovframework.MybatisUtils@isNotEmpty(hgschl)">
+		                OR IT.INSTT_GRAD = #{hgschl}
+		             </if>
+		             <if test="@egovframework.MybatisUtils@isNotEmpty(kndrgr)">
+		                OR IT.INSTT_GRAD = #{kndrgr}
+		             </if>
+		             <if test="@egovframework.MybatisUtils@isNotEmpty(spcl)">
+		                OR IT.INSTT_GRAD = #{spcl}
+		             </if>
+
+		           )
+		     </if>
+
+	        <if test="@egovframework.MybatisUtils@isNotEmpty(mberId)">
+		      AND SM.SYS_ID IN (
+					SELECT SYS_ID
+					  FROM TAP_AU_AUTHOR_MBER
+					 WHERE MBER_ID = #{mberId}
+						   AND SYS_ID != 'apple'
+					   AND AUTHOR_CODE IN (1,2)
+	        	)
+		     </if>
+
+		     <if test="@egovframework.MybatisUtils@isNotEmpty(sysTy)">
+		      AND   SM.SYS_TY = #{sysTy}
+		     </if>
+
+		     <if test="@egovframework.MybatisUtils@isNotEmpty(srchTxt)">
+		       AND  (
+       				 SM.SYS_NM LIKE '%'||#{srchTxt}||'%'
+              	  OR SM.SYS_TY LIKE '%'||#{srchTxt}||'%'
+		       )
+		    </if>
+
+	</select>
+    <!-- 콘테츠 총관리자 리스트 +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ -->
+
+    <!-- 콘테츠이력 총관리자 리스트 +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ -->
+
+<!-- 시스템리스트 -->
+
+
+    <!-- //컨텐츠 파일 리스트 등록 -->
+	<insert id="insertCntntsFile" parameterType="map">
+		INSERT INTO TCO_CF_CNTNTS_FILE(
+			FILE_ID
+			,SYS_ID
+			,FILE_STRE_COURS
+			,FILE_TTL
+			,ORIGNL_FILE_NM
+			,FILE_EXTSN
+			,USE_AT
+			,CREAT_USID
+			,CREAT_USNM
+			,CREAT_DT
+			,DWLD_URL
+		) values (
+			#{fileId}
+			,#{sysId}
+			,#{fileStreCours}
+			,#{fileTtl}
+			,#{orignlFileNm}
+			,#{fileExtsn}
+			,'Y'
+			,#{creatUsid}
+			,#{creatUsnm}
+			,SYSDATE
+			,#{dwldUrl}
+			)
+	</insert>
+
+	<select id="selectCntntsFileDetailList" parameterType="map" resultType="egovMap">
+		SELECT FILE_ID
+			  ,SYS_ID
+			  ,FILE_STRE_COURS
+			  ,FILE_TTL
+			  ,ORIGNL_FILE_NM
+			  ,FILE_EXTSN
+			  ,USE_AT
+			  ,CREAT_USID
+			  ,CREAT_USNM
+			  ,CREAT_DT
+			  ,UPDT_USNM
+			  ,UPDT_USID
+			  ,UPDT_DT
+		  FROM TCO_CF_CNTNTS_FILE
+		 WHERE 1 = 1
+		   AND FILE_ID = #{fileId}
+    </select>
+
+	<!-- 컨텐츠파일관리 삭제 시 업데이트 -->
+	<update id="updateCntntsFile" parameterType="map">
+		UPDATE
+			TCO_CF_CNTNTS_FILE
+		SET USE_AT = 'N'
+			,UPDT_USNM = #{updtUsnm}
+			,UPDT_USID = #{updtUsid}
+			,UPDT_DT = SYSDATE
+		WHERE FILE_ID IN
+		<foreach collection="cntntsFileCheckBox" item="item" index="index" open="(" close=")" separator=",">
+			#{item}
+		</foreach>
+	</update>
+
+    <!-- 등록된 파일 삭제 -->
+    <delete id="deleteCntntsFile" parameterType="map">
+    	DELETE FROM
+			TSA_ATCH_FILE
+    	WHERE FILE_ID IN
+		<foreach collection="cntntsFileCheckBox" item="item" index="index" open="(" close=")" separator=",">
+			#{item}
+		</foreach>
+    </delete>
+
+    <!-- 등록된 파일 디테일 삭제 -->
+    <delete id="deleteCntntsFileDetail" parameterType="map">
+    	DELETE FROM
+    		TSA_ATCH_FILE_DETAIL
+    	WHERE FILE_ID IN
+		<foreach collection="cntntsFileCheckBox" item="item" index="index" open="(" close=")" separator=",">
+			#{item}
+		</foreach>
+    </delete>
+
+</mapper>

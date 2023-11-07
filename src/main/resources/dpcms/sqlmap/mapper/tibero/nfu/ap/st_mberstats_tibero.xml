@@ -1,0 +1,341 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="st_mberstats">
+
+	<!--사용자 접속 통계 리스트  SQL -->
+	<sql id="selectMberStatsList" >
+	   	SELECT
+	   			(COUNT(T.MBER_ID) + COUNT( CASE WHEN T.HIST_TY = 'S' THEN T.HIST_TY END )) AS TOTAL_CNT,
+				COUNT(T.MBER_ID) AS CURR_CNT,
+				COUNT( CASE WHEN T.HIST_TY = 'S' THEN T.HIST_TY END ) AS OUT_CNT,
+				T.SYS_ID,
+				T.SYS_NM
+		FROM
+			(
+		        SELECT
+						SM.SYS_ID,
+						SM.SYS_NM,
+						MH.INSTT_CODE,
+						MH.HIST_TY,
+						MM.MBER_ID
+				FROM
+						TAP_MM_MBER_HIST MH,
+						TAP_SM_SYS_MANAGE SM,
+						TAP_MM_MBER_MANAGE MM,
+						TAP_MM_MBER_TY MT
+				WHERE
+						MM.MBER_ID = MT.MBER_ID
+	   	   		AND
+	   	   				MT.INSTT_CODE = SM.INSTT_CODE
+	  	   		AND
+	  	   				MH.MBER_NM = MM.MBER_NM
+				) T
+		WHERE
+			1=1
+		<if test="@egovframework.MybatisUtils@isNotEmpty(srchTxt)">
+    	AND
+    		T.SYS_NM like '%'||#{srchTxt}||'%'
+  		</if>
+		<if test="sysId != 'apple'">
+    	AND
+    		T.SYS_ID = #{sysId}
+  		</if>
+		GROUP BY T.SYS_ID, T.SYS_NM
+   </sql>
+
+	<!-- 사용자 접속 통계 리스트 조회(페이징) -->
+   <select id="selectMberStatsListPaging" parameterType="map" resultType="egovMap">
+    	SELECT
+    		PL.*
+    	FROM (
+        	SELECT
+        		PO.*
+        		,rownum as rsn
+			FROM (
+	    		<include refid="selectMberStatsList" />
+				) PO
+		) PL
+		WHERE
+		<![CDATA[
+			rsn <= #{maxSn}
+			AND rsn > #{minSn}
+		]]>
+    </select>
+
+	<!-- 사용자 접속 통계 리스트 조회(페이징 전체 카운트) -->
+   <select id="selectMberStatsListPagingCount" parameterType="map" resultType="int">
+      SELECT  COUNT(*)
+	    FROM  (<include refid="selectMberStatsList" />)
+	   WHERE  1 = 1
+    </select>
+
+    <!-- 방문통계 시스템 리스트 통계 sql -->
+	<sql id="selectJoinState">
+		SELECT COUNT(*)
+			FROM TAP_MM_MBER_MANAGE MMM, TAP_MM_MBER_TY MMT
+		WHERE MMT.INSTT_CODE = SM.INSTT_CODE
+		AND MMM.MBER_ID = MMT.MBER_ID
+	</sql>
+
+	<!-- 방문통계 시스템 리스트 sql -->
+	<sql id="selectJoinStateSmList">
+		SELECT
+			  ROW_NUMBER() OVER(ORDER BY IT.INSTT_CODE, IT.INSTT_LEVEL DESC) AS RSN,
+			  IT.INSTT_CODE
+	          ,IT.INSTT_NM
+	          ,IT.INSTT_TY
+	          ,SM.SYS_ID
+			  ,SM.SYS_NM
+			  ,( <include refid="selectJoinState" /> ) AS TOTAL_CNT
+			  ,( <include refid="selectJoinState" /> AND TO_CHAR(CREAT_DT,'YYYY/MM') = TO_CHAR(add_months(SYSDATE,-1),'YYYY/MM')) AS L_MONTH
+			  ,( <include refid="selectJoinState" /> AND TO_CHAR(CREAT_DT,'YYYY/MM') = TO_CHAR(SYSDATE,'YYYY/MM')) AS T_MONTH
+			  ,( <include refid="selectJoinState" /> AND TO_CHAR(CREAT_DT, 'YYYY/MM/DD') = TO_CHAR(SYSDATE, 'YYYY/MM/DD')) AS T_CNT
+			  FROM TAP_IM_INSTT_MANAGE IT, TAP_SM_SYS_MANAGE SM
+			  WHERE IT.INSTT_CODE = SM.INSTT_CODE
+			  AND SM.SYS_STTUS = 'O'
+
+			<if test='@egovframework.MybatisUtils@isEmpty(author) || author != "master"'>
+	         AND SM.SYS_ID NOT IN ('apple')
+	        </if>
+
+	        <if test="@egovframework.MybatisUtils@isNotEmpty(mberId)">
+		      AND SM.SYS_ID IN (
+					SELECT SYS_ID
+					  FROM TAP_AU_AUTHOR_MBER
+					 WHERE MBER_ID = #{mberId}
+						   AND SYS_ID != 'apple'
+					   AND AUTHOR_CODE IN (1,2)
+	        	)
+		     </if>
+
+	        <if test="@egovframework.MybatisUtils@isNotEmpty(insttCode)">
+		     AND   ( IT.INSTT_CODE =  #{insttCode}
+
+	                    OR  IT.UPPER_INSTT_CODE = #{upperInsttCode}
+	                    OR  IT.BSIS_INSTT_CODE = #{bsisInsttCode}
+
+	               	)
+	         </if>
+
+		     <if test="@egovframework.MybatisUtils@isNotEmpty(insttGrad)">
+		     AND   ( IT.INSTT_GRAD IS NULL
+
+		     		 <if test="@egovframework.MybatisUtils@isNotEmpty(dtnt)">
+		                OR IT.INSTT_GRAD = #{dtnt}
+		             </if>
+		             <if test="@egovframework.MybatisUtils@isNotEmpty(elesch)">
+		                OR IT.INSTT_GRAD = #{elesch}
+		             </if>
+		             <if test="@egovframework.MybatisUtils@isNotEmpty(mskul)">
+		                OR IT.INSTT_GRAD = #{mskul}
+		             </if>
+		             <if test="@egovframework.MybatisUtils@isNotEmpty(hgschl)">
+		                OR IT.INSTT_GRAD = #{hgschl}
+		             </if>
+		             <if test="@egovframework.MybatisUtils@isNotEmpty(kndrgr)">
+		                OR IT.INSTT_GRAD = #{kndrgr}
+		             </if>
+		             <if test="@egovframework.MybatisUtils@isNotEmpty(spcl)">
+		                OR IT.INSTT_GRAD = #{spcl}
+		             </if>
+
+		           )
+		     </if>
+
+		     <if test="@egovframework.MybatisUtils@isNotEmpty(sysTy)">
+		      AND   SM.SYS_TY = #{sysTy}
+		     </if>
+
+		     <if test="@egovframework.MybatisUtils@isNotEmpty(srchTxt)">
+		       AND  (
+       				 SM.SYS_NM like '%'||#{srchTxt}||'%'
+              	  OR SM.SYS_TY like '%'||#{srchTxt}||'%'
+
+		       )
+		    </if>
+
+			 ORDER BY   IT.INSTT_CODE, IT.INSTT_LEVEL DESC
+	</sql>
+
+	<!-- 방문통계 시스템 리스트 -->
+	<select id="selectJoinStateSmList" parameterType="map" resultType="egovMap">
+		<include refid="selectJoinStateSmList"/>
+	</select>
+
+	<!-- 방문통계 시스템 페이징 -->
+	<select id="selectJoinStateSmListPaging" parameterType="map" resultType="egovMap">
+		SELECT
+    		PL.*
+    	FROM (
+        	SELECT
+        		PO.*
+<!--         		,rownum as rsn -->
+			FROM (
+	    		<include refid="selectJoinStateSmList" />
+				) PO
+		) PL
+		WHERE
+		<![CDATA[
+			rsn <= #{maxSn}
+			AND rsn > #{minSn}
+		]]>
+	</select>
+
+	<!-- 방문통계 시스템 페이징 카운트 -->
+	<select id="selectJoinStateSmListPagingCount" parameterType="map" resultType="int">
+		SELECT
+			COUNT(*)
+			FROM TAP_IM_INSTT_MANAGE IT, TAP_SM_SYS_MANAGE SM
+			  WHERE IT.INSTT_CODE = SM.INSTT_CODE
+			  AND SM.SYS_STTUS = 'O'
+
+			<if test='@egovframework.MybatisUtils@isEmpty(author) || author != "master"'>
+	         AND SM.SYS_ID NOT IN ('apple')
+	        </if>
+
+	        <if test="@egovframework.MybatisUtils@isNotEmpty(insttCode)">
+		     AND   ( IT.INSTT_CODE =  #{insttCode}
+
+	                    OR  IT.UPPER_INSTT_CODE = #{upperInsttCode}
+	                    OR  IT.BSIS_INSTT_CODE = #{bsisInsttCode}
+
+	               	)
+	         </if>
+
+		     <if test="@egovframework.MybatisUtils@isNotEmpty(insttGrad)">
+		     AND   ( IT.INSTT_GRAD IS NULL
+
+		     		 <if test="@egovframework.MybatisUtils@isNotEmpty(dtnt)">
+		                OR IT.INSTT_GRAD = #{dtnt}
+		             </if>
+		             <if test="@egovframework.MybatisUtils@isNotEmpty(elesch)">
+		                OR IT.INSTT_GRAD = #{elesch}
+		             </if>
+		             <if test="@egovframework.MybatisUtils@isNotEmpty(mskul)">
+		                OR IT.INSTT_GRAD = #{mskul}
+		             </if>
+		             <if test="@egovframework.MybatisUtils@isNotEmpty(hgschl)">
+		                OR IT.INSTT_GRAD = #{hgschl}
+		             </if>
+		             <if test="@egovframework.MybatisUtils@isNotEmpty(kndrgr)">
+		                OR IT.INSTT_GRAD = #{kndrgr}
+		             </if>
+		             <if test="@egovframework.MybatisUtils@isNotEmpty(spcl)">
+		                OR IT.INSTT_GRAD = #{spcl}
+		             </if>
+
+		           )
+		     </if>
+
+	        <if test="@egovframework.MybatisUtils@isNotEmpty(mberId)">
+		      AND SM.SYS_ID IN (
+					SELECT SYS_ID
+					  FROM TAP_AU_AUTHOR_MBER
+					 WHERE MBER_ID = #{mberId}
+						   AND SYS_ID != 'apple'
+					   AND AUTHOR_CODE IN (1,2)
+	        	)
+		     </if>
+
+		     <if test="@egovframework.MybatisUtils@isNotEmpty(sysTy)">
+		      AND   SM.SYS_TY = #{sysTy}
+		     </if>
+
+		     <if test="@egovframework.MybatisUtils@isNotEmpty(srchTxt)">
+		       AND  (
+       				 SM.SYS_NM like '%'||#{srchTxt}||'%'
+              	  OR SM.SYS_TY like '%'||#{srchTxt}||'%'
+
+		       )
+		    </if>
+
+			 ORDER BY   IT.INSTT_CODE, IT.INSTT_LEVEL DESC
+	</select>
+
+    <!-- 총 방문자 수 -->
+	<!-- <select id="selectVisitStatsTotal" resultType="int">
+		SELECT COUNT(*)
+			FROM TAP_MM_MBER_MANAGE MMM, TAP_MM_MBER_TY MMT
+		WHERE MMT.INSTT_CODE = (SELECT SSM.INSTT_CODE FROM TAP_SM_SYS_MANAGE SSM WHERE SYS_ID = #{sysId})
+		AND MMM.MBER_ID = MMT.MBER_ID
+    </select> -->
+
+    <!-- 오늘 방문자 수 -->
+	<!-- <select id="selectVisitStatsToadyTotal" resultType="int">
+	    SELECT COUNT(*)
+	      FROM TAP_ST_VISIT_STATS
+		 WHERE SYS_ID = #{sysId}
+		   AND TO_CHAR(VISIT_DE, 'YYYY/MM/DD') LIKE TO_CHAR(SYSDATE, 'YYYY/MM/DD')||'%'
+    </select> -->
+
+    <!-- 검색 년도 조회  -->
+    <select id="st_mberstats.selectJoinStatsYearList" resultType="egovMap">
+		<![CDATA[
+    		SELECT TO_CHAR(CREAT_DT, 'YYYY') JOIN_YY
+				FROM TAP_MM_MBER_MANAGE
+			WHERE CREAT_DT IS NOT NULL
+			GROUP BY TO_CHAR(CREAT_DT, 'YYYY')
+			ORDER BY TO_CHAR(CREAT_DT, 'YYYY') DESC
+		]]>
+    </select>
+
+	<!-- 방문수 (년도) [SYS_ID, VISIT_YY] -->
+    <select id="st_mberstats.selectJoinStatsYearCount" parameterType="egovMap" resultType="egovMap">
+    	<![CDATA[
+			  SELECT SSM.SYS_ID
+			        ,SSM.SYS_NM
+			        ,SUM(CASE WHEN TO_CHAR(MMM.CREAT_DT, 'MM') = '01' THEN 1 ELSE 0 END) AS "JAN"
+			        ,SUM(CASE WHEN TO_CHAR(MMM.CREAT_DT, 'MM') = '02' THEN 1 ELSE 0 END) AS "FEB"
+			        ,SUM(CASE WHEN TO_CHAR(MMM.CREAT_DT, 'MM') = '03' THEN 1 ELSE 0 END) AS "MAR"
+			        ,SUM(CASE WHEN TO_CHAR(MMM.CREAT_DT, 'MM') = '04' THEN 1 ELSE 0 END) AS "APR"
+			        ,SUM(CASE WHEN TO_CHAR(MMM.CREAT_DT, 'MM') = '05' THEN 1 ELSE 0 END) AS "MAY"
+			        ,SUM(CASE WHEN TO_CHAR(MMM.CREAT_DT, 'MM') = '06' THEN 1 ELSE 0 END) AS "JUN"
+			        ,SUM(CASE WHEN TO_CHAR(MMM.CREAT_DT, 'MM') = '07' THEN 1 ELSE 0 END) AS "JUL"
+			        ,SUM(CASE WHEN TO_CHAR(MMM.CREAT_DT, 'MM') = '08' THEN 1 ELSE 0 END) AS "AUG"
+			        ,SUM(CASE WHEN TO_CHAR(MMM.CREAT_DT, 'MM') = '09' THEN 1 ELSE 0 END) AS "SEP"
+			        ,SUM(CASE WHEN TO_CHAR(MMM.CREAT_DT, 'MM') = '10' THEN 1 ELSE 0 END) AS "OCT"
+			        ,SUM(CASE WHEN TO_CHAR(MMM.CREAT_DT, 'MM') = '11' THEN 1 ELSE 0 END) AS "NOV"
+			        ,SUM(CASE WHEN TO_CHAR(MMM.CREAT_DT, 'MM') = '12' THEN 1 ELSE 0 END) AS "DEC"
+			        ,COUNT(*) AS "TOTAL"
+			   FROM TAP_MM_MBER_MANAGE MMM, TAP_MM_MBER_TY MMT, TAP_SM_SYS_MANAGE SSM
+	           WHERE 1=1
+	           	 AND SSM.INSTT_CODE = (SELECT SMT.INSTT_CODE FROM TAP_SM_SYS_MANAGE SMT WHERE SMT.SYS_ID = #{sysId})
+	             AND MMT.INSTT_CODE = SSM.INSTT_CODE
+	             AND MMT.MBER_ID = MMM.MBER_ID
+	             AND TO_CHAR(MMM.CREAT_DT, 'YYYY') = #{joinYy}
+			GROUP BY SSM.SYS_ID, SSM.SYS_NM
+        ]]>
+    </select>
+
+	<!-- 기간 조회 (월) -->
+    <select id="st_mberstats.selectJoinMonthCount" parameterType="egovMap" resultType="egovMap">
+    	select d.GEN_DATE AS CREAT_DT
+		        ,SUM(CASE WHEN b.CREAT_DT IS NULL THEN 0 ELSE 1 END) AS JOIN_CO
+		from dual,
+		(
+			SELECT TO_CHAR(TO_DATE(#{beginDt}, 'YYYY/MM/DD') + LEVEL - 1, 'YYYY/MM/DD') AS GEN_DATE
+			FROM DUAL
+			<![CDATA[
+			CONNECT BY LEVEL <= TO_CHAR(TO_DATE(#{endDt}, 'YYYY/MM/DD') - TO_DATE(#{beginDt}, 'YYYY/MM/DD') + 1)
+			]]>
+			ORDER BY GEN_DATE
+		) d
+		left outer join
+		(
+			SELECT TO_CHAR(MMM.CREAT_DT, 'YYYY/MM/dd') CREAT_DT
+			FROM TAP_MM_MBER_MANAGE MMM, TAP_SM_SYS_MANAGE SSM, TAP_MM_MBER_TY MMT
+			WHERE SSM.SYS_ID = #{sysId}
+			AND MMT.INSTT_CODE = SSM.INSTT_CODE
+			AND MMT.MBER_ID = MMM.MBER_ID
+			<![CDATA[
+			   AND TO_CHAR(MMM.CREAT_DT, 'YYYY/MM/DD') >= #{beginDt}
+			   AND TO_CHAR(MMM.CREAT_DT, 'YYYY/MM/DD') <= #{endDt}
+			]]>
+			ORDER BY MMM.CREAT_DT
+		) b on d.GEN_DATE = b.CREAT_DT
+		GROUP BY d.GEN_DATE
+		order by d.GEN_DATE
+    </select>
+
+</mapper>

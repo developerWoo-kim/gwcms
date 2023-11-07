@@ -1,0 +1,99 @@
+@charset "utf-8";
+
+/* 본고딕 */
+@font-face {
+    font-family: 'NotoT';
+    src: url(/font/Test_Font/NotoSansKR/NotoSansKR-Thin.eot);
+    src: url(/font/Test_Font/NotoSansKR/NotoSansKR-Thin.eot?#iefix) format('embedded-opentype'),
+    	 url(/font/Test_Font/NotoSansKR/NotoSansKR-Thin.woff2) format('woff2'),
+		 url(/font/Test_Font/NotoSansKR/NotoSansKR-Thin.woff) format('woff');
+}
+
+@font-face {
+    font-family: 'NotoL';
+    src: url(/font/Test_Font/NotoSansKR/NotoSansKR-Light.eot);
+    src: url(/font/Test_Font/NotoSansKR/NotoSansKR-Light.eot?#iefix) format('embedded-opentype'),
+    	 url(/font/Test_Font/NotoSansKR/NotoSansKR-Light.woff2) format('woff2'),
+		 url(/font/Test_Font/NotoSansKR/NotoSansKR-Light.woff) format('woff');
+}
+
+@font-face {
+    font-family: 'NotoDL';
+    src: url(/font/Test_Font/NotoSansKR/NotoSansKR-DemiLight.eot); 
+    src: url(/font/Test_Font/NotoSansKR/NotoSansKR-DemiLight.eot?#iefix) format('embedded-opentype'),
+		 url(/font/Test_Font/NotoSansKR/NotoSansKR-DemiLight.woff2) format('woff2'),
+		 url(/font/Test_Font/NotoSansKR/NotoSansKR-DemiLight.woff) format('woff');
+}
+
+@font-face {
+    font-family: 'NotoR';
+    src: url(/font/Test_Font/NotoSansKR/NotoSansKR-Regular.eot);
+    src: url(/font/Test_Font/NotoSansKR/NotoSansKR-Regular.eot?#iefix) format('embedded-opentype'),
+    	 url(/font/Test_Font/NotoSansKR/NotoSansKR-Regular.woff2) format('woff2'),
+		 url(/font/Test_Font/NotoSansKR/NotoSansKR-Regular.woff) format('woff');
+}
+
+@font-face {
+    font-family: 'NotoM';
+    src: url(/font/Test_Font/NotoSansKR/NotoSansKR-Medium.eot);
+   	src: url(/font/Test_Font/NotoSansKR/NotoSansKR-Medium.eot?#iefix) format('embedded-opentype'),
+    	 url(/font/Test_Font/NotoSansKR/NotoSansKR-Medium.woff2) format('woff2'),
+		 url(/font/Test_Font/NotoSansKR/NotoSansKR-Medium.woff) format('woff');
+}
+
+@font-face {
+    font-family: 'NotoB';
+    src: url(/font/Test_Font/NotoSansKR/NotoSansKR-Bold.eot);
+    src: url(/font/Test_Font/NotoSansKR/NotoSansKR-Bold.eot?#iefix) format('embedded-opentype'),
+    	 url(/font/Test_Font/NotoSansKR/NotoSansKR-Bold.woff2) format('woff2'),
+		 url(/font/Test_Font/NotoSansKR/NotoSansKR-Bold.woff) format('woff');
+}
+
+@font-face {
+    font-family: 'NotoBK';
+    src: url(/font/Test_Font/NotoSansKR/NotoSansKR-Black.eot);
+    src: url(/font/Test_Font/NotoSansKR/NotoSansKR-Black.eot?#iefix) format('embedded-opentype'),
+    	 url(/font/Test_Font/NotoSansKR/NotoSansKR-Black.woff2) format('woff2'),
+		 url(/font/Test_Font/NotoSansKR/NotoSansKR-Black.woff) format('woff');
+}
+/* 본명조 */
+@font-face {
+    font-family: 'NotoSerifR';
+    src: url(/font/Test_Font/NotoSerifKR/NotoSerifKR-Regular.eot); 
+    src: url(/font/Test_Font/NotoSerifKR/NotoSerifKR-Regular.eot?#iefix) format('embedded-opentype'),
+		 url(/font/Test_Font/NotoSerifKR/NotoSerifKR-Regular.woff2) format('woff2'),
+		 url(/font/Test_Font/NotoSerifKR/NotoSerifKR-Regular.woff) format('woff');
+}
+
+@font-face {
+    font-family: 'NotoSerifM';
+    src: url(/font/Test_Font/NotoSerifKR/NotoSerifKR-Medium.eot);
+    src: url(/font/Test_Font/NotoSerifKR/NotoSerifKR-Medium.eot?#iefix) format('embedded-opentype'),
+	     url(/font/Test_Font/NotoSerifKR/NotoSerifKR-Medium.woff2) format('woff2'),
+    	 url(/font/Test_Font/NotoSerifKR/NotoSerifKR-Medium.woff) format('woff');
+}
+
+@font-face {
+    font-family: 'NotoSerifSB';
+    src: url(/font/Test_Font/NotoSerifKR/NotoSerifKR-SemiBold.eot);
+   	src: url(/font/Test_Font/NotoSerifKR/NotoSerifKR-SemiBold.eot?#iefix) format('embedded-opentype'),
+		 url(/font/Test_Font/NotoSerifKR/NotoSerifKR-SemiBold.woff2) format('woff2'),
+    	 url(/font/Test_Font/NotoSerifKR/NotoSerifKR-SemiBold.woff) format('woff');
+}
+
+    
+	
+/* 맑은 고딕*/
+.malgun {font-family: "맑은 고딕", Malgun Gothic !important;}
+
+/* 돋움 */
+.dotum {font-family: "돋움", Dotum !important;}
+
+/* 본고딕 */
+.NotoT {font-family:"NotoT" !important;}
+.NotoL {font-family:"NotoL" !important;}
+.NotoDL {font-family:"NotoDL" !important;}
+.NotoR {font-family:"NotoR" !important;}
+.NotoM {font-family:"NotoM" !important;}
+.NotoB {font-family:"NotoB" !important;}
+.NotoBK {font-family:"NotoBK" !important;}

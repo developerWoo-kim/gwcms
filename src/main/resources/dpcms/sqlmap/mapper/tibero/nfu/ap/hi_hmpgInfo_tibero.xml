@@ -1,0 +1,79 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="hi_hmpgInfo">
+
+	<!--홈페이지정보 상세조회 -->
+    <select id="selectHmpgInfo" parameterType="map" resultType="egovMap">
+	        SELECT AB.*, C.MOPAS_CODE FROM
+	        (SELECT   A.SYS_ID
+       			,A.HI_HMPGINFO_SN
+       			,B.INSTT_CODE
+       			,B.SYS_NM
+				,A.HI_HMPGINFO_ADRES
+				,A.HI_HMPGINFO_TELNO
+				,A.HI_HMPGINFO_FXNUM
+				,A.HI_HMPGINFO_EMAIL
+				,A.HI_HMPGINFO_COPYRIGHT
+				,A.REG_DT
+				,A.REG_USID
+				,A.REG_USNM
+				,A.REG_USIP
+				,B.TMPLAT_ID
+	   	  FROM  TAP_HI_HMPGINFO_MANAGE A, TAP_SM_SYS_MANAGE B
+	  	  WHERE	A.SYS_ID = B.SYS_ID
+	      AND  A.SYS_ID = #{sysId}) AB
+       		LEFT JOIN TAP_IM_INSTT_MANAGE C
+	        ON C.INSTT_CODE = AB.INSTT_CODE
+    </select>
+
+  	<!-- 홈페이지정보 등록 -->
+	<insert id="insertHmpgInfo" parameterType="map" >
+	<![CDATA[
+    	INSERT INTO TAP_HI_HMPGINFO_MANAGE (
+             SYS_ID
+			,HI_HMPGINFO_SN
+			,HI_HMPGINFO_ADRES
+			,HI_HMPGINFO_TELNO
+			,HI_HMPGINFO_FXNUM
+			,HI_HMPGINFO_EMAIL
+			,REG_DT
+			,REG_USID
+			,REG_USNM
+			,REG_USIP
+			,HI_HMPGINFO_COPYRIGHT
+        ) VALUES (
+            #{sysId}
+           ,SEQ_HMPGINFO_SN.NEXTVAL
+           ,#{hiHmpginfoAdres}
+           ,#{hiHmpginfoTelno}
+           ,#{hiHmpginfoFxnum}
+           ,#{hiHmpginfoEmail}
+           ,SYSDATE
+           ,#{regUsid}
+           ,#{regUsnm}
+           ,#{regUsip}
+           ,#{hiHmpginfoCopyright}
+        )
+    ]]>
+	</insert>
+
+    <!-- 홈페이지정보 수정 -->
+    <update id="updateHmpgInfo" parameterType ="map">
+		UPDATE  TAP_HI_HMPGINFO_MANAGE
+		   SET  SYS_ID 			   = #{sysId}
+		   	   ,HI_HMPGINFO_ADRES  = #{hiHmpginfoAdres}
+			   ,HI_HMPGINFO_TELNO  = #{hiHmpginfoTelno}
+			   ,HI_HMPGINFO_FXNUM  = #{hiHmpginfoFxnum}
+			   ,HI_HMPGINFO_EMAIL  = #{hiHmpginfoEmail}
+			   ,HI_HMPGINFO_COPYRIGHT = #{hiHmpginfoCopyright}
+		WHERE   HI_HMPGINFO_SN     = #{hiHmpginfoSn}
+	</update>
+
+	<!--홈페이지정보 삭제 -->
+	<delete id="deleteHmpgInfo" parameterType="map" >
+    	DELETE FROM TAP_HI_HMPGINFO_MANAGE
+        WHERE SYS_ID = #{sysId}
+   	</delete>
+
+</mapper>

@@ -1,0 +1,1546 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="na_ntt">
+
+	<resultMap id="clobMap" type="egovMap">
+        <result property="NTT_CN" column="NTT_CN" jdbcType="CLOB" javaType="java.lang.String"/>
+    </resultMap>
+
+    <resultMap id="answerClobMap" type="egovMap">
+        <result property="ANSWER_CN" column="ANSWER_CN" jdbcType="CLOB" javaType="java.lang.String"/>
+    </resultMap>
+
+	<!-- 게시물 시퀀스 획득 -->
+	<select id="selectSeqNttSn" resultType="string">
+        SELECT SEQ_NTT_SN.NEXTVAL
+        FROM DUAL
+    </select>
+
+    <!-- 첨부파일 시퀀스 획득 -->
+	<select id="selectSeqFileSn" resultType="string">
+        SELECT SEQ_FILE_SN.NEXTVAL
+        FROM DUAL
+    </select>
+
+    <!-- 댓글 시퀀스 획득 -->
+	<select id="selectSeqAnswerSn" resultType="string">
+        SELECT SEQ_ANSWER_SN.NEXTVAL
+        FROM DUAL
+    </select>
+
+	<!-- 공지게시물 일반게시물검색조건 sql -->
+	<sql id="selectNoticeNttNormalNttSearch" >
+		<if test='noticeAt == "Y" '>
+    	AND
+    	(NOTICE_AT = 'N' OR
+	    	<![CDATA[
+	    	(NOTICE_AT = 'Y'
+	    		AND
+    			(	   SYSDATE <= NOTICE_BEGIN_DT
+	    			OR SYSDATE > NOTICE_END_DT+1
+    			)
+	    	)
+	    	]]>
+    	)
+    	</if>
+	</sql>
+
+	<!-- 공지게시물 일반게시물검색조건 sql - NT -->
+	<sql id="selectNoticeNttNormalNttSearchNT" >
+		<if test='noticeAt == "Y" '>
+    	AND
+    	(NT.NOTICE_AT = 'N' OR
+	    	<![CDATA[
+	    	(NT.NOTICE_AT = 'Y'
+	    		AND
+    			(	   SYSDATE <= NT.NOTICE_BEGIN_DT
+	    			OR SYSDATE > NT.NOTICE_END_DT+1
+    			)
+	    	)
+	    	]]>
+    	)
+    	</if>
+	</sql>
+
+	<!-- 공지게시물 일반게시물검색조건 sql - NA -->
+	<sql id="selectNoticeNttNormalNttSearchNA" >
+		<if test='noticeAt == "Y" '>
+    	AND
+    	(NA.NOTICE_AT = 'N' OR
+	    	<![CDATA[
+	    	(NA.NOTICE_AT = 'Y'
+	    		AND
+    			(	   SYSDATE <= NA.NOTICE_BEGIN_DT
+	    			OR SYSDATE > NA.NOTICE_END_DT+1
+    			)
+	    	)
+	    	]]>
+    	)
+    	</if>
+	</sql>
+
+	<!-- 게시물 리스트 검색조건 sql -->
+	<sql id="selectNttListSearchType" >
+		    		<if test="searchType.equals('ADIT_COL1')">
+		    AND ADIT_COL1 LIKE '%'||#{searchValue}||'%'
+		    		</if>
+		    		<if test="searchType.equals('ADIT_COL2')">
+		    AND ADIT_COL2 LIKE '%'||#{searchValue}||'%'
+		    		</if>
+		    		<if test="searchType.equals('ADIT_COL3')">
+		    AND ADIT_COL3 LIKE '%'||#{searchValue}||'%'
+		    		</if>
+		    		<if test="searchType.equals('ADIT_COL4')">
+		    AND ADIT_COL4 LIKE '%'||#{searchValue}||'%'
+		    		</if>
+		    		<if test="searchType.equals('ADIT_COL5')">
+		    AND ADIT_COL5 LIKE '%'||#{searchValue}||'%'
+		    		</if>
+		    		<if test="searchType.equals('ADIT_COL6')">
+		    AND ADIT_COL6 LIKE '%'||#{searchValue}||'%'
+		    		</if>
+		    		<if test="searchType.equals('ADIT_COL7')">
+		    AND ADIT_COL7 LIKE '%'||#{searchValue}||'%'
+		    		</if>
+		    		<if test="searchType.equals('ADIT_COL8')">
+		    AND ADIT_COL8 LIKE '%'||#{searchValue}||'%'
+		    		</if>
+		    		<if test="searchType.equals('ADIT_COL9')">
+		    AND ADIT_COL9 LIKE '%'||#{searchValue}||'%'
+		    		</if>
+		    		<if test="searchType.equals('ADIT_COL10')">
+		    AND ADIT_COL10 LIKE '%'||#{searchValue}||'%'
+		    		</if>
+	</sql>
+
+	<!-- 일반 게시물 리스트 sql -->
+	<sql id="selectNttList" >
+    	SELECT
+	    	 NT.BBS_ID
+			,NT.NTT_SN
+			,NT.UPPER_NTT_SN
+			,NT.NTT_SJ
+			,NT.NTT_CN
+			,NT.REG_ID
+			,NT.REG_NM AS ORI_REG_NM
+			<choose>
+				<when test="@egovframework.MybatisUtils@isNotEmpty(annymtyUseAt)">
+<!-- 			,REPLACE(NT.REG_NM, (SUBSTR(NT.REG_NM, 2, 1)), '*') AS REG_NM 	 -->
+			,REPLACE(NT.REG_NM, (SUBSTR(NT.REG_NM, 2)), '**') AS REG_NM
+				</when>
+				<otherwise>
+			,NT.REG_NM
+				</otherwise>
+			</choose>
+			,NT.REG_IP
+			,NT.REG_DT
+			,NT.NTT_RDCNT
+			,NT.NTT_OPPS_CO
+			,NT.NTT_APPRVL_CO
+			,NT.NTT_STTUS
+			,NT.NTT_USE_AT
+			,NT.SECRET_AT
+			,NT.SMS_AT
+			,NT.EMAIL_AT
+			,NT.NOTICE_AT
+			,NT.NOTICE_BEGIN_DT
+			,NT.NOTICE_END_DT
+			,NT.ADIT_COL1
+			,NT.ADIT_COL2
+			,NT.ADIT_COL3
+			,NT.ADIT_COL4
+			,NT.ADIT_COL5
+			,NT.ADIT_COL6
+			,NT.ADIT_COL7
+			,NT.ADIT_COL8
+			,NT.ADIT_COL9
+			,NT.ADIT_COL10
+			,NT.CLSDR_AT
+			,NT.CONFM_AT
+			,TO_CHAR(NT.CONFM_BEGIN_DT, 'YYYY/MM/DD') AS CONFM_BEGIN_DT
+			,TO_CHAR(NT.CONFM_END_DT, 'YYYY/MM/DD') AS CONFM_END_DT
+			,NT.CONFM_MBER_ID
+			,NT.CONFM_MBER_NM
+			,TO_CHAR(NT.CONFM_DT, 'YYYY/MM/DD') AS CONFM_DT
+	    	,( SELECT COUNT(*) FROM TCO_NA_NTT_ANSWER AN WHERE AN.NTT_SN = NT.NTT_SN AND AN.ANSWER_USE_AT = 'Y' ) AS ANSWER_CNT
+	    	,( SELECT COUNT(*) FROM TCO_NA_NTT_FILE NF WHERE NF.NTT_SN = NT.NTT_SN )  AS FILE_CHK
+	    	<if test="@egovframework.MybatisUtils@isNotEmpty(newHour)">
+            ,CASE
+                 WHEN TO_CHAR(SYSDATE, 'YYYYMMDDHH24MISS') BETWEEN TO_CHAR(NT.REG_DT, 'YYYYMMDDHH24MISS') AND TO_CHAR(NT.REG_DT + (#{newHour}/24), 'YYYYMMDDHH24MISS') THEN 'Y'
+                 ELSE 'N'
+              END AS NEW_CHECK
+			</if>
+	    	<if test='ivBbs == "Y"'>
+		    	,ROW_NUMBER() OVER(ORDER BY TO_CHAR(NT.NTT_CN) DESC) AS RSN
+	    	</if>
+	    	<if test="@egovframework.MybatisUtils@isEmpty(ivBbs)">
+		    	,ROW_NUMBER() OVER(ORDER BY NT.REG_DT DESC) AS RSN
+	    	</if>
+
+	    FROM
+	    	TCO_NA_NTT_MANAGE NT
+	    WHERE
+	    	NT.BBS_ID = #{bbsId}
+	    	AND NT.NTT_USE_AT = 'Y'
+	    	AND NT.UPPER_NTT_SN = 0
+	    	<if test="@egovframework.MybatisUtils@isNotEmpty(nttSttus)">
+	    	AND NT.NTT_STTUS = #{nttSttus}
+	    	</if>
+
+	    	<if test="@egovframework.MybatisUtils@isNotEmpty(confmUseAt)">
+	    	  <if test='confmUseAt == "Y" '>
+		    	<if test="@egovframework.MybatisUtils@isNotEmpty(manageAt)">
+		    		<if test='manageAt == "N" '>
+		    		AND NT.CONFM_AT = 'Y'
+		    		</if>
+		    		<if test='manageAt == "Y" '>
+		    		AND ( NT.CONFM_AT IN ( 'Y' , 'N') OR NT.CONFM_AT IS NULL )
+		    		</if>
+		    	</if>
+		    	<![CDATA[
+        		 	AND ( ( NT.CONFM_BEGIN_DT >= #{confmBeginDt} AND NT.CONFM_BEGIN_DT <= #{confmEndDt} )
+                      		OR ( NT.CONFM_END_DT >= #{confmBeginDt} AND NT.CONFM_END_DT <= #{confmEndDt} ) )
+                  ]]>
+              </if>
+	    	</if>
+
+	    	<if test="@egovframework.MybatisUtils@isNotEmpty(searchValue)">
+	    		<choose>
+		    	<when test="searchType.equals('all')">
+		    AND ( NT.NTT_SJ LIKE '%'||#{searchValue}||'%' OR INSTR(NT.NTT_CN,#{searchValue}) > 0 )
+		    	</when>
+		    	<when test="searchType.equals('sj')">
+		    AND NT.NTT_SJ LIKE '%'||#{searchValue}||'%'
+		    	</when>
+		    	<when test="searchType.equals('cn')">
+		    AND INSTR(NT.NTT_CN,#{searchValue}) > 0
+		    	</when>
+		    	<when test="searchType.equals('nm')">
+		    AND NT.REG_NM LIKE '%'||#{searchValue}||'%'
+		    	</when>
+		    	<otherwise>
+		    		<include refid="selectNttListSearchType" />
+		    	</otherwise>
+		    	</choose>
+	    	</if>
+	    	<include refid="selectNoticeNttNormalNttSearchNT" />
+			<if test="@egovframework.MybatisUtils@isNotEmpty(excpClsdrMberId)">
+		    AND (NT.CLSDR_AT = 'N' OR NT.REG_ID = #{excpClsdrMberId})
+		    </if>
+
+	    	<if test='ivBbs == "Y"'>
+		    	ORDER BY TO_CHAR(NT.NTT_CN) DESC
+	    	</if>
+	    	<if test="@egovframework.MybatisUtils@isEmpty(ivBbs)">
+		    	ORDER BY NT.REG_DT DESC
+	    	</if>
+	</sql>
+
+	<!-- 게시물 리스트 조회 -->
+    <select id="selectNttList" parameterType="map" resultMap="clobMap">
+	    <include refid="selectNttList" />
+    </select>
+
+	<!-- 게시물 리스트 조회(페이징) -->
+    <select id="selectNttListPaging" parameterType="map" resultMap="clobMap">
+    	SELECT
+    		PL.*
+    	FROM (
+        	SELECT
+        		PO.*
+			FROM (
+	    		<include refid="selectNttList" />
+				) PO
+		) PL
+		WHERE
+		<![CDATA[
+			rsn <= #{maxSn}
+			AND rsn > #{minSn}
+		]]>
+    </select>
+
+    <!-- 게시물 리스트 조회(페이징 전체 카운트) -->
+    <select id="selectNttListPagingCount" parameterType="map" resultType="int">
+    	SELECT
+	    	COUNT(*)
+	    FROM
+	    	TCO_NA_NTT_MANAGE
+	    WHERE
+	    	BBS_ID = #{bbsId}
+	    	AND NTT_USE_AT = 'Y'
+	    	AND UPPER_NTT_SN = 0
+
+	    	<if test="@egovframework.MybatisUtils@isNotEmpty(confmUseAt)">
+	    	  <if test='confmUseAt == "Y" '>
+		    	<if test="@egovframework.MybatisUtils@isNotEmpty(manageAt)">
+		    		<if test='manageAt == "N" '>
+		    		AND CONFM_AT = 'Y'
+		    		</if>
+		    		<if test='manageAt == "Y" '>
+		    		AND ( CONFM_AT IN ( 'Y' , 'N') OR CONFM_AT IS NULL )
+		    		</if>
+		    	</if>
+		    	<![CDATA[
+        		 	AND ( ( CONFM_BEGIN_DT >= #{confmBeginDt} AND CONFM_BEGIN_DT <= #{confmEndDt} )
+                      		OR ( CONFM_END_DT >= #{confmBeginDt} AND CONFM_END_DT <= #{confmEndDt} ) )
+                  ]]>
+              </if>
+	    	</if>
+
+	    	<if test="@egovframework.MybatisUtils@isNotEmpty(nttSttus)">
+	    	AND NTT_STTUS = #{nttSttus}
+	    	</if>
+	    	<if test="@egovframework.MybatisUtils@isNotEmpty(searchValue)">
+	    		<choose>
+		    	<when test="searchType.equals('all')">
+		    AND ( NTT_SJ LIKE '%'||#{searchValue}||'%' OR INSTR(NTT_CN,#{searchValue}) > 0 )
+		    	</when>
+		    	<when test="searchType.equals('sj')">
+		    AND NTT_SJ LIKE '%'||#{searchValue}||'%'
+		    	</when>
+		    	<when test="searchType.equals('cn')">
+		    AND INSTR(NTT_CN,#{searchValue}) > 0
+		    	</when>
+		    	<when test="searchType.equals('nm')">
+		    AND REG_NM LIKE '%'||#{searchValue}||'%'
+		    	</when>
+		    	<otherwise>
+		    		<include refid="selectNttListSearchType" />
+		    	</otherwise>
+		    	</choose>
+	    	</if>
+	    	<include refid="selectNoticeNttNormalNttSearch" />
+			<if test="@egovframework.MybatisUtils@isNotEmpty(excpClsdrMberId)">
+		    AND (CLSDR_AT = 'N' OR REG_ID = #{excpClsdrMberId})
+		    </if>
+    </select>
+
+    <!-- 답글 게시물 리스트 sql -->
+	<sql id="selectReplyNttList" >
+    	SELECT
+			    LEVEL,
+			  	NA.NTT_SN,
+			  	NA.BBS_ID,
+	<![CDATA[
+				REPLACE(LPAD('[RE]', 4 * (LEVEL - 1)), ' ', '&nbsp;') || NA.NTT_SJ AS NTT_SJ,
+    ]]>
+				NA.NTT_CN,
+				NA.REG_ID,
+				NA.REG_NM AS ORI_REG_NM,
+			<choose>
+				<when test="@egovframework.MybatisUtils@isNotEmpty(annymtyUseAt)">
+<!-- 			REPLACE(NA.REG_NM, (SUBSTR(NA.REG_NM, 2, 1)), '*') AS REG_NM, 	 -->
+			REPLACE(NA.REG_NM, (SUBSTR(NA.REG_NM, 2)), '**') AS REG_NM,
+				</when>
+				<otherwise>
+			NA.REG_NM,
+				</otherwise>
+			</choose>
+				NA.REG_IP,
+				NA.REG_DT,
+				NA.NTT_RDCNT,
+				NA.NTT_OPPS_CO,
+				NA.NTT_APPRVL_CO,
+				NA.NTT_STTUS,
+				NA.NTT_USE_AT,
+				NA.SECRET_AT,
+				NA.SMS_AT,
+				NA.EMAIL_AT,
+				NA.NOTICE_AT,
+				NA.NOTICE_BEGIN_DT,
+				NA.NOTICE_END_DT,
+				NA.CLSDR_AT,
+			    NA.CONFM_AT,
+				TO_CHAR(NA.CONFM_BEGIN_DT, 'YYYY/MM/DD') AS CONFM_BEGIN_DT,
+				TO_CHAR(NA.CONFM_END_DT, 'YYYY/MM/DD') AS CONFM_END_DT,
+				NA.CONFM_MBER_ID,
+				NA.CONFM_MBER_NM,
+				TO_CHAR(NA.CONFM_DT, 'YYYY/MM/DD') AS CONFM_DT,
+		    	<if test="@egovframework.MybatisUtils@isNotEmpty(newHour)">
+	            CASE
+	               WHEN TO_CHAR(SYSDATE, 'YYYYMMDDHH24MISS') BETWEEN TO_CHAR(NA.REG_DT, 'YYYYMMDDHH24MISS') AND TO_CHAR(NA.REG_DT + (#{newHour}/24), 'YYYYMMDDHH24MISS') THEN 'Y'
+	               ELSE 'N'
+	            END AS NEW_CHECK
+				</if>
+		 FROM   TCO_NA_NTT_MANAGE NA, (SELECT MIN(UPPER_NTT_SN) AS UPPER_NTT_SN FROM TCO_NA_NTT_MANAGE WHERE BBS_ID = #{bbsId} AND NTT_USE_AT = 'Y') MUSN
+	    WHERE   1=1
+		  AND   NA.BBS_ID = #{bbsId}
+		  AND   NA.NTT_USE_AT = 'Y'
+
+    	<if test="@egovframework.MybatisUtils@isNotEmpty(nttSttus)">
+	      AND  NA.NTT_STTUS = #{nttSttus}
+	    </if>
+	     <if test="@egovframework.MybatisUtils@isNotEmpty(searchValue)">
+	     <choose>
+		 <when test="searchType.equals('all')">
+		  AND ( NA.NTT_SJ LIKE '%'||#{searchValue}||'%' OR INSTR(NA.NTT_CN,#{searchValue}) > 0 )
+		 </when>
+		 <when test="searchType.equals('sj')">
+		  AND  NA.NTT_SJ LIKE '%'||#{searchValue}||'%'
+		 </when>
+		 <when test="searchType.equals('cn')">
+		  AND  INSTR(NA.NTT_CN,#{searchValue}) > 0
+		 </when>
+		 <when test="searchType.equals('nm')">
+		  AND  NA.REG_NM LIKE '%'||#{searchValue}||'%'
+		  </when>
+		  <otherwise>
+		   <include refid="selectNttListSearchType" />
+		   </otherwise>
+		  </choose>
+	    </if>
+
+	   <if test="@egovframework.MybatisUtils@isNotEmpty(confmUseAt)">
+	    	  <if test='confmUseAt == "Y" '>
+		    	<if test="@egovframework.MybatisUtils@isNotEmpty(manageAt)">
+		    		<if test='manageAt == "N" '>
+		    		AND NA.CONFM_AT = 'Y'
+		    		</if>
+		    		<if test='manageAt == "Y" '>
+		    		AND ( NA.CONFM_AT IN ( 'Y' , 'N') OR NA.CONFM_AT IS NULL )
+		    		</if>
+		    	</if>
+		    	<![CDATA[
+        		 	AND ( ( NA.CONFM_BEGIN_DT >= #{confmBeginDt} AND NA.CONFM_BEGIN_DT <= #{confmEndDt} )
+                      		OR ( NA.CONFM_END_DT >= #{confmBeginDt} AND NA.CONFM_END_DT <= #{confmEndDt} ) )
+                  ]]>
+              </if>
+	    </if>
+
+	    <include refid="selectNoticeNttNormalNttSearchNA" />
+
+		<if test="@egovframework.MybatisUtils@isNotEmpty(excpClsdrNtt)">
+          AND NA.CLSDR_AT = 'N'
+          AND NA.NTT_SN NOT IN (
+                                            SELECT NTT_SN
+                                              FROM TCO_NA_NTT_MANAGE
+                                             WHERE 1 = 1
+                                               AND BBS_ID = #{bbsId}
+                                               AND NTT_USE_AT = 'Y'
+                                        START WITH BBS_ID = #{bbsId} AND NTT_USE_AT = 'Y' AND UPPER_NTT_SN = MUSN.UPPER_NTT_SN
+                                               AND CLSDR_AT = 'Y'
+                                  CONNECT BY PRIOR NTT_SN = UPPER_NTT_SN AND BBS_ID = #{bbsId} AND NTT_USE_AT = 'Y'
+                               )
+	    </if>
+		<if test="@egovframework.MybatisUtils@isNotEmpty(excpClsdrMberId)">
+          AND NA.NTT_SN NOT IN (
+		                                    SELECT NTT_SN
+		                                      FROM TCO_NA_NTT_MANAGE
+		                                     WHERE 1 = 1
+		                                       AND BBS_ID = #{bbsId}
+		                                       AND NTT_USE_AT = 'Y'
+		                                START WITH BBS_ID = #{bbsId} AND NTT_USE_AT = 'Y' AND UPPER_NTT_SN = MUSN.UPPER_NTT_SN
+		                                       AND REG_ID != #{excpClsdrMberId}
+		                                       AND CLSDR_AT = 'Y'
+		                          CONNECT BY PRIOR NTT_SN = UPPER_NTT_SN AND BBS_ID = #{bbsId} AND NTT_USE_AT = 'Y'
+                               )
+          AND NA.NTT_SN NOT IN (
+		                                    SELECT NTT_SN
+		                                      FROM TCO_NA_NTT_MANAGE
+		                                     WHERE 1 = 1
+		                                       AND BBS_ID = #{bbsId}
+		                                	   AND UPPER_NTT_SN != 0
+		                                       AND REG_ID != #{excpClsdrMberId}
+		                                       AND CLSDR_AT = 'Y'
+                               )
+	    </if>
+
+	START WITH NA.BBS_ID = #{bbsId} AND NA.NTT_USE_AT = 'Y' AND NA.UPPER_NTT_SN = MUSN.UPPER_NTT_SN
+	CONNECT BY PRIOR NA.NTT_SN = NA.UPPER_NTT_SN AND NA.BBS_ID = #{bbsId} AND NA.NTT_USE_AT ='Y'
+	ORDER SIBLINGS BY NA.REG_DT DESC
+	</sql>
+
+	<!-- 답글 게시물 리스트 조회(페이징) -->
+    <select id="selectReplyNttListPaging" parameterType="map" resultMap="clobMap">
+    	SELECT
+    		PL.*
+    	FROM (
+        	SELECT
+        		PO.*
+        		,rownum as rsn
+			FROM (
+	    		<include refid="selectReplyNttList" />
+				) PO
+		) PL
+		WHERE
+		<![CDATA[
+			rsn <= #{maxSn}
+			AND rsn > #{minSn}
+		]]>
+    </select>
+
+    <!-- 답글 게시물 리스트 조회(페이징 전체 카운트) -->
+    <select id="selectReplyNttListPagingCount" parameterType="map" resultType="int">
+    	SELECT
+	    	COUNT(*)
+	    FROM
+	    	TCO_NA_NTT_MANAGE NT
+	    WHERE
+	    	BBS_ID = #{bbsId}
+	    	AND NTT_USE_AT = 'Y'
+	    	<if test="@egovframework.MybatisUtils@isNotEmpty(nttSttus)">
+	    	AND NTT_STTUS = #{nttSttus}
+	    	</if>
+	    	<if test="@egovframework.MybatisUtils@isNotEmpty(searchValue)">
+	    		<choose>
+		    	<when test="searchType.equals('all')">
+		    AND ( NTT_SJ LIKE '%'||#{searchValue}||'%' OR INSTR(NTT_CN,#{searchValue}) > 0 )
+		    	</when>
+		    	<when test="searchType.equals('sj')">
+		    AND NTT_SJ LIKE '%'||#{searchValue}||'%'
+		    	</when>
+		    	<when test="searchType.equals('cn')">
+		    AND INSTR(NTT_CN,#{searchValue}) > 0
+		    	</when>
+		    	<when test="searchType.equals('nm')">
+		    AND REG_NM LIKE '%'||#{searchValue}||'%'
+		    	</when>
+		    	<otherwise>
+		    		<include refid="selectNttListSearchType" />
+		    	</otherwise>
+		    	</choose>
+	    	</if>
+
+			<include refid="selectNoticeNttNormalNttSearch" />
+
+	    	 <if test="@egovframework.MybatisUtils@isNotEmpty(confmUseAt)">
+	    	  <if test='confmUseAt == "Y" '>
+		    	<if test="@egovframework.MybatisUtils@isNotEmpty(manageAt)">
+		    		<if test='manageAt == "N" '>
+		    		AND NT.CONFM_AT = 'Y'
+		    		</if>
+		    		<if test='manageAt == "Y" '>
+		    		AND ( NT.CONFM_AT IN ( 'Y' , 'N') OR NT.CONFM_AT IS NULL )
+		    		</if>
+		    	</if>
+		    	<![CDATA[
+        		 	AND ( ( NT.CONFM_BEGIN_DT >= #{confmBeginDt} AND NT.CONFM_BEGIN_DT <= #{confmEndDt} )
+                      		OR ( NT.CONFM_END_DT >= #{confmBeginDt} AND NT.CONFM_END_DT <= #{confmEndDt} ) )
+                  ]]>
+              </if>
+	    	</if>
+
+		    <if test="@egovframework.MybatisUtils@isNotEmpty(excpClsdrNtt)">
+              AND CLSDR_AT = 'N'
+              AND NTT_SN NOT IN (
+                                                SELECT NTT_SN
+                                                  FROM TCO_NA_NTT_MANAGE
+                                                 WHERE 1 = 1
+                                                   AND BBS_ID = #{bbsId}
+                                            START WITH UPPER_NTT_SN = 0
+                                                   AND CLSDR_AT = 'Y'
+                                      CONNECT BY PRIOR NTT_SN = UPPER_NTT_SN
+                                 )
+	        </if>
+		    <if test="@egovframework.MybatisUtils@isNotEmpty(excpClsdrMberId)">
+	          AND NTT_SN NOT IN (
+                                                SELECT NTT_SN
+                                                  FROM TCO_NA_NTT_MANAGE
+                                                 WHERE 1 = 1
+                                                   AND BBS_ID = #{bbsId}
+                                            START WITH UPPER_NTT_SN = 0
+                                                   AND REG_ID != #{excpClsdrMberId}
+                                                   AND CLSDR_AT = 'Y'
+                                      CONNECT BY PRIOR NTT_SN = UPPER_NTT_SN
+	                            )
+	          AND NTT_SN NOT IN (
+                                                SELECT NTT_SN
+                                                  FROM TCO_NA_NTT_MANAGE
+                                                 WHERE 1 = 1
+                                                   AND BBS_ID = #{bbsId}
+                                            	   AND UPPER_NTT_SN != 0
+                                                   AND REG_ID != #{excpClsdrMberId}
+                                                   AND CLSDR_AT = 'Y'
+	                            )
+	        </if>
+
+	START WITH UPPER_NTT_SN = 0
+	CONNECT BY PRIOR NTT_SN = UPPER_NTT_SN
+	AND NTT_USE_AT ='Y'
+	ORDER SIBLINGS BY REG_DT DESC
+    </select>
+
+    <!-- 답글 게시물 리스트 조회 -->
+    <select id="selectReplyNttList" parameterType="map" resultMap="clobMap">
+	    <include refid="selectReplyNttList" />
+    </select>
+
+
+	<!-- 승인여부 조회 리스트 sql -->
+	<sql id="selectConfmAtSql" >
+    	SELECT
+	    	 NT.BBS_ID
+			,NT.NTT_SN
+			,NT.NTT_SJ
+			,NT.REG_ID
+			,NT.REG_NM AS ORI_REG_NM
+			<choose>
+				<when test="@egovframework.MybatisUtils@isNotEmpty(annymtyUseAt)">
+<!-- 			,REPLACE(NT.REG_NM, (SUBSTR(NT.REG_NM, 2, 1)), '*') AS REG_NM 	 -->
+			,REPLACE(NT.REG_NM, (SUBSTR(NT.REG_NM, 2)), '**') AS REG_NM
+				</when>
+				<otherwise>
+			,NT.REG_NM
+				</otherwise>
+			</choose>
+			,NT.REG_IP
+			,NT.REG_DT
+			,NT.CONFM_AT
+			,TO_CHAR(NT.CONFM_BEGIN_DT, 'YYYY/MM/DD') AS CONFM_BEGIN_DT
+			,TO_CHAR(NT.CONFM_END_DT, 'YYYY/MM/DD') AS CONFM_END_DT
+			,NT.CONFM_MBER_ID
+			,NT.CONFM_MBER_NM
+			,TO_CHAR(NT.CONFM_DT, 'YYYY/MM/DD') AS CONFM_DT
+	    FROM
+	    	TCO_NA_NTT_MANAGE NT, TAP_BM_BBS_MANAGE BM
+	    WHERE
+	    	NT.BBS_ID = BM.BBS_ID
+	    AND
+	    	NT.REG_ID = #{mberId}
+	    AND
+	    	BM.BBS_ID = #{bbsId}
+       	AND
+       		<![CDATA[
+       		 ( ( NT.CONFM_BEGIN_DT >= #{confmBeginDt} AND NT.CONFM_BEGIN_DT <= #{confmEndDt} )
+                  OR ( NT.CONFM_END_DT >= #{confmBeginDt} AND NT.CONFM_END_DT <= #{confmEndDt} ) )
+	    	]]>
+
+	    	<if test="@egovframework.MybatisUtils@isNotEmpty(searchValue)">
+	    		<choose>
+		    	<when test="searchType.equals('all')">
+		    AND ( NT.NTT_SJ LIKE '%'||#{searchValue}||'%' OR INSTR(NT.NTT_CN,#{searchValue}) > 0 )
+		    	</when>
+		    	<when test="searchType.equals('sj')">
+		    AND NT.NTT_SJ LIKE '%'||#{searchValue}||'%'
+		    	</when>
+		    	<when test="searchType.equals('cn')">
+		    AND INSTR(NT.NTT_CN,#{searchValue}) > 0
+		    	</when>
+		    	<when test="searchType.equals('nm')">
+		    AND NT.REG_NM LIKE '%'||#{searchValue}||'%'
+		    	</when>
+		    	<otherwise>
+		    		<include refid="selectNttListSearchType" />
+		    	</otherwise>
+		    	</choose>
+	    	</if>
+	</sql>
+
+	<!-- 승인여부 리스트 조회 -->
+    <select id="selectConfmAtList" parameterType="map" resultMap="clobMap">
+	    <include refid="selectConfmAtSql" />
+	     ORDER BY
+	    	NT.REG_DT DESC
+    </select>
+
+	<!-- 승인여부 리스트 조회(페이징) -->
+    <select id="selectConfmAtListPaging" parameterType="map" resultMap="clobMap">
+    	SELECT
+    		PL.*
+    	FROM (
+        	SELECT
+        		PO.*
+        		,rownum as rsn
+			FROM (
+	    		<include refid="selectConfmAtSql" />
+				) PO
+		) PL
+		WHERE
+		<![CDATA[
+			rsn <= #{maxSn}
+			AND rsn > #{minSn}
+		]]>
+    </select>
+
+    <!-- 승인여부 리스트 조회(페이징 전체 카운트) -->
+    <select id="selectConfmAtListPagingCount" parameterType="map" resultType="int">
+    	SELECT
+	    	COUNT(*)
+	    FROM
+	    	( <include refid="selectConfmAtSql" />  ) A
+    </select>
+
+
+    <!-- 게시물 단건 조회 -->
+    <select id="selectNttInfo" parameterType="map" resultMap="clobMap">
+	    SELECT
+	    	BBS_ID
+			,NTT_SN
+			,UPPER_NTT_SN
+			,NTT_SJ
+			,NTT_CN
+			,REG_ID
+			,REG_NM
+			,REG_IP
+			,REG_DT
+			,NTT_RDCNT
+			,NTT_OPPS_CO
+			,NTT_APPRVL_CO
+			,NTT_STTUS
+			,NTT_USE_AT
+			,SECRET_AT
+			,SMS_AT
+			,EMAIL_AT
+			,NOTICE_AT
+			,TO_CHAR(NOTICE_BEGIN_DT, 'YYYY/MM/DD') AS NOTICE_BEGIN_DT
+			,TO_CHAR(NOTICE_END_DT, 'YYYY/MM/DD') AS NOTICE_END_DT
+			,ADIT_COL1
+			,ADIT_COL2
+			,ADIT_COL3
+			,ADIT_COL4
+			,ADIT_COL5
+			,ADIT_COL6
+			,ADIT_COL7
+			,ADIT_COL8
+			,ADIT_COL9
+			,ADIT_COL10
+			,CLSDR_AT
+			,BEFORE_ID
+			,CONFM_AT
+			,TO_CHAR(CONFM_BEGIN_DT, 'YYYY/MM/DD') AS CONFM_BEGIN_DT
+			,TO_CHAR(CONFM_END_DT, 'YYYY/MM/DD') AS CONFM_END_DT
+			,CONFM_MBER_ID
+			,CONFM_MBER_NM
+			,TO_CHAR(CONFM_DT, 'YYYY/MM/DD') AS CONFM_DT
+			,VOD_STTL
+	    FROM
+	    	TCO_NA_NTT_MANAGE
+	    WHERE
+	    	NTT_SN = #{nttSn}
+	      AND NTT_USE_AT = 'Y'
+    </select>
+
+    <!-- 게시물 추가항목 조회 -->
+    <select id="selectNttAditList" parameterType="map" resultType="egovMap">
+	    SELECT
+	    	*
+	    FROM
+	    	TCO_NA_NTT_ADIT
+	    WHERE
+	    	NTT_SN = #{nttSn}
+	    ORDER BY
+	    	NTT_ADIT_SN
+    </select>
+
+    <!-- (사진, 갤러리, 동영상 )  게시물 리스트 sql -->
+	<sql id="selectNttTyList" >
+    	SELECT
+	    	 NT.BBS_ID
+			,NT.NTT_SN
+			,NT.UPPER_NTT_SN
+			,NT.NTT_SJ
+			<if test="@egovframework.MybatisUtils@isNotEmpty(bbsTy) and bbsTy != 'PIC' and bbsTy != 'VOD'">
+			,NT.NTT_CN
+			</if>
+			<if test="@egovframework.MybatisUtils@isNotEmpty(bbsTy) and bbsTy = 'VOD'">
+			,CASE WHEN LENGTH(NT.NTT_CN) > '4000' THEN TO_CLOB('클릭하여 본문확인') ELSE SUBSTR(REGEXP_REPLACE(NT.NTT_CN, <![CDATA['<[^>]*>|\&([^;])*;']]>,''),0,100) END AS NTT_CN
+			</if>
+			,NT.REG_ID
+			,NT.REG_NM AS ORI_REG_NM
+			<choose>
+				<when test="@egovframework.MybatisUtils@isNotEmpty(annymtyUseAt)">
+<!-- 			,REPLACE(NT.REG_NM, (SUBSTR(NT.REG_NM, 2, 1)), '*') AS REG_NM 	 -->
+			,REPLACE(NT.REG_NM, (SUBSTR(NT.REG_NM, 2)), '**') AS REG_NM
+				</when>
+				<otherwise>
+			,NT.REG_NM
+				</otherwise>
+			</choose>
+			,NT.REG_IP
+			,NT.REG_DT
+			,NT.NTT_RDCNT
+			,NT.NTT_OPPS_CO
+			,NT.NTT_APPRVL_CO
+			,NT.NTT_STTUS
+			,NT.NTT_USE_AT
+			,NT.SECRET_AT
+			,NT.SMS_AT
+			,NT.EMAIL_AT
+			,NT.NOTICE_AT
+			,NT.NOTICE_BEGIN_DT
+			,NT.NOTICE_END_DT
+			,NT.ADIT_COL1
+			,NT.ADIT_COL2
+			,NT.ADIT_COL3
+			,NT.ADIT_COL4
+			,NT.ADIT_COL5
+			,NT.ADIT_COL6
+			,NT.ADIT_COL7
+			,NT.ADIT_COL8
+			,NT.ADIT_COL9
+			,NT.ADIT_COL10
+			,NT.CLSDR_AT
+			,NT.CONFM_AT
+			,TO_CHAR(NT.CONFM_BEGIN_DT, 'YYYY/MM/DD') AS CONFM_BEGIN_DT
+			,TO_CHAR(NT.CONFM_END_DT, 'YYYY/MM/DD') AS CONFM_END_DT
+			,NT.CONFM_MBER_ID
+			,NT.CONFM_MBER_NM
+	    	,( SELECT COUNT(*) FROM TCO_NA_NTT_ANSWER AN WHERE AN.NTT_SN = NT.NTT_SN AND AN.ANSWER_USE_AT = 'Y' ) AS ANSWER_CNT
+            <!-- ,NVL(( SELECT THUMB_FILPTH FROM TCO_NA_NTT_FILE WHERE NTT_SN = NT.NTT_SN AND FILE_TY = 'img'
+                   AND FILE_SN IN (SELECT MIN(FILE_SN) FROM TCO_NA_NTT_FILE WHERE NTT_SN = NT.NTT_SN AND FILE_TY = 'img') ), '') AS THUMB_FILPTH -->
+            ,NVL((SELECT THUMB_FILPTH FROM (SELECT FILE_SN, THUMB_FILPTH FROM TCO_NA_NTT_FILE WHERE NTT_SN = NT.NTT_SN AND FILE_TY = 'img') WHERE ROWNUM = 1), '') AS THUMB_FILPTH
+	    	<if test="@egovframework.MybatisUtils@isNotEmpty(newHour)">
+            ,CASE
+                 WHEN TO_CHAR(SYSDATE, 'YYYYMMDDHH24MISS') BETWEEN TO_CHAR(NT.REG_DT, 'YYYYMMDDHH24MISS') AND TO_CHAR(NT.REG_DT + (#{newHour}/24), 'YYYYMMDDHH24MISS') THEN 'Y'
+                 ELSE 'N'
+              END AS NEW_CHECK
+			</if>
+			,ROW_NUMBER() OVER(ORDER BY NT.REG_DT DESC) AS RSN
+	    FROM
+	    	TCO_NA_NTT_MANAGE NT
+	    WHERE
+	    	NT.BBS_ID = #{bbsId}
+	    	AND NT.NTT_USE_AT = 'Y'
+	    	<if test="@egovframework.MybatisUtils@isNotEmpty(nttSttus)">
+	    	AND NT.NTT_STTUS = #{nttSttus}
+	    	</if>
+	    	<if test="@egovframework.MybatisUtils@isNotEmpty(searchValue)">
+	    		<choose>
+		    	<when test="searchType.equals('all')">
+		    AND ( NT.NTT_SJ LIKE '%'||#{searchValue}||'%' OR INSTR(NT.NTT_CN,#{searchValue}) > 0 )
+		    	</when>
+		    	<when test="searchType.equals('sj')">
+		    AND NT.NTT_SJ LIKE '%'||#{searchValue}||'%'
+		    	</when>
+		    	<when test="searchType.equals('cn')">
+		    AND INSTR(NT.NTT_CN,#{searchValue}) > 0
+		    	</when>
+		    	<when test="searchType.equals('nm')">
+		    AND NT.REG_NM LIKE '%'||#{searchValue}||'%'
+		    	</when>
+		    	<otherwise>
+		    		<if test="searchType.equals('ADIT_COL1')">
+		    AND NT.ADIT_COL1 LIKE '%'||#{searchValue}||'%'
+		    		</if>
+		    		<if test="searchType.equals('ADIT_COL2')">
+		    AND NT.ADIT_COL2 LIKE '%'||#{searchValue}||'%'
+		    		</if>
+		    		<if test="searchType.equals('ADIT_COL3')">
+		    AND NT.ADIT_COL3 LIKE '%'||#{searchValue}||'%'
+		    		</if>
+		    		<if test="searchType.equals('ADIT_COL4')">
+		    AND NT.ADIT_COL4 LIKE '%'||#{searchValue}||'%'
+		    		</if>
+		    		<if test="searchType.equals('ADIT_COL5')">
+		    AND NT.ADIT_COL5 LIKE '%'||#{searchValue}||'%'
+		    		</if>
+		    		<if test="searchType.equals('ADIT_COL6')">
+		    AND NT.ADIT_COL6 LIKE '%'||#{searchValue}||'%'
+		    		</if>
+		    		<if test="searchType.equals('ADIT_COL7')">
+		    AND NT.ADIT_COL7 LIKE '%'||#{searchValue}||'%'
+		    		</if>
+		    		<if test="searchType.equals('ADIT_COL8')">
+		    AND NT.ADIT_COL8 LIKE '%'||#{searchValue}||'%'
+		    		</if>
+		    		<if test="searchType.equals('ADIT_COL9')">
+		    AND NT.ADIT_COL9 LIKE '%'||#{searchValue}||'%'
+		    		</if>
+		    		<if test="searchType.equals('ADIT_COL10')">
+		    AND NT.ADIT_COL10 LIKE '%'||#{searchValue}||'%'
+		    		</if>
+		    	</otherwise>
+		    	</choose>
+	    	</if>
+
+	    	<include refid="selectNoticeNttNormalNttSearchNT" />
+
+	    	<if test="@egovframework.MybatisUtils@isNotEmpty(confmUseAt)">
+	    	  <if test='confmUseAt == "Y" '>
+		    	<if test="@egovframework.MybatisUtils@isNotEmpty(manageAt)">
+		    		<if test='manageAt == "N" '>
+		    		AND NT.CONFM_AT = 'Y'
+		    		</if>
+		    		<if test='manageAt == "Y" '>
+		    		AND ( NT.CONFM_AT IN ( 'Y' , 'N') OR NT.CONFM_AT IS NULL )
+		    		</if>
+		    	</if>
+		    	<![CDATA[
+        		 	AND ( ( NT.CONFM_BEGIN_DT >= #{confmBeginDt} AND NT.CONFM_BEGIN_DT <= #{confmEndDt} )
+                      		OR ( NT.CONFM_END_DT >= #{confmBeginDt} AND NT.CONFM_END_DT <= #{confmEndDt} ) )
+                  ]]>
+              </if>
+	    	</if>
+
+			<if test="@egovframework.MybatisUtils@isNotEmpty(excpClsdrMberId)">
+			AND (NT.CLSDR_AT = 'N' OR NT.REG_ID = #{excpClsdrMberId})
+			</if>
+	    ORDER BY
+	    	NT.REG_DT DESC
+	</sql>
+
+	<!-- (사진, 갤러리, 동영상 ) 게시물 리스트 조회(페이징) -->
+    <select id="selectNttTyListPaging" parameterType="map" resultMap="clobMap">
+    	SELECT
+    		PL.*
+    	FROM (
+        	SELECT
+        		PO.*
+			FROM (
+	    		<include refid="selectNttTyList" />
+				) PO
+		) PL
+		WHERE
+		<![CDATA[
+			rsn <= #{maxSn}
+			AND rsn > #{minSn}
+		]]>
+    </select>
+
+    <!-- (사진, 갤러리, 동영상 ) 게시물 리스트 조회(페이징 전체 카운트) -->
+    <select id="selectNttTyListPagingCount" parameterType="map" resultType="int">
+    	SELECT
+	    	COUNT(*)
+	     FROM (
+	     <include refid="selectNttTyList" />
+	     ) PO
+    </select>
+
+    <!-- (사진, 갤러리, 동영상 ) 게시물 리스트 조회 -->
+    <select id="selectNttTyList" parameterType="map" resultMap="clobMap">
+	    <include refid="selectNttTyList" />
+    </select>
+
+    <!-- 게시물 내용 조회 ( FAQ )-->
+    <select id="selectNttCnInfo" parameterType="map" resultMap="clobMap">
+	    SELECT NT.NTT_CN
+	          ,BM.EDITR_USE_AT
+ 	      FROM TCO_NA_NTT_MANAGE NT, TAP_BM_BBS_MANAGE BM
+	     WHERE NT.BBS_ID = BM.BBS_ID
+	       AND NTT_SN = #{nttSn}
+    </select>
+
+    <!-- 게시물 등록 -->
+    <insert id="insertNttInfo" parameterType="map" >
+    	INSERT INTO
+    	TCO_NA_NTT_MANAGE
+    	(
+    		BBS_ID
+			,NTT_SN
+			,UPPER_NTT_SN
+			,NTT_SJ
+			,NTT_CN
+			,REG_ID
+			,REG_NM
+			,REG_IP
+			,REG_DT
+			,NTT_RDCNT
+			,NTT_OPPS_CO
+			,NTT_APPRVL_CO
+			,NTT_STTUS
+			,NTT_USE_AT
+			,SECRET_AT
+			,SMS_AT
+			,EMAIL_AT
+			,NOTICE_AT
+			,NOTICE_BEGIN_DT
+			,NOTICE_END_DT
+			,ADIT_COL1
+			,ADIT_COL2
+			,ADIT_COL3
+			,ADIT_COL4
+			,ADIT_COL5
+			,ADIT_COL6
+			,ADIT_COL7
+			,ADIT_COL8
+			,ADIT_COL9
+			,ADIT_COL10
+			,CLSDR_AT
+			,CONFM_AT
+			,CONFM_BEGIN_DT
+			,CONFM_END_DT
+			,CONFM_MBER_ID
+			,CONFM_MBER_NM
+			,CONFM_DT
+			,VOD_STTL
+    	) VALUES (
+    		#{bbsId}
+    		,#{nttSn}
+    		,NVL(#{upperNttSn},0)
+    		,#{nttSj}
+    		,#{nttCn}
+    		,#{regId}
+    		,#{regNm}
+    		,#{regIp}
+    		,SYSDATE
+    		,0
+    		,0
+    		,0
+    		,'W'
+    		,'Y'
+    		,#{secretAt}
+    		,#{smsAt}
+    		,#{emailAt}
+    		,#{noticeAt}
+    		,(SELECT CASE WHEN LENGTH(#{noticeBeginDt}) >= 10 THEN
+				TO_DATE(SUBSTR(#{noticeBeginDt},0,10),'YYYY/MM/DD')
+				ELSE NULL END FROM DUAL)
+			,(SELECT CASE WHEN LENGTH(#{noticeEndDt}) >= 10 THEN
+				TO_DATE(SUBSTR(#{noticeEndDt},0,10),'YYYY/MM/DD')
+				ELSE NULL END FROM DUAL)
+    		,#{aditCol1}
+    		,#{aditCol2}
+    		,#{aditCol3}
+    		,#{aditCol4}
+    		,#{aditCol5}
+    		,#{aditCol6}
+    		,#{aditCol7}
+    		,#{aditCol8}
+    		,#{aditCol9}
+    		,#{aditCol10}
+    		,#{clsdrAt}
+    		,#{confmAt}
+			,#{confmBeginDt}
+			,#{confmEndDt}
+			,#{confmMberId}
+			,#{confmMberNm}
+			,TO_DATE(#{confmDt}, 'YYYY/MM/DD')
+			,#{vodSttl}
+    	)
+    </insert>
+
+    <!-- 게시물 수정 -->
+    <update id="updateNttInfo" parameterType="map" >
+    	UPDATE
+    		TCO_NA_NTT_MANAGE
+    	SET
+			NTT_SJ = #{nttSj}
+			,NTT_CN = #{nttCn}
+			,SECRET_AT = #{secretAt}
+			,SMS_AT = #{smsAt}
+			,EMAIL_AT = #{emailAt}
+			,NOTICE_AT = #{noticeAt}
+    		,NOTICE_BEGIN_DT = (SELECT CASE WHEN LENGTH(#{noticeBeginDt}) >= 10 THEN
+				TO_DATE(SUBSTR(#{noticeBeginDt},0,10),'YYYY/MM/DD')
+				ELSE NULL END FROM DUAL)
+			,NOTICE_END_DT = (SELECT CASE WHEN LENGTH(#{noticeEndDt}) >= 10 THEN
+				TO_DATE(SUBSTR(#{noticeEndDt},0,10),'YYYY/MM/DD')
+				ELSE NULL END FROM DUAL)
+			,ADIT_COL1 = #{aditCol1}
+			,ADIT_COL2 = #{aditCol2}
+			,ADIT_COL3 = #{aditCol3}
+			,ADIT_COL4 = #{aditCol4}
+			,ADIT_COL5 = #{aditCol5}
+			,ADIT_COL6 = #{aditCol6}
+			,ADIT_COL7 = #{aditCol7}
+			,ADIT_COL8 = #{aditCol8}
+			,ADIT_COL9 = #{aditCol9}
+			,ADIT_COL10 = #{aditCol10}
+			,CLSDR_AT = #{clsdrAt}
+			,VOD_STTL = #{vodSttl}
+    	WHERE
+    		NTT_SN = #{nttSn}
+    </update>
+
+    <!-- 게시물 승인 -->
+    <update id="updateNttConfmAt" parameterType="map" >
+    	UPDATE
+    		TCO_NA_NTT_MANAGE
+    	SET
+			 CONFM_AT = #{confmAt},
+			 CONFM_MBER_ID = #{confmMberId},
+			 CONFM_MBER_NM = #{confmMberNm},
+			 CONFM_DT = SYSDATE
+			 <if test="confmAt.equals('R')">
+			 NTT_USE_AT = 'N'
+			 </if>
+    	WHERE
+    		NTT_SN = #{nttSn}
+    </update>
+
+    <!-- 게시물 삭제 -->
+    <update id="deleteNttInfo" parameterType="map" >
+    	UPDATE
+    		TCO_NA_NTT_MANAGE
+    	SET
+			NTT_USE_AT = 'N'
+    	WHERE
+    		NTT_SN = #{nttSn}
+    </update>
+
+    <!-- 게시물 조회 카운트 증가 -->
+    <update id="updateNttRdcnt" parameterType="map" >
+    	UPDATE
+    		TCO_NA_NTT_MANAGE
+    	SET
+			NTT_RDCNT = NTT_RDCNT+1
+    	WHERE
+    		NTT_SN = #{nttSn}
+    </update>
+
+    <!-- 첨부파일 등록 -->
+    <insert id="insertNttFile" parameterType="map" >
+    	INSERT INTO
+    	TCO_NA_NTT_FILE
+    	(
+    		BBS_ID
+			,NTT_SN
+			,FILE_SN
+			,FILE_NM
+			,FLPTH
+			,FILE_SIZE
+			,DWLD_CO
+			,DWLD_URL
+			,EXTSN
+			,THUMB_FILPTH
+			,FILE_TY
+    	) VALUES (
+    		#{bbsId}
+    		,#{nttSn}
+    		,#{fileSn}
+    		,#{fileNm}
+    		,#{flpth}
+    		,#{fileSize}
+    		,#{dwldCo}
+    		,#{dwldUrl}
+    		,#{extsn}
+    		,#{thumbFilpth}
+    		,#{fileTy}
+    	)
+    </insert>
+
+    <!-- 첨부파일 삭제 -->
+    <delete id="deleteNttFile" parameterType="map" >
+    	DELETE
+    		TCO_NA_NTT_FILE
+    	WHERE
+    		FILE_SN = #{fileSn}
+    </delete>
+
+    <!-- 첨부파일 리스트 조회 -->
+    <select id="selectNttFileList" parameterType="map" resultType="egovMap">
+	    SELECT
+	    	*
+	    FROM
+	    	TCO_NA_NTT_FILE
+	    WHERE
+	    	NTT_SN = #{nttSn}
+	    ORDER BY
+	    	FILE_SN
+    </select>
+
+    <!-- 첨부파일 단건 조회 -->
+    <select id="selectNttFileInfo" parameterType="map" resultType="egovMap">
+	    SELECT
+	    	*
+	    FROM
+	    	TCO_NA_NTT_FILE
+	    WHERE
+	    	FILE_SN = #{fileSn}
+    </select>
+
+    <!-- 첨부파일 다운로드 카운트 증가 -->
+    <update id="updateNttFileDwldCount" parameterType="map" >
+    	UPDATE
+    		TCO_NA_NTT_FILE
+    	SET
+    		DWLD_CO = DWLD_CO+1
+    	WHERE
+    		FILE_SN = #{fileSn}
+    </update>
+
+    <!-- 이전 게시물 조회 -->
+    <select id="selectPrevNttInfo" parameterType="map" resultType="egovMap">
+    	SELECT
+    		BBS_ID
+    		,NTT_SN
+    		,NTT_SJ
+    	FROM
+    		TCO_NA_NTT_MANAGE
+    	WHERE
+    		NTT_SN = (
+    			SELECT
+    				MAX(NTT_SN)
+    			FROM
+    				TCO_NA_NTT_MANAGE
+    			WHERE
+    			<![CDATA[
+    				NTT_SN < #{nttSn}
+    				AND BBS_ID = #{bbsId}
+    				AND NTT_USE_AT = 'Y'
+    			]]>
+    		)
+    </select>
+
+    <!-- 다음 게시물 조회 -->
+    <select id="selectNextNttInfo" parameterType="map" resultType="egovMap">
+    	SELECT
+    		BBS_ID
+    		,NTT_SN
+    		,NTT_SJ
+    	FROM
+    		TCO_NA_NTT_MANAGE
+    	WHERE
+    		NTT_SN = (
+    			SELECT
+    				MIN(NTT_SN)
+    			FROM
+    				TCO_NA_NTT_MANAGE
+    			WHERE
+    			<![CDATA[
+    				NTT_SN > #{nttSn}
+    				AND BBS_ID = #{bbsId}
+    				AND NTT_USE_AT = 'Y'
+    			]]>
+    		)
+    </select>
+
+    <!-- 댓글 등록 -->
+    <insert id="insertNttAnswer" parameterType="map" >
+    	INSERT INTO
+    	TCO_NA_NTT_ANSWER
+    	(
+    		BBS_ID
+			,NTT_SN
+			,ANSWER_SN
+			,UPPER_ANSWER_SN
+			,ANSWER_SJ
+			,ANSWER_CN
+			,ANSWER_REG_ID
+			,ANSWER_REG_NM
+			,ANSWER_REG_IP
+			,ANSWER_REG_DT
+			,ANSWER_OPPS_CO
+			,ANSWER_APPRVL_CO
+			,ANSWER_STTUS
+			,ANSWER_USE_AT
+			,SECRET_AT
+    	) VALUES (
+    		#{bbsId}
+    		,#{nttSn}
+    		,#{answerSn}
+    		,NVL(#{upperAnswerSn},0)
+    		,#{answerSj}
+    		,#{answerCn}
+    		,#{answerRegId}
+    		,#{answerRegNm}
+    		,#{answerRegIp}
+    		,SYSDATE
+    		,0
+    		,0
+    		,'R'
+    		,'Y'
+    		,'N'
+    	)
+    </insert>
+
+    <!-- 댓글 단건 조회 -->
+    <select id="selectAnswerInfo" parameterType="map" resultMap="answerClobMap">
+    	SELECT
+    		*
+    	FROM
+    		TCO_NA_NTT_ANSWER
+    	WHERE
+    		ANSWER_SN = #{answerSn}
+    </select>
+
+    <!-- 댓글 리스트 조회 -->
+    <select id="selectNttAnswerList" parameterType="map" resultMap="answerClobMap">
+    	SELECT
+    		*
+    	FROM
+    		TCO_NA_NTT_ANSWER
+    	WHERE
+    		ANSWER_USE_AT = 'Y'
+    		AND NTT_SN = #{nttSn}
+    	ORDER BY
+    		ANSWER_REG_DT DESC
+    </select>
+
+    <!-- 댓글 수정 -->
+    <update id="updateNttAnswer" parameterType="map" >
+    	UPDATE
+    		TCO_NA_NTT_ANSWER
+    	SET
+			ANSWER_CN = #{answerCn}
+    	WHERE
+    		ANSWER_SN = #{answerSn}
+    </update>
+
+    <!-- 댓글 삭제 -->
+    <update id="deleteNttAnswer" parameterType="map" >
+    	UPDATE
+    		TCO_NA_NTT_ANSWER
+    	SET
+			ANSWER_USE_AT = 'N'
+    	WHERE
+    		ANSWER_SN = #{answerSn}
+    </update>
+
+    <!-- 공지 게시물 리스트 조회 -->
+    <select id="selectNttNoticeList" parameterType="map" resultType="egovMap">
+	    SELECT
+	    	NT.BBS_ID
+			,NT.NTT_SN
+			,NT.UPPER_NTT_SN
+			,NT.NTT_SJ
+			,NT.NTT_CN
+			,NT.REG_ID
+			,NT.REG_NM AS ORI_REG_NM
+			<choose>
+				<when test="@egovframework.MybatisUtils@isNotEmpty(annymtyUseAt)">
+			,REPLACE(NT.REG_NM, (SUBSTR(NT.REG_NM, 2)), '**') AS REG_NM
+				</when>
+				<otherwise>
+			,NT.REG_NM
+				</otherwise>
+			</choose>
+			,NT.REG_IP
+			,NT.REG_DT
+			,NT.NTT_RDCNT
+			,NT.NTT_OPPS_CO
+			,NT.NTT_APPRVL_CO
+			,NT.NTT_STTUS
+			,NT.NTT_USE_AT
+			,NT.SECRET_AT
+			,NT.SMS_AT
+			,NT.EMAIL_AT
+			,NT.NOTICE_AT
+			,NT.NOTICE_BEGIN_DT
+			,NT.NOTICE_END_DT
+			,NT.ADIT_COL1
+			,NT.ADIT_COL2
+			,NT.ADIT_COL3
+			,NT.ADIT_COL4
+			,NT.ADIT_COL5
+			,NT.ADIT_COL6
+			,NT.ADIT_COL7
+			,NT.ADIT_COL8
+			,NT.ADIT_COL9
+			,NT.ADIT_COL10
+			,NT.CLSDR_AT
+			,NT.CONFM_AT
+			,TO_CHAR(NT.CONFM_BEGIN_DT, 'YYYY/MM/DD') AS CONFM_BEGIN_DT
+			,TO_CHAR(NT.CONFM_END_DT, 'YYYY/MM/DD') AS CONFM_END_DT
+			,NT.CONFM_MBER_ID
+			,NT.CONFM_MBER_NM
+			,TO_CHAR(NT.CONFM_DT, 'YYYY/MM/DD') AS CONFM_DT
+	    	,( SELECT COUNT(*) FROM TCO_NA_NTT_ANSWER AN WHERE AN.NTT_SN = NT.NTT_SN AND AN.ANSWER_USE_AT = 'Y' ) AS ANSWER_CNT
+	    	,( SELECT COUNT(*) FROM TCO_NA_NTT_FILE NF WHERE NF.NTT_SN = NT.NTT_SN )  AS FILE_CHK
+	    	<if test="@egovframework.MybatisUtils@isNotEmpty(newHour)">
+            ,CASE
+                 WHEN TO_CHAR(SYSDATE, 'YYYYMMDDHH24MISS') BETWEEN TO_CHAR(NT.REG_DT, 'YYYYMMDDHH24MISS') AND TO_CHAR(NT.REG_DT + (#{newHour}/24), 'YYYYMMDDHH24MISS') THEN 'Y'
+                 ELSE 'N'
+              END AS NEW_CHECK
+			</if>
+	    FROM
+	    	TCO_NA_NTT_MANAGE NT
+	    WHERE
+	    	BBS_ID = #{bbsId}
+	    	AND NTT_USE_AT = 'Y'
+	    	AND NOTICE_AT = 'Y'
+		    <if test="@egovframework.MybatisUtils@isNotEmpty(searchValue)">
+	    		<choose>
+		    	<when test="searchType.equals('all')">
+		    AND ( NTT_SJ LIKE '%'||#{searchValue}||'%' OR INSTR(NTT_CN,#{searchValue}) > 0 )
+		    	</when>
+		    	<when test="searchType.equals('sj')">
+		    AND NTT_SJ LIKE '%'||#{searchValue}||'%'
+		    	</when>
+		    	<when test="searchType.equals('cn')">
+		    AND INSTR(NTT_CN,#{searchValue}) > 0
+		    	</when>
+		    	<when test="searchType.equals('nm')">
+		    AND REG_NM LIKE '%'||#{searchValue}||'%'
+		    	</when>
+		    	<otherwise>
+		    		<include refid="selectNttListSearchType" />
+		    	</otherwise>
+		    	</choose>
+	    	</if>
+	    <![CDATA[
+	    	AND SYSDATE >= NOTICE_BEGIN_DT
+	    	AND SYSDATE <= NOTICE_END_DT+1
+	    ]]>
+	    ORDER BY
+	    	REG_DT DESC
+    </select>
+
+    <!-- 일반게시물 미니 리스트 조회 -->
+    <select id="selectNttNormalMiniList" parameterType="map" resultType="egovMap">
+    	SELECT
+    		PL.*
+    	FROM (
+        	SELECT
+        		PO.*
+        		,rownum as rsn
+			FROM (
+	    		SELECT NT.NTT_SN
+			    	,NT.NTT_SJ
+			    	,NT.REG_DT
+			    	,NT.REG_NM
+			   <if test="@egovframework.MybatisUtils@isNotEmpty(newHour)">
+            		,CASE
+                 		  WHEN TO_CHAR(SYSDATE, 'YYYYMMDDHH24MISS') BETWEEN TO_CHAR(NT.REG_DT, 'YYYYMMDDHH24MISS') AND TO_CHAR(NT.REG_DT + (#{newHour}/24), 'YYYYMMDDHH24MISS') THEN 'Y'
+                 		  ELSE 'N'
+              		  END AS NEW_CHECK
+			   </if>
+			    FROM TCO_NA_NTT_MANAGE NT
+			    WHERE BBS_ID = #{bbsId}
+			    	AND NTT_USE_AT = 'Y'
+			    ORDER BY REG_DT DESC
+				) PO
+		) PL
+		WHERE
+		<![CDATA[
+			rsn <= #{rowCo}
+		]]>
+	</select>
+
+	<!-- 앨범게시물 미니 리스트 조회 -->
+    <select id="selectNttPicMiniList" parameterType="map" resultType="egovMap">
+    	SELECT
+    		PL.*
+    		,( SELECT FLPTH FROM TCO_NA_NTT_FILE NF WHERE PL.NTT_SN = NF.NTT_SN AND ROWNUM = 1 ) AS FLPTH
+    	FROM (
+        	SELECT
+        		PO.*
+        		,rownum as rsn
+			FROM (
+	    		SELECT NT.NTT_SN
+			    	,NT.NTT_SJ
+			    	,NT.REG_DT
+			    	,NT.REG_NM
+			<if test="@egovframework.MybatisUtils@isNotEmpty(newHour)">
+            		,CASE
+                 		  WHEN TO_CHAR(SYSDATE, 'YYYYMMDDHH24MISS') BETWEEN TO_CHAR(NT.REG_DT, 'YYYYMMDDHH24MISS') AND TO_CHAR(NT.REG_DT + (#{newHour}/24), 'YYYYMMDDHH24MISS') THEN 'Y'
+                 		  ELSE 'N'
+              		  END AS NEW_CHECK
+			</if>
+			    FROM TCO_NA_NTT_MANAGE NT
+			    WHERE BBS_ID = #{bbsId}
+			    	AND NTT_USE_AT = 'Y'
+			    ORDER BY REG_DT DESC
+				) PO
+		) PL
+		WHERE
+		<![CDATA[
+			rsn <= #{rowCo}
+		]]>
+	</select>
+
+	<!-- 갤러리 게시물 미니 리스트 조회 -->
+    <select id="selectNttGalMiniList" parameterType="map" resultMap="clobMap">
+    	SELECT
+    		PL.*
+    		,( SELECT FLPTH FROM TCO_NA_NTT_FILE NF WHERE PL.NTT_SN = NF.NTT_SN AND ROWNUM = 1 ) AS FLPTH
+    	FROM (
+        	SELECT
+        		PO.*
+        		,rownum as rsn
+			FROM (
+	    		SELECT NT.NTT_SN
+			    	,NT.NTT_SJ
+			    	,NT.REG_DT
+			    	,NT.REG_NM
+			    	,NT.NTT_CN
+			   	<if test="@egovframework.MybatisUtils@isNotEmpty(newHour)">
+            		,CASE
+                 		  WHEN TO_CHAR(SYSDATE, 'YYYYMMDDHH24MISS') BETWEEN TO_CHAR(NT.REG_DT, 'YYYYMMDDHH24MISS') AND TO_CHAR(NT.REG_DT + (#{newHour}/24), 'YYYYMMDDHH24MISS') THEN 'Y'
+                 		  ELSE 'N'
+              		  END AS NEW_CHECK
+			   </if>
+			    FROM TCO_NA_NTT_MANAGE NT
+			    WHERE BBS_ID = #{bbsId}
+			    	AND NTT_USE_AT = 'Y'
+			    ORDER BY REG_DT DESC
+				) PO
+		) PL
+		WHERE
+		<![CDATA[
+			rsn <= #{rowCo}
+		]]>
+	</select>
+
+    <!-- 게시물 이동 -->
+    <update id="updateBbsId" parameterType="map">
+    	UPDATE TCO_NA_NTT_MANAGE
+    	   SET BBS_ID = #{bbsId},
+    	       BEFORE_ID = #{oriBbsId}
+    	 WHERE NTT_SN = #{nttSn}
+    </update>
+
+	<!-- 게시물 진행현황 -->
+    <update id="updateNttSttus" parameterType="map">
+    	UPDATE TCO_NA_NTT_MANAGE
+    	   SET NTT_STTUS = #{nttSttus}
+    	 WHERE NTT_SN = #{nttSn}
+    </update>
+
+	<!-- 일반 게시물 리스트 (고도화 전용) -->
+	<select id="selectSimpleNttList" parameterType="map" resultMap="clobMap">
+		SELECT
+		       PL.*
+		  FROM (
+		         SELECT
+		                PO.* ,
+		                ROWNUM AS RSN
+		           FROM (
+		                  SELECT NT.NTT_SN,
+		                         NT.NTT_SJ,
+		                         NT.NTT_CN,
+		                         NT.REG_NM,
+		                         CASE
+		                             WHEN TO_CHAR(SYSDATE, 'YYYYMMDDHH24MISS') BETWEEN TO_CHAR(NT.REG_DT, 'YYYYMMDDHH24MISS') AND TO_CHAR(NT.REG_DT + (24/24), 'YYYYMMDDHH24MISS') THEN 'Y'
+		                             ELSE 'N'
+		                          END AS NEW_CHECK,
+                                 TO_CHAR(NT.REG_DT, 'YYYY.MM.DD') AS REG_DT_S,
+                                 TO_CHAR(NT.REG_DT, 'YYYY.MM') AS REG_DT_1,
+                                 TO_CHAR(NT.REG_DT, 'DD') AS REG_DT_2
+		                    FROM TCO_NA_NTT_MANAGE NT
+		                   WHERE BBS_ID = 0
+		                     AND NTT_USE_AT = 'Y'
+		                ORDER BY REG_DT DESC
+		                ) PO
+		       ) PL
+		 WHERE <![CDATA[ RSN <= 3 ]]>
+	</select>
+
+	<!-- 이관게시물 이미지 조회용 -->
+	<select id="selectOldImageInfo" parameterType="map" resultType="egovMap">
+		SELECT DWLD_URL AS FILE_KEY
+		FROM TCO_NA_NTT_FILE
+		<![CDATA[
+		WHERE NTT_SN > 10000000
+		]]>
+		AND FILE_TY = 'img'
+		AND FLPTH LIKE CONCAT('/upload/old/%/',#{atchFileNm})
+	</select>
+
+	<!-- 게시글 작성자 정보 조회 -->
+	<select id="selectNttWriterInfo" parameterType="map" resultType="egovMap">
+		SELECT
+			NT.REG_ID
+			,NT.NTT_SJ
+			,NT.REG_NM
+			,MM.MBTLNUM
+			,BM.SMS_USE_AT
+		FROM
+			TCO_NA_NTT_MANAGE NT
+			,TAP_BM_BBS_MANAGE BM
+			,V_TAP_MM_MBER_MANAGE MM
+		WHERE
+			NT.NTT_SN = #{nttSn}
+		AND
+			NT.BBS_ID = BM.BBS_ID
+		AND
+			NT.REG_ID = MM.MBER_ID
+ 		AND
+ 			MM.DI_KEY != 'diKey'
+	</select>
+
+	<!-- 민원게시판 미답변, 처리건수 -->
+	<select id="selectCvplCount" parameterType="map" resultType="egovMap">
+		SELECT COUNT(CASE WHEN NTT_STTUS = 'C' THEN 1 ELSE NULL END) AS CVPL_COUNT_C
+				,COUNT(CASE WHEN (NTT_STTUS = 'W' OR NTT_STTUS = 'R') THEN 1 ELSE NULL END) AS CVPL_COUNT_W
+		FROM TCO_NA_NTT_MANAGE
+		WHERE BBS_ID = #{bbsId}
+		AND NTT_USE_AT = 'Y'
+	</select>
+
+	<!-- 답글게시판 답글 리스트 -->
+	<select id="selectNttReplyList" parameterType="map" resultType="egovMap">
+		SELECT NTT_SN FROM TCO_NA_NTT_MANAGE WHERE UPPER_NTT_SN = #{nttSn}
+	</select>
+</mapper>

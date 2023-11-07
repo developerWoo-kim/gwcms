@@ -1,0 +1,47 @@
+﻿@charset "utf-8";
+/* CSS Document */
+
+
+#container {position:relative;}
+#container:after {content:""; display:block; clear:both;}
+
+.main_content {position:relative; z-index:7; padding:20px 0 25px 0;  font-family:'맑은 고딕','Malgun Gothic'; overflow:hidden; }
+.main_content:after {content:""; display:block; clear:both;}
+
+.MC_box1 { width:100%; height:50px; overflow:hidden; border-radius:10px;margin-bottom:20px; border: 1px solid #c8d1db;  box-sizing:border-box; }
+.MC_box2 {position:relative; width:220px; height:260px; float:left; overflow:hidden; border-radius:10px; margin-right:20px;}
+.MC_box3 {width:740xp; height:260px; float:left;}
+.MC_box4 {position:relative; width:220px; height:230px; float:left; overflow:hidden; border-radius:10px; margin-top:20px;}
+.MC_box5 {position:relative; width:360px; height:230px; float:left; overflow:hidden; border-radius:10px; border: 1px solid #d2d2d2; margin: 20px 0 0 20px;}
+.MC_box6 {position:relative; width:360px; height:230px; float:right; overflow:hidden; border-radius:10px; border: 1px solid #d2d2d2;  margin-top:20px;}
+.MC_box7 {position:relative; width:220px; height:255px; float:left; border-radius:10px; overflow:hidden; margin:20px 20px 0 0;}
+.MC_box8 { width:358px; height:255px; float:left; border-radius:10px; overflow:hidden; margin:20px 20px 0 0;}
+.MC_box9 {position:relative; width:358px; height:255px; float:left; border-radius:10px; overflow:hidden; margin-top:20px; border: 1px solid #d2d2d2;  box-sizing:border-box;}
+
+@media (max-width: 800px) {
+	
+	#container,
+	.main_content,
+	 {-webkit-box-sizing:border-box; -moz-box-sizing:border-box; -ms-box-sizing:border-box; box-sizing:border-box}
+		
+	#container { width:100%;  padding-top:70px; }
+	.main_content { width:100%; padding:20px 2.5% 20px; }
+
+	#container,
+	.main_content,
+	.MC_box1, MC_box2, MC_box3, MC_box4, MC_box5, MC_box6, MC_box7, MC_box8, MC_box9 {-webkit-box-sizing:border-box; -moz-box-sizing:border-box; -ms-box-sizing:border-box; box-sizing:border-box;  }
+	
+	.MC_box1, MC_box2, MC_box3, MC_box4, MC_box5, MC_box6, MC_box7, MC_box8, MC_box9 {-webkit-transition:all 0.3s ease; -moz-transition:all 0.3s ease; -ms-transition:all 0.3s ease; transition:all 0.3s ease}
+	
+	.MC_box1 {}
+	.MC_box2 {display:none} 
+	.MC_box3 { width:100%; height:auto; margin-bottom:20px; float:none;} 
+	.MC_box4 {display:none} 
+	.MC_box5 {width:100%; float:none; margin:20px 0 0 0;} 
+	.MC_box6 {width:100%; float:none;} 
+	.MC_box7 {width:100%; margin:20px 0 0;float:none;} 
+	.MC_box8 {width:100%; margin-top:20px; float:none;} 
+	.MC_box9 {width:100%; margin:20px 0; float:none;} 
+
+	
+}

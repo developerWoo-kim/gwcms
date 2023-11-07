@@ -1,0 +1,39 @@
+@charset "utf-8";
+
+/* 시간표 */
+.schedule{width:100%; overflow:hidden; position:relative;}
+.schedule table{ width:100%; margin-left:-1px;}
+.schedule th, .schedule td { padding:8px 6px; border-left:2px solid #fff; border-bottom:2px solid #fff; line-height:20px; border-radius:5px}
+.schedule th {background:#4a82c5; text-align:center; color:#fff; font-family:"NanumBold"; font-size:15px}
+.schedule td { text-align:center; background:#dbe6f4; font-size:12px; color:#666;}
+.schedule tr td:first-child {color:#a4b6ba; font-family:"NanumBold"; font-size:15px; font-style:italic}
+
+
+
+
+@media (max-width:800px) {
+
+}
+
+
+
+
+@media (max-width:650px) {
+	
+
+	
+}
+
+
+
+@media (max-width:480px) {
+
+	
+}
+
+
+
+@media (max-width:380px) {
+
+	
+}

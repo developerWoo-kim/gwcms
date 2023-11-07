@@ -1,0 +1,330 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+ 
+<mapper namespace="mp_mph">
+
+<!-- 비밀번호 변경 이력관리 리스트 sql-->
+	<sql id ="selectMphList">
+	   SELECT  MH.MPH_TY
+			  ,MH.MBER_ID
+			  ,MM.MBER_NM
+			  ,MH.UPDT_USNM
+			  ,MH.UPDT_USID
+			  ,TO_CHAR(MH.UPDT_DT, 'YYYY/MM/DD HH24:MI:SS') AS UPDT_DT
+			  ,MT.MBER_TY
+	    FROM   TAP_MM_PASSWORD_HIST MH, TAP_MM_MBER_MANAGE MM, TAP_MM_MBER_TY MT, TAP_SM_SYS_MANAGE SM
+		WHERE   MH.MBER_ID = MM.MBER_ID
+		AND   MH.MBER_ID = MT.MBER_ID
+		AND   SM.INSTT_CODE = MT.INSTT_CODE
+		AND   SM.SYS_ID= #{sysId}
+	   <if test="@egovframework.MybatisUtils@isNotEmpty(mphTy)">
+	    AND    MH.MPH_TY = #{mphTy}
+	   </if>
+	   <if test="@egovframework.MybatisUtils@isNotEmpty(mberTy)">
+	    AND    MT.MBER_TY = #{mberTy}
+	   </if>
+	   <if test="@egovframework.MybatisUtils@isNotEmpty(srchMphTxt)">
+	       AND  (  		 
+	       				 MM.MBER_NM like '%'||#{srchMphTxt}||'%'
+	       			  OR MM.MBER_ID like '%'||#{srchMphTxt}||'%'
+	              	  OR MH.UPDT_USNM like '%'||#{srchMphTxt}||'%' 
+	              	  OR MH.UPDT_USID like '%'||#{srchMphTxt}||'%' 
+	              	 
+	            )
+	   </if>
+	ORDER BY   MH.MPH_SN DESC
+	</sql>
+	
+	<!-- 비밀번호 변경 이력 관리 시스템  리스트  -->
+    <select id="selectMphList" parameterType="egovMap" resultType="egovMap">
+	 	<include refid="selectMphList" /> 
+	 </select>
+	 	
+	<!-- 비밀번호 변경 이력 관리  리스트(페이징) -->
+    <select id="selectMphListPaging" parameterType="map" resultType="egovMap">
+    	SELECT
+    		PL.*
+    	FROM (
+        	SELECT 
+        		PO.*
+        		,rownum as rsn
+			FROM (
+	    		<include refid="selectMphList" /> 
+				) PO
+		) PL
+		WHERE
+		<![CDATA[
+			rsn <= #{maxSn} 
+			AND rsn > #{minSn}
+		]]>
+    </select>
+    
+    <!-- 배너관리 시스템  리스트 (페이징 전체 카운트) -->
+    <select id="selectMphListPagingCount" parameterType="map" resultType="int">
+    	SELECT   COUNT(*)
+		FROM   TAP_MM_PASSWORD_HIST MH, TAP_MM_MBER_MANAGE MM, TAP_MM_MBER_TY MT, TAP_SM_SYS_MANAGE SM
+		WHERE   MH.MBER_ID = MM.MBER_ID
+		AND   MH.MBER_ID = MT.MBER_ID
+		AND   SM.INSTT_CODE = MT.INSTT_CODE
+		AND   SM.SYS_ID= #{sysId}
+	   <if test="@egovframework.MybatisUtils@isNotEmpty(mphTy)">
+	       AND    MH.MPH_TY = #{mphTy}
+	   </if>
+	   <if test="@egovframework.MybatisUtils@isNotEmpty(mberTy)">
+	       AND    MT.MBER_TY = #{mberTy}
+	   </if>
+	    <if test="@egovframework.MybatisUtils@isNotEmpty(srchMphTxt)">
+	       AND  (  		 
+	       				 MM.MBER_NM like '%'||#{srchMphTxt}||'%'
+	       			  OR MM.MBER_ID like '%'||#{srchMphTxt}||'%'
+	              	  OR MH.UPDT_USNM like '%'||#{srchMphTxt}||'%' 
+	              	  OR MH.UPDT_USID like '%'||#{srchMphTxt}||'%' 
+	              	 
+	            )
+	   </if>
+	  ORDER BY   MH.MPH_SN
+    </select>
+
+
+ <!-- 비밀번호 변경(초기화) 이력 등록 -->
+	<insert id="insertPasswordHistInfo" parameterType="map" >
+    	INSERT INTO TAP_MM_PASSWORD_HIST (
+			 MPH_SN
+			,MPH_TY
+			,MBER_ID
+			,LEGACY_PASSWORD
+			,UPDT_USID
+			,UPDT_USNM
+			,UPDT_USIP
+			,UPDT_DT
+
+        ) VALUES (
+             SEQ_MM_PASSWORD_SN.NEXTVAL
+			,#{mphTy}
+			,#{mberId}
+			,#{legacyPassword}
+			,#{updtUsid}
+			,#{updtUsnm}
+			,#{updtUsip}
+			,sysdate
+        )
+	</insert>
+	
+	<!-- 이력 총관리자 리스트 +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ -->
+    <!-- 이력 시스템 리스트 통계 sql -->
+	<sql id="selectMphState">
+		SELECT COUNT(*) 
+		FROM   TAP_MM_PASSWORD_HIST MH, TAP_MM_MBER_MANAGE MM, TAP_MM_MBER_TY MT
+		WHERE   MH.MBER_ID = MM.MBER_ID
+		AND   MH.MBER_ID = MT.MBER_ID
+		AND   SM.INSTT_CODE = MT.INSTT_CODE
+	</sql>
+	
+	<!-- 이력 시스템 리스트 sql -->
+	<sql id="selectMphSmList">
+		SELECT IT.INSTT_CODE
+	          ,IT.INSTT_NM
+	          ,IT.INSTT_TY
+	          ,SM.SYS_ID
+			  ,SM.SYS_NM 
+			  ,( <include refid="selectMphState" /> ) AS TOTAL_CNT                                                                
+			  ,( <include refid="selectMphState" /> AND TO_CHAR(MH.UPDT_DT, 'YYYY/MM/DD') =TO_CHAR(SYSDATE, 'YYYY/MM/DD')) AS T_CNT
+			  FROM TAP_IM_INSTT_MANAGE IT, TAP_SM_SYS_MANAGE SM 
+			  WHERE IT.INSTT_CODE = SM.INSTT_CODE
+			  AND SM.SYS_STTUS = 'O'
+			
+			<if test='@egovframework.MybatisUtils@isEmpty(author) || author != "master"'>
+	         AND SM.SYS_ID NOT IN ('apple')
+	        </if>
+	        
+	        <if test="@egovframework.MybatisUtils@isNotEmpty(mberId)">
+		      AND SM.SYS_ID IN (
+					SELECT SYS_ID
+					  FROM TAP_AU_AUTHOR_MBER 
+					 WHERE MBER_ID = #{mberId}
+						   AND SYS_ID != 'apple'
+					   AND AUTHOR_CODE IN (1,2)	
+	        	)
+		     </if>
+		     
+	        <if test="@egovframework.MybatisUtils@isNotEmpty(insttCode)">
+		     AND   ( IT.INSTT_CODE =  #{insttCode}
+		     
+	                    OR  IT.UPPER_INSTT_CODE = #{upperInsttCode}
+	                    OR  IT.BSIS_INSTT_CODE = #{bsisInsttCode}
+	                    
+	               	)
+	         </if>
+	         
+		     <if test="@egovframework.MybatisUtils@isNotEmpty(insttGrad)">
+		     AND   ( IT.INSTT_GRAD IS NULL
+		     
+		     		 <if test="@egovframework.MybatisUtils@isNotEmpty(dtnt)">
+		                OR IT.INSTT_GRAD = #{dtnt}
+		             </if>
+		             <if test="@egovframework.MybatisUtils@isNotEmpty(elesch)">
+		                OR IT.INSTT_GRAD = #{elesch}
+		             </if>
+		             <if test="@egovframework.MybatisUtils@isNotEmpty(mskul)">    
+		                OR IT.INSTT_GRAD = #{mskul}
+		             </if> 
+		             <if test="@egovframework.MybatisUtils@isNotEmpty(hgschl)">
+		                OR IT.INSTT_GRAD = #{hgschl}
+		             </if>
+		             <if test="@egovframework.MybatisUtils@isNotEmpty(kndrgr)">     
+		                OR IT.INSTT_GRAD = #{kndrgr}
+		             </if>
+		             <if test="@egovframework.MybatisUtils@isNotEmpty(spcl)">
+		                OR IT.INSTT_GRAD = #{spcl}
+		             </if>
+		             
+		           )
+		     </if>
+		     
+		     <if test="@egovframework.MybatisUtils@isNotEmpty(sysTy)">
+		      AND   SM.SYS_TY = #{sysTy}
+		     </if>
+		     
+		     <if test="@egovframework.MybatisUtils@isNotEmpty(srchTxt)">
+		       AND  (  		 
+       				 SM.SYS_NM like '%'||#{srchTxt}||'%'
+              	  OR SM.SYS_TY like '%'||#{srchTxt}||'%' 
+		              	 
+		       )
+		    </if>
+			 
+			 ORDER BY   IT.INSTT_CODE, IT.INSTT_LEVEL DESC
+	</sql>
+	
+	<!-- 이력 시스템 리스트 -->
+	<select id="selectMphSmList" parameterType="map" resultType="egovMap">
+		<include refid="selectMphSmList"/>
+	</select>
+	
+	<!-- 이력 시스템 페이징 -->
+	<select id="selectMphSmListPaging" parameterType="map" resultType="egovMap">
+		SELECT
+    		PL.*
+    	FROM (
+        	SELECT 
+        		PO.*
+        		,rownum as rsn
+			FROM (
+	    		<include refid="selectMphSmList" /> 
+				) PO
+		) PL
+		WHERE
+		<![CDATA[
+			rsn <= #{maxSn} 
+			AND rsn > #{minSn}
+		]]>
+	</select>
+	
+	<!-- 이력 시스템 페이징 카운트 -->
+	<select id="selectMphSmListPagingCount" parameterType="map" resultType="int">
+		SELECT 
+			COUNT(*)
+			FROM TAP_IM_INSTT_MANAGE IT, TAP_SM_SYS_MANAGE SM 
+			  WHERE IT.INSTT_CODE = SM.INSTT_CODE
+			  AND SM.SYS_STTUS = 'O'
+			
+			<if test='@egovframework.MybatisUtils@isEmpty(author) || author != "master"'>
+	         AND SM.SYS_ID NOT IN ('apple')
+	        </if>
+	        
+	        <if test="@egovframework.MybatisUtils@isNotEmpty(insttCode)">
+		     AND   ( IT.INSTT_CODE =  #{insttCode}
+		     
+	                    OR  IT.UPPER_INSTT_CODE = #{upperInsttCode}
+	                    OR  IT.BSIS_INSTT_CODE = #{bsisInsttCode}
+	                    
+	               	)
+	         </if>
+	         
+		     <if test="@egovframework.MybatisUtils@isNotEmpty(insttGrad)">
+		     AND   ( IT.INSTT_GRAD IS NULL
+		     
+		     		 <if test="@egovframework.MybatisUtils@isNotEmpty(dtnt)">
+		                OR IT.INSTT_GRAD = #{dtnt}
+		             </if>
+		             <if test="@egovframework.MybatisUtils@isNotEmpty(elesch)">
+		                OR IT.INSTT_GRAD = #{elesch}
+		             </if>
+		             <if test="@egovframework.MybatisUtils@isNotEmpty(mskul)">    
+		                OR IT.INSTT_GRAD = #{mskul}
+		             </if> 
+		             <if test="@egovframework.MybatisUtils@isNotEmpty(hgschl)">
+		                OR IT.INSTT_GRAD = #{hgschl}
+		             </if>
+		             <if test="@egovframework.MybatisUtils@isNotEmpty(kndrgr)">     
+		                OR IT.INSTT_GRAD = #{kndrgr}
+		             </if>
+		             <if test="@egovframework.MybatisUtils@isNotEmpty(spcl)">
+		                OR IT.INSTT_GRAD = #{spcl}
+		             </if>
+		             
+		           )
+		     </if>
+	        
+	        <if test="@egovframework.MybatisUtils@isNotEmpty(mberId)">
+		      AND SM.SYS_ID IN (
+					SELECT SYS_ID
+					  FROM TAP_AU_AUTHOR_MBER 
+					 WHERE MBER_ID = #{mberId}
+						   AND SYS_ID != 'apple'
+					   AND AUTHOR_CODE IN (1,2)	
+	        	)
+		     </if>
+		     
+		     <if test="@egovframework.MybatisUtils@isNotEmpty(sysTy)">
+		      AND   SM.SYS_TY = #{sysTy}
+		     </if>
+		     
+		     <if test="@egovframework.MybatisUtils@isNotEmpty(srchTxt)">
+		       AND  (  		 
+       				 SM.SYS_NM like '%'||#{srchTxt}||'%'
+              	  OR SM.SYS_TY like '%'||#{srchTxt}||'%' 
+		              	 
+		       )
+		    </if>
+			 
+			 ORDER BY   IT.INSTT_CODE, IT.INSTT_LEVEL DESC
+	</select>
+    <!-- 이력 총관리자 리스트 +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ --> 
+    
+    <!-- 엑셀다운로드 -->
+    <select id="selectMphHistListExcel" parameterType="map" resultType="egovMap">
+		SELECT  
+    	   	MH.MPH_TY,
+   	   	  	MM.MBER_NM,
+   	   	  	MH.MBER_ID,
+   	   	  	MT.MBER_TY,
+   	   	  	MH.UPDT_USNM,
+   	   	  	MH.UPDT_USID,
+   	   	  	MH.UPDT_DT
+	    FROM   TAP_MM_PASSWORD_HIST MH, TAP_MM_MBER_MANAGE MM, TAP_MM_MBER_TY MT, TAP_SM_SYS_MANAGE SM
+		WHERE   MH.MBER_ID = MM.MBER_ID
+		AND   MH.MBER_ID = MT.MBER_ID
+		AND   SM.INSTT_CODE = MT.INSTT_CODE
+		<if test="sysId != null and !sysId.equals('apple') and @egovframework.MybatisUtils@isNotEmpty(sysId) ">
+		AND   SM.SYS_ID= #{sysId}
+		</if>
+	   <if test="@egovframework.MybatisUtils@isNotEmpty(mphTy)">
+	    AND    MH.MPH_TY = #{mphTy}
+	   </if>
+	   <if test="@egovframework.MybatisUtils@isNotEmpty(mberTy)">
+	    AND    MT.MBER_TY = #{mberTy}
+	   </if>
+	   <if test="@egovframework.MybatisUtils@isNotEmpty(srchMphTxt)">
+	       AND  (  		 
+	       				 MM.MBER_NM LIKE '%'||#{srchMphTxt}||'%'
+	       			  OR MM.MBER_ID LIKE '%'||#{srchMphTxt}||'%'
+	              	  OR MH.UPDT_USNM LIKE '%'||#{srchMphTxt}||'%' 
+	              	  OR MH.UPDT_USID LIKE '%'||#{srchMphTxt}||'%' 
+	              	 
+	            )
+	   </if>
+    </select>
+</mapper>
+
+

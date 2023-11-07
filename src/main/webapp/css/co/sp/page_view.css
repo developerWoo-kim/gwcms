@@ -1,0 +1,39 @@
+﻿@charset "utf-8";
+@import url(common.css);
+
+
+/* 사이트맵 */
+.sitemap_warp{ position:relative; padding:0 0 60px; font-family:'NotoR'}
+.sitemapBox {width: 23%; margin:0 1% 50px; float: left; border-top: 2px solid #333; height:360px;}/* 높이 조절 */
+.sitemapBox h3{font-size: 18px; color: #111; height: 45px; line-height: 45px; border-bottom: 1px solid #ddd; position: relative; padding:0 8px;}
+.siteMap { padding-top:6px}
+.siteMap > li {font-size: 15px; line-height: 35px; padding-left: 22px; background:url(/images/co/sb/bullet_01.png) no-repeat 8px 13px}
+.siteMap > li a {color: #5d5d5d;}
+.siteMap > li a:hover { text-decoration:underline}
+
+@media screen and (max-width :992px) {
+
+	/* 사이트맵 */
+	.sitemapBox {width: 30.666%; margin:0 0 50px 4%}
+	.sitemapBox:first-child{ margin-left:0}
+	.sitemapBox:nth-child(4), .sitemapBox:nth-child(7), .sitemapBox:nth-child(10), .sitemapBox:nth-child(13) { margin-left:0}
+
+
+}
+
+@media screen and (max-width:640px) {
+	
+	/* 사이트맵 */
+	.sitemapBox {width: 47.5%; margin:0 0 50px 5%}
+	.sitemapBox:nth-child(even) { margin-left:5%} /* 짝수 */
+	.sitemapBox:nth-child(odd) { margin-left:0} /* 홀수 */
+
+}
+
+ @media (max-width:380px) {
+	
+	/* 사이트맵 */
+	.sitemapBox {width: 100%; height:auto; margin:0 0 50px 0}	
+	.sitemapBox:nth-child(even) { margin-left:0} /* 짝수 */
+
+}

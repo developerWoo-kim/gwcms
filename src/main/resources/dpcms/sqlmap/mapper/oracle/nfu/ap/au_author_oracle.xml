@@ -1,0 +1,818 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+ 
+<mapper namespace="au_author">
+
+	<!-- 권한 시퀀스 획득 -->
+	<select id="selectSeqAuthorSn" resultType="string">
+        SELECT SEQ_AUTHOR_SN.NEXTVAL
+        FROM DUAL
+    </select>
+    
+    <!-- 사용자 권한 번호 조회 -->
+	<select id="selectAuthorMberSn" resultType="string">
+		SELECT SEQ_AUTHOR_MBER_SN.NEXTVAL FROM DUAL
+	</select> 
+	
+    <!-- 그룹 권한 번호 조회 -->
+	<select id="selectGroupAuthorSn" resultType="string">
+		SELECT SEQ_GROUP_AUTHOR_SN.NEXTVAL FROM DUAL
+	</select> 	   
+    
+    <!-- 권한리스트 조회  sql-->
+     <sql id="selectAuthorlist">
+     	  SELECT  A.AUTHOR_SEQ,
+           		  A.AUTHOR_CODE,
+                  A.AUTHOR_NM,
+                  A.SYS_ID,
+                  B.SYS_NM
+            FROM  TAP_AU_AUTHOR_MANAGE A, TAP_SM_SYS_MANAGE B 
+           WHERE  A.SYS_ID = B.SYS_ID
+		   <if test="@egovframework.MybatisUtils@isNotEmpty(sysId)">
+		   	 <choose>
+       	   		<when test="@egovframework.MybatisUtils@isNotEmpty(author)">
+    	   			AND A.SYS_ID IN(#{sysId},'apple')
+       	   			<if test="author=='master'">
+       	   				AND A.AUTHOR_CODE >= 0
+       	   			</if>
+       	   			<if test="author=='admin'">
+       	   				AND A.AUTHOR_CODE >= 1
+       	   			</if>
+       	   		</when>
+       	   		<otherwise>
+       	   			AND  A.SYS_ID = #{sysId}
+       	   		</otherwise>
+       	   	 </choose>
+       	   </if>
+       	   
+		   <if test="@egovframework.MybatisUtils@isNotEmpty(srchTxt)">
+             AND  (B.SYS_NM like '%'||#{srchTxt}||'%' or A.AUTHOR_NM like '%'||#{srchTxt}||'%' or A.AUTHOR_SEQ like '%'||#{srchTxt}||'%')    
+           </if>
+        ORDER BY  A.AUTHOR_SEQ DESC
+     </sql>
+
+	<!-- 권한리스트 조회-->
+     <select id="selectAuthorlist" parameterType="map" resultType="egovMap">
+     	  <include refid="selectAuthorlist" /> 
+    </select>
+    
+     <!-- 권한리스트조회(페이징) -->
+    <select id="selectAuthorlistPaging" parameterType="map" resultType="egovMap">
+    	SELECT
+    		PL.*
+    	FROM (
+        	SELECT 
+        		PO.*
+        		,rownum as rsn
+			FROM (
+	    		<include refid="selectAuthorlist" /> 
+				) PO
+		) PL
+		WHERE
+		<![CDATA[
+			rsn <= #{maxSn} 
+			AND rsn > #{minSn}
+		]]>
+    </select>
+    
+    <!-- 권한리스트조회 (페이징 전체 카운트) -->
+    <select id="selectAuthorlistPagingCount" parameterType="map" resultType="int">
+    	SELECT   COUNT(*)
+	      FROM  TAP_AU_AUTHOR_MANAGE A, TAP_SM_SYS_MANAGE B 
+         WHERE  A.SYS_ID = B.SYS_ID
+         	<if test="@egovframework.MybatisUtils@isNotEmpty(sysId)">
+		   	 <choose>
+       	   		<when test="@egovframework.MybatisUtils@isNotEmpty(author)">
+    	   			AND A.SYS_ID IN(#{sysId},'apple')
+       	   			<if test="author=='master'">
+       	   				AND A.AUTHOR_CODE >= 0
+       	   			</if>
+       	   			<if test="author=='admin'">
+       	   				AND A.AUTHOR_CODE >= 1
+       	   			</if>
+       	   		</when>
+       	   		<otherwise>
+       	   			AND  A.SYS_ID = #{sysId}
+       	   		</otherwise>
+       	   	 </choose>
+       	   </if>
+       	   
+		   <if test="@egovframework.MybatisUtils@isNotEmpty(srchTxt)">
+           AND  (B.SYS_NM like '%'||#{srchTxt}||'%' or A.AUTHOR_NM like '%'||#{srchTxt}||'%' or A.AUTHOR_SEQ like '%'||#{srchTxt}||'%')    
+           </if>
+<!--       ORDER BY  A.AUTHOR_CODE DESC -->
+    </select>
+    
+	<!-- 권한리스트 조회-->
+    <select id="selectAuthorListForSys" parameterType="map" resultType="egovMap">
+		SELECT A.SYS_ID,
+		       A.AUTHOR_CODE,
+		       <choose>
+		       	<when test="@egovframework.MybatisUtils@isNotEmpty(sysId) and sysId=='apple'">B.SYS_NM || ' ' || A.AUTHOR_NM AS AUTHOR_NM,</when>
+		       	<otherwise>A.AUTHOR_NM,</otherwise>
+		       </choose> 
+		       A.AUTHOR_SEQ
+		  FROM TAP_AU_AUTHOR_MANAGE A, TAP_SM_SYS_MANAGE B
+			 WHERE A.SYS_ID = B.SYS_ID	
+			 <choose>
+				<when test="@egovframework.MybatisUtils@isNotEmpty(sysId) and sysId=='apple'">AND (A.SYS_ID = #{sysId} OR (A.SYS_ID != #{sysId} AND AUTHOR_CODE = 1) )</when>
+		       	<otherwise>AND A.SYS_ID = #{sysId}</otherwise>
+			</choose> 
+	      ORDER BY A.AUTHOR_CODE
+    </select>   
+    
+    <!-- 권한 정보 조회-->
+     <select id="selectAuthorInfo" parameterType="map" resultType="egovMap">
+           SELECT  A.AUTHOR_SEQ, 
+           		   A.AUTHOR_CODE,
+           		   A.AUTHOR_NM,
+           		   A.SYS_ID,
+           		   B.SYS_NM
+             FROM  TAP_AU_AUTHOR_MANAGE A, TAP_SM_SYS_MANAGE B 
+            WHERE  A.SYS_ID = B.SYS_ID
+              AND  A.AUTHOR_CODE = #{authorCode} 
+              <choose>
+              	<when test="@egovframework.MybatisUtils@isNotEmpty(viewId)">
+              		AND  A.SYS_ID = #{viewId} 
+              	</when>
+              	<otherwise>
+              		AND  A.SYS_ID = #{sysId} 
+              	</otherwise>
+              </choose>
+     </select>
+
+     <!-- 권한명 중복체크-->
+     <select id="selectAuthorNmInfo" parameterType="map" resultType="egovMap">
+           SELECT  COUNT(*) AS AUTHOR_CNT
+             FROM  TAP_AU_AUTHOR_MANAGE
+            WHERE  AUTHOR_NM = #{authorNm}
+              AND  SYS_ID = #{sysId} 		  
+     </select>
+     
+     <!-- 권한명 수정-->
+     <update id="updateAuthorInfo" parameterType ="map">
+		   UPDATE  TAP_AU_AUTHOR_MANAGE	
+			  SET  AUTHOR_NM  = #{authorNm}
+			         ,SYS_ID  = #{sysId}
+			WHERE  AUTHOR_SEQ = #{authorSeq} 
+	</update>	
+	
+	<!-- 권한 등록-->
+	<insert id="insertAuthorInfo" parameterType="map" >
+           INSERT INTO TAP_AU_AUTHOR_MANAGE (
+			   AUTHOR_SEQ
+			  ,AUTHOR_CODE  
+			  ,AUTHOR_NM
+			  ,SYS_ID          
+			  
+      	   )VALUES(
+			   SEQ_AUTHOR_SN.NEXTVAL
+			  ,SEQ_AUTHOR_SN.NEXTVAL
+			  ,#{authorNm}
+			  ,#{sysId}         
+          	 )
+     </insert> 
+     
+    <!-- 게시판 권한 등록-->
+	<insert id="insertBbsAuthorInfo" parameterType="map" >
+           INSERT INTO TAP_AU_AUTHOR_MANAGE (
+			   AUTHOR_SEQ
+			  ,AUTHOR_CODE  
+			  ,AUTHOR_NM
+			  ,SYS_ID   
+			         
+      	    )VALUES(
+			   #{authorSn}
+			  ,#{authorSn}
+			  ,#{authorNm}
+			  ,#{sysId}         
+          	 )
+     </insert>  
+     
+     <!-- 권한삭제-->
+     <delete id="deleteAuthorInfo" parameterType="map" >
+           DELETE 
+             FROM TAP_AU_AUTHOR_MANAGE 
+            WHERE AUTHOR_SEQ = #{authorSeq} 
+     </delete>
+     
+     <!-- 권한 삭제 시 회원에게 부여된 권한 삭제-->
+     <delete id="deleteMberAuthorInfo" parameterType="map" >
+           DELETE
+             FROM TAP_AU_AUTHOR_MBER 
+            WHERE AUTHOR_CODE = #{authorCode}
+     </delete>
+     
+     <!-- 권한 삭제 시 그룹에게 부여된 권한 삭제-->
+     <delete id="deleteGroupAuthorInfo" parameterType="map" >
+           DELETE 
+             FROM TAP_GR_GROUP_AUTHOR 
+            WHERE AUTHOR_CODE = #{authorCode}
+     </delete>
+	
+<!--사용자 권한 관리 -->	
+    <!-- 사용자 관리자 권한 조회 -->
+	 <select id="selectAuthorMngrInfo" parameterType="map" resultType="egovMap">
+     	  SELECT  AUTHOR_CODE
+            FROM  TAP_AU_AUTHOR_MBER
+           WHERE  MBER_ID = #{mberId}    
+             AND  AUTHOR_CODE = '1'
+    </select>
+    
+    <!-- 사용자 관리 : 사용자에게 부여된 권한 조회 -->
+	 <select id="selectAuthorMberList" parameterType="map" resultType="egovMap">
+     	  SELECT   A.AUTHOR_MBER_SEQ
+                  ,A.AUTHOR_CODE
+                  ,B.AUTHOR_NM
+                  ,B.SYS_ID
+                  ,SM.SYS_NM
+            FROM   TAP_AU_AUTHOR_MBER A, TAP_AU_AUTHOR_MANAGE B, TAP_SM_SYS_MANAGE SM
+           WHERE   A.AUTHOR_CODE = B.AUTHOR_CODE
+           	 AND   A.SYS_ID = B.SYS_ID
+           	 AND   B.SYS_ID = SM.SYS_ID
+           	 AND   A.MBER_ID = #{mberId}
+            <if test='topAuthAt == "N"'>
+		     AND   A.SYS_ID IN ( #{sysId}, 'apple' )
+             </if>
+           <if test="@egovframework.MybatisUtils@isNotEmpty(srchAuthorMber)">
+             AND   ( A.AUTHOR_CODE  LIKE '%'||#{srchAuthorMber}||'%' OR B.AUTHOR_NM  LIKE '%'||#{srchAuthorMber}||'%' OR SM.SYS_NM  LIKE '%'||#{srchAuthorMber}||'%')
+           </if> 
+        ORDER BY   B.SYS_ID, A.AUTHOR_CODE
+    </select>
+    
+    <!-- 사용자 관리 : 사용자에게 부여 가능한 권한 조회 -->
+	 <select id="selectAuthorGiveList" parameterType="map" resultType="egovMap">
+     	  SELECT   AU.AUTHOR_CODE
+			        ,AU.AUTHOR_NM
+			        ,AU.SYS_ID
+			        ,SM.SYS_NM
+			FROM   TAP_IM_INSTT_MANAGE IT, TAP_SM_SYS_MANAGE SM, TAP_AU_AUTHOR_MANAGE AU
+			WHERE   IT.INSTT_CODE = SM.INSTT_CODE
+			AND     SM.SYS_ID = AU.SYS_ID
+           AND   AU.AUTHOR_CODE not in ( select author_code from TAP_AU_AUTHOR_MBER where mber_id = #{mberId} AND SYS_ID = SM.SYS_ID) 
+           
+           <!-- 통합운영자 이상 -->
+           <if test='topAuthAt == "Y"'>
+			  <!-- 통합운영자일때 -->
+			   <if test='adminAt == "N"'>
+				   <if test='@egovframework.MybatisUtils@isEmpty(author) || author != "master"'>
+			         AND SM.SYS_ID NOT IN ('apple')
+			        </if>
+			        
+			        <if test="@egovframework.MybatisUtils@isNotEmpty(insttCode)">
+				     AND   ( IT.INSTT_CODE =  #{insttCode}
+				     
+			                    OR  IT.UPPER_INSTT_CODE = #{upperInsttCode}
+			                    OR  IT.BSIS_INSTT_CODE = #{bsisInsttCode}
+			                    
+			               	)
+			         </if>
+			  </if>
+           </if>
+           
+           <!-- 시스템 총관리자 이상 권한자(apple=1,3,5) -->
+           <if test='appleAuth == "N"'>
+           		AND  AU.AUTHOR_CODE NOT IN ( 0 )
+           </if>
+           
+           <!-- 홈페이지관리자 -->
+           <if test='topAuthAt == "N"'>
+	           <if test='homeManage == "Y" '>
+		     		AND  SM.SYS_ID = #{sysId}
+	           </if>
+	           <if test='homeManage == "N" '>
+		     		AND  SM.SYS_ID = #{sysId}
+		     		AND  AU.AUTHOR_CODE NOT IN ( 1, 2 )
+	           </if>
+           </if>
+           <if test="@egovframework.MybatisUtils@isNotEmpty(srchAuthorGive)">
+             AND   ( AU.AUTHOR_CODE  LIKE '%'||#{srchAuthorGive}||'%' OR AU.AUTHOR_NM  LIKE '%'||#{srchAuthorGive}||'%' OR SM.SYS_NM  LIKE '%'||#{srchAuthorGive}||'%')
+           </if>
+           ORDER BY SM.SYS_ID, AU.AUTHOR_CODE
+    </select>
+    
+    <!-- 권한 부여 가능한 사용자 리스트 조회 -->
+     <select id="selectNAuthorMbrlist" parameterType="map" resultType="egovMap">
+		  SELECT   A.MBER_TY_SEQ
+                  ,B.MBER_SEQ
+                  ,A.MBER_ID
+                  ,B.MBER_NM
+            FROM   TAP_MM_MBER_TY A, TAP_MM_MBER_MANAGE B 
+           WHERE   A.MBER_ID NOT IN  (SELECT MBER_ID FROM TAP_AU_AUTHOR_MBER WHERE AUTHOR_CODE = #{authorCode})
+             AND   A.MBER_ID = B.MBER_ID
+             AND   A.INSTT_NM = #{insttNm}
+           <if test="@egovframework.MybatisUtils@isNotEmpty(srchMbr)">
+             AND   ( A.MBER_ID  like '%'||#{srchMbr}||'%' or B.MBER_NM  like '%'||#{srchMbr}||'%' or B.MBER_SEQ like '%'||#{srchMbr}||'%' ) 
+           </if>
+    </select>
+    
+    <!-- 권한을 소유한 사용자 리스트 조회 -->
+     <select id="selectYAuthorMbrlist" parameterType="map" resultType="egovMap">
+       	  SELECT   A.MBER_ID
+                  ,A.MBER_NM 
+                  ,C.AUTHOR_MBER_SEQ
+            FROM   TAP_MM_MBER_MANAGE A, TAP_MM_MBER_TY B, TAP_AU_AUTHOR_MBER C 
+           WHERE   A.MBER_ID = B.MBER_ID
+             AND   A.MBER_ID = C.MBER_ID
+             AND   C.AUTHOR_CODE = #{authorCode}
+             AND   B.INSTT_NM = #{insttNm}
+           <if test="@egovframework.MybatisUtils@isNotEmpty(srchMbr)">
+             AND   (  A.MBER_ID like '%'||#{srchMbr}||'%' or A.MBER_NM  like '%'||#{srchMbr}||'%' )
+           </if>
+    </select>
+    
+    <!-- 회원권한 페이징 -->
+	<sql id="selectAuthorMbrlistSql">
+		SELECT    A.MBER_TY_SEQ
+                  ,B.MBER_SEQ
+                  ,A.MBER_ID
+                  ,B.MBER_NM
+                  <if test="@egovframework.MybatisUtils@isNotEmpty(authChk)">
+         			<if test='authChk!="N"'>
+                	,(SELECT T.AUTHOR_MBER_SEQ 
+                		FROM TAP_AU_AUTHOR_MBER T 
+                		WHERE T.AUTHOR_CODE = #{authorCode}
+                		 AND A.MBER_ID = T.MBER_ID 
+                		 <choose>
+			              	<when test="@egovframework.MybatisUtils@isNotEmpty(viewId)">
+			              		AND T.SYS_ID = #{viewId}
+			              	</when>
+			              	<otherwise>
+			              		AND T.SYS_ID = C.SYS_ID
+			              	</otherwise>
+			              </choose>
+                	) AS CHK
+		            </if>
+	        	  </if>
+	        	  ,ROW_NUMBER() OVER(ORDER BY A.MBER_TY_SEQ) AS RSN
+            FROM   TAP_MM_MBER_TY A, TAP_MM_MBER_MANAGE B, TAP_SM_SYS_MANAGE C
+           WHERE   C.INSTT_CODE = A.INSTT_CODE
+             AND   A.MBER_ID = B.MBER_ID
+             <choose>
+              	<when test="@egovframework.MybatisUtils@isNotEmpty(viewId)">
+              		AND  C.SYS_ID IN (#{viewId},#{sysId})
+              	</when>
+              	<otherwise>
+              		AND   C.SYS_ID = #{sysId}
+              	</otherwise>
+              </choose>
+             
+             <!-- 0권한을 가지지 않으면 admin,apple 계정 권환 회수 불가 처리 -->
+	         <if test="author=='admin'">
+	         		AND B.MBER_SEQ NOT IN (1,2)
+	         </if>
+	         
+	         <if test="@egovframework.MybatisUtils@isNotEmpty(authChk)">
+	         	<if test='authChk=="Y"'>
+		            AND   A.MBER_ID IN  (
+		            	SELECT MBER_ID 
+		            	FROM TAP_AU_AUTHOR_MBER 
+		            	WHERE AUTHOR_CODE = #{authorCode}
+			            <if test='@egovframework.MybatisUtils@isNotEmpty(viewId)'>
+	               		 	AND SYS_ID = #{viewId}
+	               		 </if>
+		            )
+		     	</if>
+		     	<if test='authChk=="N"'>
+		     		AND   A.MBER_ID NOT IN  (SELECT MBER_ID FROM TAP_AU_AUTHOR_MBER WHERE AUTHOR_CODE = #{authorCode})
+		     	</if>
+	         </if>
+	         <if test="@egovframework.MybatisUtils@isNotEmpty(srchMbr)">
+	             AND   (  B.MBER_ID like '%'||#{srchMbr}||'%' or B.MBER_NM  like '%'||#{srchMbr}||'%' )
+	         </if>
+	</sql>
+	
+	<select id="selectAuthorMbrlist" parameterType="map" resultType="egovMap">
+		<include refid="selectAuthorMbrlistSql" /> 
+        ORDER BY MBER_TY_SEQ
+	</select>
+	
+    <select id="selectAuthorMbrlistPaging" parameterType="map" resultType="egovMap">
+    	SELECT
+    		PL.*
+    	FROM (
+        	SELECT 
+        		PO.*
+			FROM (
+	    		<include refid="selectAuthorMbrlistSql" /> 
+	    		ORDER BY MBER_TY_SEQ
+				) PO
+		) PL
+		WHERE
+		<![CDATA[
+  			rsn <= #{maxSn}   
+  			AND rsn > #{minSn}  
+  		]]> 
+    </select>
+    
+    <select id="selectAuthorMbrlistPagingCount" parameterType="map" resultType="int">
+    	SELECT COUNT(*) 
+        	FROM   TAP_MM_MBER_TY A, TAP_MM_MBER_MANAGE B, TAP_SM_SYS_MANAGE C
+           WHERE   C.INSTT_CODE = A.INSTT_CODE
+             AND   A.MBER_ID = B.MBER_ID
+             <choose>
+              	<when test="@egovframework.MybatisUtils@isNotEmpty(viewId)">
+              		AND  C.SYS_ID IN (#{viewId},#{sysId})
+              	</when>
+              	<otherwise>
+              		AND   C.SYS_ID = #{sysId}
+              	</otherwise>
+              </choose>
+         <if test="@egovframework.MybatisUtils@isNotEmpty(authChk)">
+         	<if test='authChk=="Y"'>
+	            AND   A.MBER_ID IN  (SELECT MBER_ID FROM TAP_AU_AUTHOR_MBER WHERE AUTHOR_CODE = #{authorCode})
+	     	</if>
+	     	<if test='authChk=="N"'>
+	     		AND   A.MBER_ID NOT IN  (SELECT MBER_ID FROM TAP_AU_AUTHOR_MBER WHERE AUTHOR_CODE = #{authorCode})
+	     	</if>
+         </if>
+         <if test="@egovframework.MybatisUtils@isNotEmpty(srchMbr)">
+             AND   (  B.MBER_ID like '%'||#{srchMbr}||'%' or B.MBER_NM  like '%'||#{srchMbr}||'%' )
+         </if>
+    </select>
+	<!-- //회원권한 페이징 -->
+    
+    <!-- 사용자에게 권한 부여 -->
+	<insert id="insertAuthorMbrInfo" parameterType="map" >
+           INSERT INTO TAP_AU_AUTHOR_MBER(
+			   AUTHOR_MBER_SEQ
+			  ,AUTHOR_CODE  
+			  ,MBER_ID
+			  ,SYS_ID    
+      		)VALUES(
+			   #{authorMberSeq}
+			  ,#{authorCode}
+			  ,#{mberId}
+			  ,#{sysId}         
+           )
+    </insert> 	
+       
+    <!-- 사용자 권한 회수 -->
+     <delete id="deleteAuthorMberInfo" parameterType="map" >
+	       DELETE
+	    	 FROM  TAP_AU_AUTHOR_MBER 
+	    	WHERE  AUTHOR_MBER_SEQ = #{authorMberSeq}	 
+    </delete>
+    
+    <!-- 그룹권한관리 -->
+	
+	<!-- 그룹권한 페이징 -->
+	<sql id="selectAuthorGrpListSql">
+		SELECT   A.GROUP_CODE
+                ,A.GROUP_NM
+                <if test="@egovframework.MybatisUtils@isNotEmpty(authChk)">
+         			<if test='authChk!="N"'>
+                	,(SELECT B.AUTHORGRP_SEQ FROM TAP_GR_GROUP_AUTHOR B WHERE  AUTHOR_CODE = #{authorCode} AND A.GROUP_CODE = B.GROUP_CODE) AS CHK
+		            </if>
+		        </if>
+		        ,ROW_NUMBER() OVER(ORDER BY A.GROUP_CODE) AS RSN
+          FROM   TAP_GR_GROUP_MANAGE A
+         WHERE   A.SYS_ID = #{sysId}
+         <if test="@egovframework.MybatisUtils@isNotEmpty(authChk)">
+         	<if test='authChk=="Y"'>
+	            AND   A.GROUP_CODE IN  (SELECT GROUP_CODE FROM TAP_GR_GROUP_AUTHOR WHERE  AUTHOR_CODE = #{authorCode} )
+	     	</if>
+	     	<if test='authChk=="N"'>
+	     		AND   A.GROUP_CODE NOT IN  (SELECT GROUP_CODE FROM TAP_GR_GROUP_AUTHOR WHERE  AUTHOR_CODE = #{authorCode} )
+	     	</if>
+         </if>
+         <if test="@egovframework.MybatisUtils@isNotEmpty(srchGrp)">
+           AND   ( A.GROUP_CODE like '%'||#{srchGrp}||'%' or A.GROUP_NM like '%'||#{srchGrp}||'%' )
+ 	     </if> 
+	</sql>
+	
+	<select id="selectAuthorGrpList" parameterType="map" resultType="egovMap">
+		<include refid="selectAuthorGrpListSql" /> 
+        ORDER BY GROUP_CODE
+	</select>
+	
+    <select id="selectAuthorGrpListPaging" parameterType="map" resultType="egovMap">
+    	SELECT
+    		PL.*
+    	FROM (
+        	SELECT 
+        		PO.*
+			FROM (
+	    		<include refid="selectAuthorGrpListSql" /> 
+	    		ORDER BY GROUP_CODE
+				) PO
+		) PL
+		WHERE
+		<![CDATA[
+  			rsn <= #{maxSn}   
+  			AND rsn > #{minSn}  
+  		]]> 
+    </select>
+    
+    <select id="selectAuthorGrpListPagingCount" parameterType="map" resultType="int">
+    	SELECT COUNT(*) 
+        FROM TAP_GR_GROUP_MANAGE 
+        WHERE 
+        	SYS_ID = #{sysId}
+         <if test="@egovframework.MybatisUtils@isNotEmpty(authChk)">
+         	<if test='authChk=="Y"'>
+	            AND   GROUP_CODE NOT IN  (SELECT GROUP_CODE FROM TAP_GR_GROUP_AUTHOR WHERE  AUTHOR_CODE = #{authorCode} )
+	     	</if>
+	     	<if test='authChk=="N"'>
+	     		AND   GROUP_CODE IN  (SELECT GROUP_CODE FROM TAP_GR_GROUP_AUTHOR WHERE  AUTHOR_CODE = #{authorCode} )
+	     	</if>
+         </if>
+         <if test="@egovframework.MybatisUtils@isNotEmpty(srchGrp)">
+           AND   ( GROUP_CODE like '%'||#{srchGrp}||'%' or GROUP_NM like '%'||#{srchGrp}||'%' )
+ 	     </if> 
+    </select>
+	<!-- //그룹권한 페이징 -->
+	
+	<!-- 권한 부여 가능한 그룹 리스트 조회 -->
+	 <select id="selectNAuthorGrpList" parameterType="map" resultType="egovMap">
+           SELECT   GROUP_CODE
+                   ,GROUP_NM
+             FROM   TAP_GR_GROUP_MANAGE
+            WHERE   GROUP_CODE NOT IN  (SELECT GROUP_CODE FROM TAP_GR_GROUP_AUTHOR WHERE  AUTHOR_CODE = #{authorCode} )
+              AND   SYS_ID = #{sysId}
+           <if test="@egovframework.MybatisUtils@isNotEmpty(srchGrp)">
+              AND   ( GROUP_CODE like '%'||#{srchGrp}||'%' or GROUP_NM like '%'||#{srchGrp}||'%' )
+    	   </if>        
+     </select>
+     
+     <!-- 권한이 부여된 그룹리스트 조회 -->
+    <select id="selectYAuthorGrplist" parameterType="map" resultType="egovMap">
+ 		   SELECT   A.GROUP_CODE
+                   ,B.GROUP_NM
+                   ,A.AUTHORGRP_SEQ
+             FROM   TAP_GR_GROUP_AUTHOR A, TAP_GR_GROUP_MANAGE B
+            WHERE   A.GROUP_CODE = B.GROUP_CODE
+              AND   A.AUTHOR_CODE = #{authorCode}
+              AND   A.SYS_ID = #{sysId}
+              <if test="@egovframework.MybatisUtils@isNotEmpty(srchGrp)">
+              AND   ( A.GROUP_CODE like '%'||#{srchGrp}||'%' or B.GROUP_NM like '%'||#{srchGrp}||'%' )
+              </if>
+     </select>
+     
+    <!-- 그룹에 권한 부여 -->
+	<insert id="insertAuthorGrpInfo" parameterType="map" >
+             INSERT INTO TAP_GR_GROUP_AUTHOR (
+			     AUTHORGRP_SEQ
+			    ,AUTHOR_CODE  
+			    ,GROUP_CODE
+			    ,SYS_ID        
+      		  )VALUES(
+			     #{authorgrpSeq}
+			    ,#{authorCode}
+			    ,#{groupCode}
+          	    ,#{sysId}
+          	 )
+    </insert>
+     
+    <!-- 그룹 권한 회수 -->
+    <delete id="deleteAuthorGrpInfo" parameterType="map" >
+    	DELETE
+    	  FROM  TAP_GR_GROUP_AUTHOR
+    	 WHERE  AUTHORGRP_SEQ = #{authorgrpSeq}
+    </delete>
+    
+	<!-- 권한 정보 조회 (사용자 권한 번호) -->
+	<select id="selectAuthorInfoByAuthorMberSn" parameterType="map" resultType="egovMap">
+		SELECT 
+		       AUTHOR_MBER_SEQ,
+		       MBER_ID,
+		       AUTHOR_CODE,
+		       SYS_ID
+		  FROM 
+		       TAP_AU_AUTHOR_MBER
+		 WHERE 1 = 1 
+		   AND AUTHOR_MBER_SEQ = #{authorMberSeq}
+	</select>
+	
+	<!-- 권한 정보 조회 (사용자 권한 번호) -->
+	<select id="selectAuthorInfoByGroupAuthorSn" parameterType="map" resultType="egovMap">
+		SELECT 
+		       AUTHORGRP_SEQ,
+		       GROUP_CODE,
+		       AUTHOR_CODE,
+		       SYS_ID
+		  FROM 
+		       TAP_GR_GROUP_AUTHOR
+		 WHERE 1 = 1 
+		   AND AUTHORGRP_SEQ = #{authorgrpSeq}
+	</select>	
+ 
+ 	<!--  총관리자 리스트  -->
+ 	
+    <!--  시스템 리스트 통계 sql -->
+	<sql id="selectAuthorState">
+		SELECT COUNT(*) AS CNT
+		FROM   TAP_AU_AUTHOR_MANAGE AU
+		WHERE  AU.SYS_ID = SM.SYS_ID  
+	</sql>
+	
+	<!--  시스템 리스트 sql -->
+	<sql id="selectAuthorSmList">
+		SELECT IT.INSTT_CODE
+	          ,IT.INSTT_NM
+	          ,IT.INSTT_TY
+	          ,SM.SYS_ID
+			  ,SM.SYS_NM 
+			  ,( <include refid="selectAuthorState" /> ) AS TOTAL_CNT                                                                
+			  FROM TAP_IM_INSTT_MANAGE IT, TAP_SM_SYS_MANAGE SM 
+			  WHERE IT.INSTT_CODE = SM.INSTT_CODE
+			  AND SM.SYS_STTUS = 'O'
+			
+			<if test='@egovframework.MybatisUtils@isEmpty(author) || author != "master"'>
+	         AND SM.SYS_ID NOT IN ('apple')
+	        </if>
+	        
+	        <if test="@egovframework.MybatisUtils@isNotEmpty(mberId)">
+		      AND SM.SYS_ID IN (
+					SELECT SYS_ID
+					  FROM TAP_AU_AUTHOR_MBER 
+					 WHERE MBER_ID = #{mberId}
+						   AND SYS_ID != 'apple'
+					   AND AUTHOR_CODE IN (1,2)	
+	        	)
+		     </if>
+		     
+	        <if test="@egovframework.MybatisUtils@isNotEmpty(insttCode)">
+		     AND   ( IT.INSTT_CODE =  #{insttCode}
+		     
+	                    OR  IT.UPPER_INSTT_CODE = #{upperInsttCode}
+	                    OR  IT.BSIS_INSTT_CODE = #{bsisInsttCode}
+	                    
+	               	)
+	         </if>
+	         
+		     <if test="@egovframework.MybatisUtils@isNotEmpty(insttGrad)">
+		     AND   ( IT.INSTT_GRAD IS NULL
+		     
+		     		 <if test="@egovframework.MybatisUtils@isNotEmpty(dtnt)">
+		                OR IT.INSTT_GRAD = #{dtnt}
+		             </if>
+		             <if test="@egovframework.MybatisUtils@isNotEmpty(elesch)">
+		                OR IT.INSTT_GRAD = #{elesch}
+		             </if>
+		             <if test="@egovframework.MybatisUtils@isNotEmpty(mskul)">    
+		                OR IT.INSTT_GRAD = #{mskul}
+		             </if> 
+		             <if test="@egovframework.MybatisUtils@isNotEmpty(hgschl)">
+		                OR IT.INSTT_GRAD = #{hgschl}
+		             </if>
+		             <if test="@egovframework.MybatisUtils@isNotEmpty(kndrgr)">     
+		                OR IT.INSTT_GRAD = #{kndrgr}
+		             </if>
+		             <if test="@egovframework.MybatisUtils@isNotEmpty(spcl)">
+		                OR IT.INSTT_GRAD = #{spcl}
+		             </if>
+		             
+		           )
+		     </if>
+		     
+		     <if test="@egovframework.MybatisUtils@isNotEmpty(sysTy)">
+		      AND   SM.SYS_TY = #{sysTy}
+		     </if>
+		     
+		     <if test="@egovframework.MybatisUtils@isNotEmpty(srchTxt)">
+		       AND  (  		 
+       				 SM.SYS_NM like '%'||#{srchTxt}||'%'
+              	  OR SM.SYS_TY like '%'||#{srchTxt}||'%' 
+		              	 
+		       )
+		    </if>
+			 
+			 ORDER BY   IT.INSTT_CODE, IT.INSTT_LEVEL DESC
+	</sql>
+	
+	<!--  시스템 리스트 -->
+	<select id="selectAuthorSmList" parameterType="map" resultType="egovMap">
+		<include refid="selectAuthorSmList"/> 
+	</select>
+	
+	<!--  시스템 페이징 -->
+	<select id="selectAuthorSmListPaging" parameterType="map" resultType="egovMap">
+		SELECT
+    		PL.*
+    	FROM (
+        	SELECT 
+        		PO.*
+        		,rownum as rsn
+			FROM (
+	    		<include refid="selectAuthorSmList" /> 
+				) PO
+		) PL
+		WHERE
+		<![CDATA[
+			rsn <= #{maxSn} 
+			AND rsn > #{minSn}
+		]]>
+	</select>
+	
+	<!--  시스템 페이징 카운트 -->
+	<select id="selectAuthorSmListPagingCount" parameterType="map" resultType="int">
+		SELECT 
+			COUNT(*)
+			FROM TAP_IM_INSTT_MANAGE IT, TAP_SM_SYS_MANAGE SM 
+			  WHERE IT.INSTT_CODE = SM.INSTT_CODE
+			  AND SM.SYS_STTUS = 'O'
+			
+			<if test='@egovframework.MybatisUtils@isEmpty(author) || author != "master"'>
+	         AND SM.SYS_ID NOT IN ('apple')
+	        </if>
+	        
+	        <if test="@egovframework.MybatisUtils@isNotEmpty(insttCode)">
+		     AND   ( IT.INSTT_CODE =  #{insttCode}
+		     
+	                    OR  IT.UPPER_INSTT_CODE = #{upperInsttCode}
+	                    OR  IT.BSIS_INSTT_CODE = #{bsisInsttCode}
+	                    
+	               	)
+	         </if>
+	         
+		     <if test="@egovframework.MybatisUtils@isNotEmpty(insttGrad)">
+		     AND   ( IT.INSTT_GRAD IS NULL
+		     
+		     		 <if test="@egovframework.MybatisUtils@isNotEmpty(dtnt)">
+		                OR IT.INSTT_GRAD = #{dtnt}
+		             </if>
+		             <if test="@egovframework.MybatisUtils@isNotEmpty(elesch)">
+		                OR IT.INSTT_GRAD = #{elesch}
+		             </if>
+		             <if test="@egovframework.MybatisUtils@isNotEmpty(mskul)">    
+		                OR IT.INSTT_GRAD = #{mskul}
+		             </if> 
+		             <if test="@egovframework.MybatisUtils@isNotEmpty(hgschl)">
+		                OR IT.INSTT_GRAD = #{hgschl}
+		             </if>
+		             <if test="@egovframework.MybatisUtils@isNotEmpty(kndrgr)">     
+		                OR IT.INSTT_GRAD = #{kndrgr}
+		             </if>
+		             <if test="@egovframework.MybatisUtils@isNotEmpty(spcl)">
+		                OR IT.INSTT_GRAD = #{spcl}
+		             </if>
+		             
+		           )
+		     </if>
+	        
+	        <if test="@egovframework.MybatisUtils@isNotEmpty(mberId)">
+		      AND SM.SYS_ID IN (
+					SELECT SYS_ID
+					  FROM TAP_AU_AUTHOR_MBER 
+					 WHERE MBER_ID = #{mberId}
+						   AND SYS_ID != 'apple'
+					   AND AUTHOR_CODE IN (1,2)	
+	        	)
+		     </if>
+		     
+		     <if test="@egovframework.MybatisUtils@isNotEmpty(sysTy)">
+		      AND   SM.SYS_TY = #{sysTy}
+		     </if>
+		     
+		     <if test="@egovframework.MybatisUtils@isNotEmpty(srchTxt)">
+		       AND  (  		 
+       				 SM.SYS_NM like '%'||#{srchTxt}||'%'
+              	  OR SM.SYS_TY like '%'||#{srchTxt}||'%' 
+		              	 
+		       )
+		    </if>
+			 
+			 ORDER BY   IT.INSTT_CODE, IT.INSTT_LEVEL DESC
+	</select>
+   <!--  총관리자 리스트 -->
+   
+	<!-- 권한코드 사용자 조회 (메뉴 관리) -->
+	<select id="selectAuthorListByCode" parameterType="map" resultType="egovMap">
+		SELECT 
+		       AU.AUTHOR_MBER_SEQ,
+		       AU.MBER_ID,
+		       AU.AUTHOR_CODE,
+		       AU.SYS_ID,
+		       MM.MBER_NM
+		  FROM 
+		       TAP_AU_AUTHOR_MBER AU, TAP_MM_MBER_MANAGE MM
+		 WHERE 1 = 1
+		   AND AU.MBER_ID = MM.MBER_ID
+		   AND AU.SYS_ID = #{sysId} 
+		   AND AU.AUTHOR_CODE = #{authorCode}	
+	</select>
+	
+	<!-- 메뉴 권한 리스트 조회-->
+	<select id="selectAuthorListForMenu" parameterType="map" resultType="egovMap">
+	  SELECT 
+			   A.SYS_ID,
+		       A.AUTHOR_CODE,
+		       <choose>
+		       	<when test="@egovframework.MybatisUtils@isNotEmpty(sysId) and sysId=='apple'">B.SYS_NM || ' ' || A.AUTHOR_NM AS AUTHOR_NM,</when>
+		       	<otherwise>A.AUTHOR_NM,</otherwise>
+		       </choose> 
+		       A.AUTHOR_SEQ
+		  FROM 
+		  	   TAP_AU_AUTHOR_MANAGE A, TAP_SM_SYS_MANAGE B
+		 WHERE 1 = 1
+		   AND A.SYS_ID = B.SYS_ID
+			<choose>
+				<when test="@egovframework.MybatisUtils@isNotEmpty(sysId) and sysId=='apple'">AND (A.SYS_ID = #{sysId} OR (A.SYS_ID != #{sysId} AND A.AUTHOR_CODE = 1) )</when>
+		       	<otherwise>AND A.SYS_ID = #{sysId}</otherwise>
+			</choose> 
+		   AND A.AUTHOR_SEQ NOT IN (SELECT AUTHOR_NO FROM TAP_MN_MENU_AUTHOR WHERE MENU_ID = #{menuId} AND AUTHOR_TY = 'A')
+	  ORDER BY A.AUTHOR_CODE
+	</select>	
+   
+</mapper>

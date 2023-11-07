@@ -1,0 +1,444 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="bc_batchjob">
+
+	<!-- 배치 작업 실행 여부 조회 -->
+	<select id="selectBatchJobManageInfo" resultType="egovMap">
+		SELECT
+			EXECUTION_SEQ,
+			CASE EXECUTION_AT WHEN 'Y' THEN 'RUNNING' WHEN 'N' THEN 'STOP' END AS EXECUTION_AT,
+			REG_ID,
+			REG_NM,
+			REG_DT,
+			UPDT_ID,
+			UPDT_NM,
+			UPDT_DT,
+			EXECUTION_TIME,
+			VOD_RTNT_PERIOD
+		FROM
+			TAP_SC_DATA_SCHDUL_MANAGE
+	</select>
+
+	<!-- 탈퇴 회원 조회 -->
+	<select id="selectWithdrawalMberList" parameterType="map" resultType="egovMap">
+		SELECT
+			MBER_ID
+		FROM
+			TAP_MM_MBER_HIST
+		WHERE
+			HIST_TY IN ('D', 'S')
+		GROUP BY
+			MBER_ID
+	</select>
+
+	<!-- 미접속 회원 (default 1년) 조회 -->
+	<select id="selectNotConnectedMberList" parameterType="map" resultType="TargetMberVO">
+		SELECT
+			A.MBER_ID,
+			TO_CHAR(A.CONECT_DATE, 'YYYY-MM-DD') AS CONECT_DATE,
+			A.DRMNT_DATE,
+			B.MBER_NM,
+			B.MBTLNUM,
+			C.MBER_TY,
+			C.INSTT_NM,
+			C.INSTT_CODE,
+			D.SYS_ID,
+			D.SYS_NM
+		FROM
+			(
+			SELECT
+				AC.CONECTR_ID AS MBER_ID,
+				MAX(AC.CONECT_DATE) AS CONECT_DATE,
+				MAX(TO_CHAR(ADD_MONTHS(AC.CONECT_DATE, +13), 'YYYY-MM-DD')) AS DRMNT_DATE
+			FROM
+				TAP_ST_MBER_ACCES AC,
+				V_TAP_MM_MBER_MANAGE MM,
+				TAP_MM_MBER_TY MT,
+				TAP_SM_SYS_MANAGE SM
+			WHERE
+				AC.CONECTR_ID = MM.MBER_ID
+			AND
+				MM.MBER_ID = MT.MBER_ID
+			AND
+				MT.INSTT_CODE = SM.INSTT_CODE
+			GROUP BY
+				AC.CONECTR_ID
+			) A,
+			TAP_MM_MBER_MANAGE B,
+			TAP_MM_MBER_TY C,
+			TAP_SM_SYS_MANAGE D
+		WHERE
+			A.MBER_ID = B.MBER_ID
+		AND
+			B.MBER_ID = C.MBER_ID
+		AND
+			C.INSTT_CODE = D.INSTT_CODE
+		AND
+			C.CONFM_YN = 'Y'
+		<![CDATA[
+		AND
+			A.DRMNT_DATE > SYSDATE
+		AND
+			A.MBER_ID NOT IN(
+				SELECT MBER_ID
+				FROM (
+					SELECT MBER_ID, MAX(DRMNT_DATE)
+					FROM TAP_AC_DRMNT_MBER_HIST
+					WHERE CONECT_DATE = A.CONECT_DATE
+					GROUP BY MBER_ID
+				)
+			)
+		AND
+			TO_CHAR(ADD_MONTHS(A.CONECT_DATE, +12)) < SYSDATE
+		]]>
+	</select>
+
+	<!-- 휴면 처리 대상 회원 조회 -->
+	<select id="selectDormantTargetMber" parameterType="map" resultType="TargetMberVO">
+		SELECT
+			A.MBER_ID,
+			TO_CHAR(A.CONECT_DATE, 'YYYY-MM-DD') AS CONECT_DATE,
+			A.DRMNT_DATE,
+			B.MBER_NM,
+			B.MBTLNUM,
+			C.MBER_TY,
+			C.INSTT_NM,
+			C.INSTT_CODE,
+			D.SYS_ID,
+			D.SYS_NM
+		FROM
+			(
+			SELECT
+				AC.CONECTR_ID AS MBER_ID,
+				MAX(AC.CONECT_DATE) AS CONECT_DATE,
+				MAX(TO_CHAR(ADD_MONTHS(AC.CONECT_DATE, +13), 'YYYY-MM-DD')) AS DRMNT_DATE
+			FROM
+				TAP_ST_MBER_ACCES AC,
+				V_TAP_MM_MBER_MANAGE MM,
+				TAP_MM_MBER_TY MT,
+				TAP_SM_SYS_MANAGE SM
+			WHERE
+				AC.CONECTR_ID = MM.MBER_ID
+			AND
+				MM.MBER_ID = MT.MBER_ID
+			AND
+				MT.INSTT_CODE = SM.INSTT_CODE
+			GROUP BY
+				AC.CONECTR_ID
+			) A,
+			TAP_MM_MBER_MANAGE B,
+			TAP_MM_MBER_TY C,
+			TAP_SM_SYS_MANAGE D
+		WHERE
+			A.MBER_ID = B.MBER_ID
+		AND
+			B.MBER_ID = C.MBER_ID
+		AND
+			C.INSTT_CODE = D.INSTT_CODE
+		AND
+			C.CONFM_YN = 'Y'
+		AND
+		<![CDATA[
+			TO_CHAR(ADD_MONTHS(A.CONECT_DATE, +13)) < SYSDATE
+		]]>
+	</select>
+
+	<!-- 보관기간이 지난 게시물 데이터 조회 -->
+	<select id="selectPastNttData" parameterType="map" resultType="egovMap">
+		SELECT
+			A.NTT_SN
+		FROM
+			(
+				SELECT
+					NTT_SN,
+					MAX(HIST_DATE) AS HIST_DATE
+				FROM
+					TCO_NA_NTT_HIST
+				GROUP BY
+					NTT_SN
+			) A,
+			TCO_NA_NTT_HIST B
+		WHERE
+			A.NTT_SN = B.NTT_SN
+		AND
+			A.HIST_DATE = B.HIST_DATE
+		AND
+			B.HIST_TY = 'D'
+		AND
+		<![CDATA[
+			B.HIST_DATE <= ( SELECT TO_CHAR(ADD_MONTHS(SYSDATE, -#{nttRetentionPeriod}), 'YYYY/MM/DD') FROM DUAL)
+		]]>
+	</select>
+
+	<delete id="deletePastNttData" parameterType="map">
+		DELETE FROM
+			TCO_NA_NTT_HIST
+		WHERE
+			NTT_SN = #{nttSn}
+	</delete>
+
+	<!-- 휴면 전환 대상 문자발송 이력 저장 -->
+	<insert id="insertDormantTargetMberHist" parameterType="TargetMberVO">
+		INSERT INTO
+			TAP_AC_DRMNT_MBER_HIST (
+ 				DRMNT_SN,
+       			MBER_ID,
+       			MBER_NM,
+       			MBER_TY,
+       			CONECT_DATE,
+       			DRMNT_DATE,
+       			MBTLNUM,
+       			INSTT_NM,
+       			INSTT_CODE,
+       			SYS_ID,
+       			SYS_NM,
+       			SMS_SUCCESS_AT
+       		) VALUES (
+       			SEQ_DRMNT_SN.NEXTVAL,
+       			#{mberId},
+       			#{mberNm},
+       			#{mberTy},
+       			TO_DATE(#{conectDate}, 'YYYY-MM-DD'),
+  				TO_DATE(#{drmntDate}, 'YYYY-MM-DD'),
+       			#{mbtlnum},
+       			#{insttNm},
+       			#{insttCode},
+       			#{sysId},
+       			#{sysNm},
+       			#{smsSuccessAt}
+       		)
+	</insert>
+
+	<!-- 휴면 처리  -->
+	<update id="updateDormant" parameterType="TargetMberVO">
+		UPDATE
+			TAP_MM_MBER_TY
+		SET
+			CONFM_YN = 'R'
+		WHERE
+			INSTT_CODE = #{insttCode}
+		AND
+			MBER_ID = #{mberId}
+	</update>
+
+	<!-- 배치 이력 시퀀스 조회 -->
+	<select id="selectJobSchedulSeq" resultType="int">
+		SELECT SEQ_BC_SCHDUL_SN.NEXTVAL FROM DUAL
+	</select>
+
+	<!-- 배치 이력 저장 -->
+	<insert id="insertBcSchedulHist" parameterType="JobSchedulerVO">
+		INSERT INTO
+			TAP_BC_SCHDUL_HIST(
+				SCHDUL_SN,
+				SCHDUL_VS,
+				SCHDUL_STAT,
+				START_DATE,
+				END_DATE
+			)
+			VALUES(
+				#{schdulSn},
+				#{schdulVs},
+				#{schdulStat},
+				TO_DATE(#{startDate}, 'YYYY-MM-DD HH24:MI:SS'),
+				TO_DATE(#{endDate}, 'YYYY-MM-DD HH24:MI:SS')
+			)
+	</insert>
+	<!-- 배치 잡 상세 이력 저장 -->
+	<insert id="insertBcSchedulDetailHist" parameterType="JobSchedulerDetailVO">
+		INSERT INTO
+			TAP_BC_SCHDUL_HIST_DETAIL(
+				SCHDUL_DETAIL_SN,
+				SCHDUL_DETAIL_ID,
+				SCHDUL_DETAIL_NM,
+				SCHDUL_DETAIL_STAT,
+				JOB_AT,
+				SCHDUL_SN,
+				SCHDUL_MSG
+			)
+			VALUES(
+				SEQ_BC_SCHDUL_DETAIL_SN.NEXTVAL,
+				#{schdulDetailId},
+				#{schdulDetailNm},
+				#{schdulDetailStat},
+				#{jobAt},
+				#{schdulSn},
+				#{schdulMsg}
+			)
+	</insert>
+
+	<!-- 배치 작업 중단 -->
+	<update id="stopBatchJob" parameterType="map">
+		UPDATE
+			TAP_SC_DATA_SCHDUL_MANAGE
+		SET
+			EXECUTION_AT = 'N',
+			UPDT_ID = #{updtId},
+			UPDT_NM = #{updtNm},
+			UPDT_DT = SYSDATE
+	</update>
+
+	<!-- 배치 작업 실행 -->
+	<update id="startBatchJob" parameterType="map">
+		UPDATE
+			TAP_SC_DATA_SCHDUL_MANAGE
+		SET
+			EXECUTION_AT = 'Y',
+			UPDT_ID = #{updtId},
+			UPDT_NM = #{updtNm},
+			UPDT_DT = SYSDATE
+	</update>
+
+	<!-- 배치 작업 정보 업데이트 -->
+	<update id="updateBatchJobInfo" parameterType="map">
+		UPDATE
+			TAP_SC_DATA_SCHDUL_MANAGE
+		SET
+			EXECUTION_TIME = #{executionTime},
+			UPDT_ID = #{updtId},
+			UPDT_NM = #{updtNm},
+			UPDT_DT = SYSDATE
+	</update>
+
+	<!-- 개인정보 제공 미동의 회원 (default 2년) 조회 -->
+	<select id="selectNotArgMberList" parameterType="map" resultType="egovMap">
+		SELECT
+			MBER_ID
+		FROM
+			TAP_MM_AGRE_HIST
+		WHERE
+			HIST_TY IN ('I', 'U')
+		AND
+		<![CDATA[
+			TO_CHAR(ADD_MONTHS(HIST_DT, +12)) < SYSDATE
+		]]>
+		GROUP BY
+			MBER_ID
+	</select>
+
+	<!-- 동영상 파일 삭제 대상 조회 -->
+	<select id="selecVodDeleteTarget" parameterType="map" resultType="egovMap">
+		SELECT
+			BS.BBS_TY,
+			NF.FILE_SN,
+			NF.FILE_NM,
+			NF.FLPTH,
+			NF.FILE_TY,
+			NT.REG_DT
+		FROM
+			TAP_BM_BBS_MANAGE BS,
+			TCO_NA_NTT_MANAGE NT,
+			TCO_NA_NTT_FILE NF
+		WHERE
+			BS.BBS_ID = NT.BBS_ID
+		AND
+			NT.NTT_SN = NF.NTT_SN
+		AND
+			BS.BBS_TY = 'VOD'
+		AND
+			NF.FILE_TY = 'vod'
+		AND
+		<![CDATA[
+			NT.REG_DT <= ( SELECT TO_CHAR(ADD_MONTHS(SYSDATE, -#{vodRtntPeriod}), 'YYYY/MM/DD') FROM DUAL)
+		]]>
+	</select>
+
+
+	<!-- 					           배치 스케쥴러 이력 관리자 화면 시작
+	==================================================================================
+	-->
+
+	<!-- 배치 프로그램 이력 조회 -->
+	<sql id ="selectBatchJobHist">
+		SELECT
+			SCHDUL_SN,
+	        SCHDUL_VS,
+	        CASE SCHDUL_STAT WHEN 'COMPLETED' THEN '완료' WHEN 'FAILED' THEN '실패' END AS SCHDUL_STAT,
+	        TO_CHAR(START_DATE, 'YYYY-MM-DD HH24:MI:SS') AS START_DATE,
+	        TO_CHAR(END_DATE, 'YYYY-MM-DD HH24:MI:SS') AS END_DATE
+		FROM
+			TAP_BC_SCHDUL_HIST
+		WHERE
+			1=1
+		<include refid="searchBatchJobHist" />
+		ORDER BY
+			SCHDUL_SN DESC
+	</sql>
+	<!-- 검색 조건 -->
+	<sql id ="searchBatchJobHist">
+		<if test="@egovframework.MybatisUtils@isNotEmpty(schdulStat)">
+		AND
+			SCHDUL_STAT = #{schdulStat}
+         </if>
+		<if test="@egovframework.MybatisUtils@isNotEmpty(beginDt)">
+		  <![CDATA[
+			  AND (TO_CHAR(START_DATE,'YYYY/MM/DD') BETWEEN TO_DATE(#{beginDt},'YYYY/MM/DD') and TO_DATE(#{endDt},'YYYY/MM/DD')
+			    OR TO_CHAR(START_DATE,'YYYY/MM/DD') BETWEEN TO_DATE(#{beginDt},'YYYY/MM/DD') and TO_DATE(#{endDt},'YYYY/MM/DD'))
+		  ]]>
+	     </if>
+	</sql>
+
+	<!-- 배치 프로그램 이력 (페이징) -->
+    <select id="selectBatchJobHistPaging" parameterType="map" resultType="egovMap">
+    	SELECT
+    		PL.*
+    	FROM (
+        	SELECT
+        		PO.*
+        		,rownum as rsn
+			FROM (
+	    		<include refid="selectBatchJobHist" />
+				) PO
+		) PL
+		WHERE
+		<![CDATA[
+			rsn <= #{maxSn}
+			AND rsn > #{minSn}
+		]]>
+    </select>
+
+    <!-- 배치 프로그램 이력 (페이징 전체 카운트) -->
+    <select id="selectBatchJobHistPagingCount" parameterType="map" resultType="int">
+    	SELECT
+    		COUNT(*)
+    	FROM
+			TAP_BC_SCHDUL_HIST
+		WHERE
+			1=1
+		<include refid="searchBatchJobHist" />
+		ORDER BY
+			SCHDUL_SN DESC
+    </select>
+    <!-- 배치 프로그램 상세 이력 -->
+    <select id="selectBatchJobHistDetail" parameterType="map" resultMap="batchJobResult">
+    	SELECT
+    		SCHDUL_DETAIL_SN,
+			SCHDUL_DETAIL_ID,
+			SCHDUL_DETAIL_NM,
+			SCHDUL_DETAIL_STAT,
+			JOB_AT,
+			SCHDUL_SN,
+			SCHDUL_MSG
+		FROM
+			TAP_BC_SCHDUL_HIST_DETAIL
+		WHERE
+			SCHDUL_SN = #{schdulSn}
+    </select>
+
+	<resultMap type="egovMap" id="batchJobResult">
+		<result property="SCHDUL_MSG" column="SCHDUL_MSG" javaType="java.lang.String" jdbcType="CLOB" />
+	</resultMap>
+
+	<!-- 동영상 파일 보존기간 설정 -->
+	<update id="updateVodRtnt" parameterType="map">
+		UPDATE
+			TAP_SC_DATA_SCHDUL_MANAGE
+		SET
+			VOD_RTNT_PERIOD = #{vodRtntPeriod}
+		WHERE
+			EXECUTION_SEQ = #{executionSeq}
+	</update>
+
+</mapper>
+

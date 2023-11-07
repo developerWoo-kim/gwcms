@@ -1,0 +1,108 @@
+@charset "utf-8"; 
+ 
+#container {overflow: hidden;}
+.main_wrap { width: calc(100% - 14rem); margin-left: 14rem; padding: 3rem 5rem 0 4rem;}
+
+/* 메인 탭 스타일*/
+div[class^="tab_st"] { margin-bottom: 2rem !important;}
+.tab_st1 li a { padding:1rem !important; }
+.tab_st1 li a:after { right:1rem !important; }
+.tab_st1 li.on a { border-radius: 0 !important;}
+
+/* 검색박스 */ 
+.top_cont::after {content: ""; display: block; clear: both;}
+.top_cont p {width: calc(100% - 21rem); position:relative; padding-left: 1.2rem; color:#000; font-weight:500; font-size:0.8rem; float: left; line-height: 2.5rem;}
+.top_cont p:before {content:"\e9a6"; position:absolute; left:0; top: 0; display:block; font-family:'xeicon'; color:#2c51aa; font-size:1rem;}
+
+.top_cont .search_box { position: relative; display:flex; width: 20rem; border-radius:2rem; border:1px solid #0076dd; background:#fff; float: right; }
+.top_cont .inputText { flex:1; padding:0 1rem; max-width: calc(100% - 4rem); height: 2.5rem; line-height: 2.5rem; background: none; border:0; transition: all .15s; -webkit-transition: all .15s;}
+.top_cont .inputText::placeholder { color: #000;}
+.top_cont .btnSearch { min-width: 4rem; height:2.5rem; line-height:2.4rem; font-size:0.8rem; border-radius:2rem; border: 0; font-weight:600; background: #0076dd; color: #fff; padding: 0 1.2rem; transition: all .15s; -webkit-transition: all .15s; }
+.top_cont .btnSearch:hover { background: #132a6a; }
+.top_cont .btnSearch i { margin-right: .4rem; font-size: 1.2rem; vertical-align: middle;}
+ 
+/* 학교리스트 */ 
+.cont_wrap .schl_list {width: calc(100% + 2rem); margin: 1rem 0 3rem -1rem; font-size: 0;}
+.cont_wrap .schl_list > li { display: inline-block; width: 50%; padding: 1rem; vertical-align: top; }
+.cont_wrap .schl_list > li .schl_wrap { position: relative; display: block; border-radius: 1rem; border: 1px solid #e0e0e0; padding: 1.5rem; transition: all .15s; -webkit-transition: all .15s;}
+.cont_wrap .schl_list > li .schl_wrap:hover { border: 1px solid #0076dd; box-shadow:10px 10px 0 rgba(197,201,214,.4);}
+.cont_wrap .schl_list > li .schl_wrap::after { display: block; content: ""; clear: both;}
+.cont_wrap .schl_list > li .schl_wrap .img { width: 12rem; height: 10rem; overflow: hidden; border-radius: .5rem; float: left; }
+.cont_wrap .schl_list > li .schl_wrap .img img {width:100%; height:100%;}
+.cont_wrap .schl_list > li .schl_wrap .reser_btn { position: absolute; top: 1.5rem; right: 1.5rem; font-size: 0.8rem; border-radius: 1rem; display: inline-block; background: #e2e3e9; color: #000; line-height: 2rem; padding: 0 1rem 0 2rem;transition: all .15s; -webkit-transition: all .15s;}
+.cont_wrap .schl_list > li .schl_wrap:hover .reser_btn { background: #0076dd; color: #fff; }
+.cont_wrap .schl_list > li .schl_wrap .reser_btn::before { content: "\e929"; font-family: 'xeicon'; color: #000; font-size: 1.2rem; position: absolute; left: .8rem; top: 0;}
+.cont_wrap .schl_list > li .schl_wrap:hover .reser_btn::before { color: #fff; }
+.cont_wrap .schl_list > li .schl_wrap .txt { width: calc(100% - 14rem); margin-left: 1.2rem; float: left;}
+.cont_wrap .schl_list > li .schl_wrap .txt h4 { font-size: 0.95rem; color: #000; font-weight: 600; margin: .3rem 0 .9rem;}
+.cont_wrap .schl_list > li .schl_wrap .txt .schl_dtl li {position: relative; padding-left: .5rem; font-size: 0.75rem; color: #555;}
+.cont_wrap .schl_list > li .schl_wrap .txt .schl_dtl li + li { margin: .25rem 0;}
+.cont_wrap .schl_list > li .schl_wrap .txt .schl_dtl li:before { content: ""; display: block; width: 5px; height: 5px; border-radius: 50%; background: #898989; position: absolute; top: .25rem; left: 0;}
+.cont_wrap .schl_list > li .schl_wrap .txt .schl_dtl li span {color: #333; font-weight: 600;}
+
+/* 반응형 */
+@media screen and (max-width:1740px){ 
+    .cont_wrap .schl_list > li { width: 100%; }
+}
+@media screen and (max-width:1420px){ 
+    /* 검색박스 */  
+    .top_cont p {width: 100%; }
+    .top_cont .search_box {float: left;}
+}
+@media screen and (max-width:1200px){ 
+    /* 메인 탭 스타일*/
+    .tab_st1 li a { padding: .75rem 1rem !important; }
+
+    .main_wrap { padding: 2rem 2rem 0 2rem;}
+ 
+}
+
+@media screen and (max-width:1024px){ 	
+    div[class^="tab_st"] { margin-bottom: 1rem !important;}
+
+    .main_wrap { width:100%; padding: 1rem; margin-left: 0;}
+
+
+    /* 학교리스트 */  
+    .cont_wrap .schl_list > li { padding: .5rem 1rem; }
+    .cont_wrap .schl_list > li > .schl_wrap { padding: 1rem; transition: all .15s; -webkit-transition: all .15s;}
+    .cont_wrap .schl_list > li > .schl_wrap:hover { box-shadow:5px 5px 0 rgba(197,201,214,.4);}
+    .cont_wrap .schl_list > li > .schl_wrap .reser_btn { top: 1rem; right: 1rem; }
+
+}
+
+@media screen and (max-width:860px){ 	
+     
+}
+
+@media screen and (max-width:768px){ 	
+    /* 학교리스트 */ 
+    .cont_wrap .schl_list { margin: 1rem 0 1rem -1rem; }
+}
+
+@media screen and (max-width:560px){	
+    /* 학교리스트 */  
+    .cont_wrap .schl_list > li > .schl_wrap .img { width: 100%; height: 8rem; position:relative; background: rgba(0,0,0,.2)} 
+    .cont_wrap .schl_list > li > .schl_wrap .img img { width: auto; height: 100%; position:absolute; top:0; left:50%; transform:translateX(-50%); -webkit-transform:translateX(-50%); } 
+    .cont_wrap .schl_list > li > .schl_wrap .txt { width: 100%; margin-left: 0; }
+    .cont_wrap .schl_list > li > .schl_wrap .txt h4 {font-size: 0.9rem; color: #000; font-weight: 600; margin: .6rem 0;} 
+    .cont_wrap .schl_list > li > .schl_wrap .txt .schl_dtl li + li { margin: .15rem 0;} 
+    .cont_wrap .schl_list > li > .schl_wrap .reser_btn { top: 9.5rem; line-height: 1.5rem; padding: 0 .5rem 0 1.5rem; font-size: 0.75rem; } 
+    .cont_wrap .schl_list > li > .schl_wrap .reser_btn::before {  font-size: 1rem; left: .5rem; } 
+}
+
+@media screen and (max-width:440px){
+    /* 검색박스 */
+    .top_cont .search_box {width: 100%; margin-top:.5rem;}  
+    .top_cont .inputText { max-width: calc(100% - 4.75rem); }
+    .top_cont .btnSearch { padding: 0 .8rem; } 
+    .top_cont p {line-height:1.1rem; }
+}
+
+@media screen and (max-width:360px){ 
+   
+}
+
+@media screen and (max-width:320px){ 
+
+}

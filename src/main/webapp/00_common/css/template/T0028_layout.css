@@ -1,0 +1,91 @@
+
+/* 통합검색 */
+.totalSearch { position:relative; width: 11rem; height: 2rem; border-radius: 1rem; overflow: hidden; background:#eaeaea; }
+.totalSearch input { padding: 0 2.25rem 0 .5rem; width: 100%; height: 2rem; line-height: 2rem; font-size: 0.6rem; border: none; font-family: '돋움', Dotum; background:none;}
+.totalSearch button { position: absolute; top:0; right:0; padding: 0; background:#ff7a00; width: 2rem; height: 2rem; line-height:38px; color:#fff; border: none; border-radius: 50%; font-size:.9rem; }
+.totalSearch input::-webkit-input-placeholder { color: #555; }
+.totalSearch input::placeholder { color: #555; }
+
+#header:before { background:#118b7e; } /* header 하단 라인 */
+
+/* gnb color */
+/* gnb : default */
+#gnb{ background:#118b7e; }/* gnb 배경색 */
+#gnb .depth01 > ul > li.on > a{ color:#fff; } /* 1차메뉴 active 텍스트 색상 */
+#gnb .depth01 > ul > li > a{ color:#fff; }/* 1차메뉴 텍스트 색상 */
+#gnb .depth01 > ul > li > a:before{ background:#118b7e;} /* 1차메뉴 active underline 색상*/
+#gnb .depth01 > ul > li > a > span:before{background:#41a298; } /* 1차메뉴 active 그림자 색상 */
+#gnb .depth02 > ul > li > a{ color:#111; }/* 2차메뉴 텍스트 색상 */
+/* gnb : fullDown */
+#nav.fullDown #gnb:before { height:1px; background:#118b7e; } /* 메뉴하단라인 */
+#nav.fullDown .depth02 > ul > li > a:hover,
+#nav.fullDown .depth02 > ul > li > a:focus,
+#nav.fullDown .depth02 > ul > li.active > a{ color:#fff; background:#118b7e; }/* 2차메뉴 active 효과 */
+#nav.fullDown .active .depth01 > ul > li > a{color: #fff;}
+/* gnb : oneDown */
+#nav.oneDown #gnb:before { height:1px; background:#118b7e; } /* 메뉴하단라인 */
+#nav.oneDown .depth02{ border:2px solid #118b7e;}/* 2차메뉴 border-color */
+#nav.oneDown .depth02 > ul > li > a:hover,
+#nav.oneDown .depth02 > ul > li > a:focus,
+#nav.oneDown .depth02 > ul > li.dep.active > a{ color:#118b7e; font-weight:600; }/* 2차메뉴 active 텍스트 색상 */
+/* gnb : oneFull */
+#nav.oneFull #gnb:before { height:1px; background:#d2d2d2; } /* 메뉴하단라인 */
+#nav.oneFull .depth02 > ul > li > a:hover,
+#nav.oneFull .depth02 > ul > li > a:focus,
+#nav.oneFull .depth02 > ul > li.dep.active > a{ color:#fff; background:#118b7e; }/* 2차메뉴 active 배경색 */
+#nav.oneFull .depth03 > ul > li > a:before{background:#118b7e;}/* 3차메뉴 블릿 색상 */
+
+/* footer */
+#footer { border-top:1px solid #e3e3e3; color:#222; background: #e3e3e3; }/* footer 배경, 폰트색상, border */
+.footer_link li a {color:#666;}
+.footer_link li a:before{ border-left:1px solid #a9a9a9; }/* footer link 영역 라인색상 */
+.footer_link li a strong { color: #2497dc; }/* footer link 강조 폰트색상 */
+#footer .copyright { color:#222; }/* copyright 폰트색상 */
+#footer .btn_top{ background:#ec6b31; color:#fff;}/* footer 상단이동 버튼 색상 */
+
+/* 방문자수 */
+.visitant{background:#fff; }
+.visitant ul li{ color:#000;}
+.visitant ul li strong { color:#118b7e;}
+.visitant ul li + li:before{ border-left:1px solid #ccc;}
+
+/* moblie  */
+#header .mBtn.mSearch{ background: #15b498; color:#fff;}/* 모바일 검색 버튼 */
+#header .mBtn.mNav{ background: #ec6b31; color:#fff;}/* 모바일 메뉴 버튼 */
+
+/* moblie navigation  */
+#mNav #mNavClose { border-radius:.5rem; color:#fff; background:#ec6b31;}/* 모바일 메뉴 닫기 버튼 */
+#mgnb .depth02{ background:#f7faff;}/* 2차메뉴 배경 */
+#mgnb .depth02 > ul > li:before{ background:#ec6b31;}/* 2차메뉴 블릿 색상*/
+#mgnb .depth03{ border-top:2px solid #ec6b31;}/* 3차메뉴 border 색상 */
+#mgnb .depth01 > ul > li.active > a { color: #fff; background-color:#ec6b31; }/* 1차메뉴 active */
+#mgnb .depth02 > ul > li.active > a { color: #ec6b31; }/* 2차메뉴 active */
+
+/* moblie search  */
+#mSearch .btnSearch { background: #15b498; }
+#mSearch .btnClose { background:#15b498;  }
+
+/* lnb */
+#lnb h2{ color:#fff;background: #118b7e;
+    background: -moz-linear-gradient(90deg, #88c5be 0%, #118b7e 100%);
+    background: -webkit-linear-gradient(90deg, #88c5be 0%, #118b7e 100%);
+    background: linear-gradient(90deg, #88c5be 0%, #118b7e 100%); }
+/* lnb:active */
+#lnb .dep01 > li > a:before{ background:#e7f3f2;}
+#lnb .dep01 > li.active > a{ border-color:#118b7e;}
+#lnb .dep02 > li > a:before{ background:#118b7e;}
+#lnb .dep02 > li.active > a{ color:#118b7e; }
+#lnb .dep03 { border-top:2px solid #118b7e;}
+#lnb ul > li > a:hover,
+#lnb ul > li > a:focus{color:#118b7e;}
+
+/* location : snsBox */
+.snsBox button.active,
+.snsBox button:hover,
+.snsBox button:focus{ color:#fff; border-color:#118b7e; background:#118b7e;}
+
+@media screen and (max-width:1024px){
+    /* moblie header */
+    #header{border-bottom: 4px solid #118b7e;}
+
+}

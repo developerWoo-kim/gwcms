@@ -1,0 +1,95 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="nh_nttanhist">
+
+	<!-- 사용자 조회 -->
+	<sql id="selectNahList">
+		SELECT 
+				 NA.BBS_ID
+				,BB.SYS_ID
+				,BB.BBS_SJ
+				,NA.NTT_SN
+				,NN.NTT_SJ
+				,NA.ANSWER_SN
+				,NA.UPPER_ANSWER_SN
+				,NA.ANSWER_SJ
+				,NA.ANSWER_CN
+				,NA.ANSWER_REG_ID
+				,NA.ANSWER_REG_NM
+				,NA.ANSWER_REG_IP
+				,NA.ANSWER_REG_DT
+				,NA.ANSWER_OPPS_CO
+				,NA.ANSWER_APPRVL_CO
+				,NA.ANSWER_STTUS
+				,NA.ANSWER_USE_AT
+				,NA.SECRET_AT
+				,NA.HIST_SEQ
+				,NA.HIST_GROUP_SEQ
+				,NA.HIST_USER_ID
+				,NA.HIST_USER_NM
+				,NA.HIST_USER_IP
+				,NA.HIST_DATE
+				,NA.HIST_TY
+				
+		FROM TCO_NA_NTT_ANHIST NA, TCO_NA_NTT_MANAGE NN, TAP_BM_BBS_MANAGE BB 	
+		WHERE NA.BBS_ID = BB.BBS_ID
+		AND   NA.NTT_SN = NN.NTT_SN
+		AND   BB.SYS_ID = #{sys_id}
+			<if test="@egovframework.MybatisUtils@isNotEmpty(srchTxt)">
+			   	AND (NA.ANSWER_SJ LIKE '%'||#{srchTxt}||'%' OR NA.HIST_USER_ID LIKE '%'||#{srchTxt}||'%' OR NA.HIST_USER_NM LIKE '%'||#{srchTxt}||'%')
+			</if>
+			
+		   <if test="@egovframework.MybatisUtils@isNotEmpty(beginDt)">
+			  <![CDATA[
+				AND TO_CHAR(NA.HIST_DATE, 'YYYY/MM/DD') >= #{beginDt}
+				AND TO_CHAR(NA.HIST_DATE, 'YYYY/MM/DD') <=  #{endDt}
+			  ]]>
+		  </if>
+		  
+	</sql>
+	
+    <!-- 메뉴 히스트 리스트 조회(페이징) -->
+    <select id="selectNahListPaging" parameterType="map" resultType="egovMap">
+    	SELECT
+    		PL.*
+    	FROM (
+        	SELECT 
+        		PO.*
+        		,rownum as rsn
+			FROM (
+	    		<include refid="selectNahList" /> 
+				) PO
+		) PL
+		WHERE
+		<![CDATA[
+			rsn <= #{maxSn} 
+			AND rsn > #{minSn}
+		]]>
+    </select>
+    
+    <!-- 사용자 리스트 조회 (페이징 전체 카운트) -->
+    <select id="selectNahListPagingCount" parameterType="map" resultType="int">
+    
+    	SELECT
+	    	      COUNT(*)
+	   
+	    FROM TCO_NA_NTT_ANHIST NA, TAP_BM_BBS_MANAGE BB 	
+		WHERE NA.BBS_ID = BB.BBS_ID
+		AND   BB.SYS_ID = #{sys_id}
+		
+			<if test="@egovframework.MybatisUtils@isNotEmpty(srchTxt)">
+			   	AND (NA.ANSWER_SJ LIKE '%'||#{srchTxt}||'%' OR NA.HIST_USER_ID LIKE '%'||#{srchTxt}||'%' OR NA.HIST_USER_NM LIKE '%'||#{srchTxt}||'%')
+			</if>
+			
+		   <if test="@egovframework.MybatisUtils@isNotEmpty(beginDt)">
+			  <![CDATA[
+				AND TO_CHAR(NA.HIST_DATE, 'YYYY/MM/DD') >= #{beginDt}
+				AND TO_CHAR(NA.HIST_DATE, 'YYYY/MM/DD') <=  #{endDt}
+			  ]]>
+		  </if>
+		  
+    </select>
+    
+
+</mapper>

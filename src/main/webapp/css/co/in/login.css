@@ -1,0 +1,56 @@
+@charset "utf-8";
+/* CSS Document */
+	
+/* 폰트 */
+@font-face {
+    font-family:'Nanum';
+    src:url('../font/nanum.eot');
+    src:url('../font/nanum.eot?#iefix') format('embedded-opentype'), url('../font/nanum.woff') format('woff'), url('../font/nanum.ttf') format('truetype');
+    font-weight:normal;
+    font-style:normal; 
+}
+@font-face {
+    font-family:'NanumBold';
+    src:url('../font/nanum_bold.eot');
+    src:url('../font/nanum_bold.eot?#iefix') format('embedded-opentype'), url('../font/nanum_bold.woff') format('woff'), url('../font/nanum_bold.ttf') format('truetype');
+    font-weight:bold;
+    font-style:normal; 
+}
+
+input:focus, textarea:focus { outline-style:none !important;}
+body{font-family:'돋움',Dotum,'굴림',Gulim,Helvetica,sans-serif; background-color:#579cd3;}
+#wrap { min-width:1020px;}
+/*로그인박스*/
+.login_area { position:relative; top:130px; width:350px; margin:0 auto;}
+	/*circle*/
+	.login_area p {width:200px; height:200px; background-color:#0662a3; -webkit-animation:circle 3s .5s infinite cubic-bezier(1,.015,.295,1) alternate; -o-animation:circle 3s .5s infinite cubic-bezier(1,.015,.295,1.225) alternate; -moz-animation:circle 3s .5s infinite cubic-bezier(1,.015,.295,1.225) alternate; animation:circle 3s .5s infinite cubic-bezier(1,.015,.295,1.225) alternate; margin:auto; text-align:center;}
+	.login_area p.logo img { width:127px; height:87px; padding-top:25%;}
+	/*로그인*/
+	.login_box { position:relative; top:100px; min-width:300px;}
+	.login_box ul { list-style-type:none; margin:0 auto; padding:0; text-align:center}
+	.login_box ul li { height:37px; padding-top:13px; margin-bottom:10px; border-radius:15px; background-color:#fff; box-shadow:inset 1px 1px 2px #666;}
+	.login_box ul li input { width:300px; border:0 !important; font-family:'NanumBold'; font-size:16px;}
+	.login_box a { height:50px; line-height:48px; background-color:#555e6d; border-radius:15px; font-family:'NanumBold'; font-size:16px; color:#fff!important; display:block; text-decoration:none; text-align:center }
+	.login_box a:hover{ box-shadow:inset 1px 2px 2px #333;}
+
+
+@media (max-width:800px) {
+	.login_area, .login_box { -webkit-transition:all 0.3s ease; -moz-transition:all 0.3s ease; -ms-transition:all 0.3s ease; transition:all 0.3s ease;}	
+	#wrap{ min-width:300px; width:100%}
+
+}
+
+
+@media (max-width:560px) {
+	
+	/*로그인박스*/
+	.login_area { width:100%;}
+	.login_area p {width:150px; height:150px; }/*circle*/
+	.login_area p.logo img { width:93px; height:70px;}
+		/*로그인*/
+		.login_box { width:90%; margin:0 auto }
+		.login_box ul li { height:30px; padding-top:10px; }
+		.login_box ul li input { width:90%; font-size:14px; -webkit-transition:all 0.3s ease; -moz-transition:all 0.3s ease; -ms-transition:all 0.3s ease; transition:all 0.3s ease }
+		.login_box a { height:40px; line-height:40px; font-size:14px; }
+	
+}

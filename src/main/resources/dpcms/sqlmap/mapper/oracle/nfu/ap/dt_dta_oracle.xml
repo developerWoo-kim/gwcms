@@ -1,0 +1,244 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="dt_dta">
+
+	<!-- 자료관리관리 시스템  리스트 sql-->
+	<sql id ="selectDtaSmList">
+	  SELECT   IT.INSTT_CODE
+	          ,IT.INSTT_NM
+	          ,IT.INSTT_TY
+	          ,SM.SYS_ID
+	          ,SM.SYS_NM
+	          ,SM.SYS_TY
+              ,( <include refid="selectPopupStats" />  ) AS TOTAL_CNT
+	    FROM   TAP_IM_INSTT_MANAGE IT, TAP_SM_SYS_MANAGE SM
+	   WHERE   IT.INSTT_CODE = SM.INSTT_CODE
+         AND   SM.SYS_STTUS = 'O'
+	   <include refid="srchDtaSmList" /> 
+	ORDER BY   IT.INSTT_CODE, IT.INSTT_LEVEL DESC
+	</sql>
+	
+	<!--  자료관리관리 시스템  리스트 자료관리 통계 sql-->
+	<sql id ="selectPopupStats">
+		SELECT COUNT(*)
+          FROM TAP_DT_DTA_MANAGER DT
+         WHERE 1=1  
+           AND DT.SYS_ID = SM.SYS_ID
+	</sql>
+	
+	 <!--  자료관리관리 시스템  리스트 검색조건 sql-->
+	<sql id ="srchDtaSmList">
+	
+        <if test='@egovframework.MybatisUtils@isEmpty(author) || author != "master"'>
+         AND SM.SYS_ID NOT IN ('apple')
+        </if>
+        
+        <if test="@egovframework.MybatisUtils@isNotEmpty(insttCode)">
+	     AND   ( IT.INSTT_CODE =  #{insttCode}
+	     
+                    OR  IT.UPPER_INSTT_CODE = #{upperInsttCode}
+                    OR  IT.BSIS_INSTT_CODE = #{bsisInsttCode}
+                    
+               	)
+         </if>
+	    
+	     <if test="@egovframework.MybatisUtils@isNotEmpty(srchDtaSmTxt)">
+	       AND  (  		 
+	       				 SM.SYS_NM like '%'||#{srchDtaSmTxt}||'%'
+	              	  OR SM.SYS_TY like '%'||#{srchDtaSmTxt}||'%' 
+	              	 
+	            )
+	    </if>
+	    
+	</sql>
+	
+	<!--  자료관리관리 시스템  리스트  -->
+    <select id="selectDtaSmList" parameterType="egovMap" resultType="egovMap">
+	 	<include refid="selectDtaSmList" /> 
+	 </select>
+	 	
+	<!-- 자료관리관리 시스템  리스트(페이징) -->
+    <select id="selectDtaSmListPaging" parameterType="map" resultType="egovMap">
+    	SELECT
+    		PL.*
+    	FROM (
+        	SELECT 
+        		PO.*
+        		,rownum as rsn
+			FROM (
+	    		<include refid="selectDtaSmList" /> 
+				) PO
+		) PL
+		WHERE
+		<![CDATA[
+			rsn <= #{maxSn} 
+			AND rsn > #{minSn}
+		]]>
+    </select>
+    
+    <!-- 자료관리관리 시스템  리스트 (페이징 전체 카운트) -->
+    <select id="selectDtaSmListPagingCount" parameterType="map" resultType="int">
+    	SELECT   COUNT(*)
+	      FROM   TAP_IM_INSTT_MANAGE IT, TAP_SM_SYS_MANAGE SM
+	     WHERE   IT.INSTT_CODE = SM.INSTT_CODE
+           AND   SM.SYS_STTUS = 'O'
+	   <include refid="srchDtaSmList" /> 
+	  ORDER BY   IT.INSTT_CODE, IT.INSTT_LEVEL DESC
+    </select>
+    
+	
+	<!--자료관리자 메뉴리스트 -->
+    <select id="selectDtaMenuList" parameterType="map" resultType="egovMap">
+   	<![CDATA[
+	    SELECT  MENU_ID
+		       ,MENU_NM
+		       ,MENU_LEVEL
+		       ,USE_AT
+		       ,UPPER_MENU_ID
+		       ,UPPER_MENU_NM
+		FROM TAP_MN_MENU_MANAGE
+		WHERE SYS_ID = #{sysId}	
+		ORDER BY SORT_ORDR
+	]]>
+    </select>
+    
+    <!-- 자료관리관리  리스트 sql-->
+	<sql id ="selectDtaList">
+		<![CDATA[
+	    SELECT  A.DTA_SN
+		       ,A.SYS_ID
+		       ,A.DTA_PSITN
+		       ,A.DTA_NM
+		       ,A.DTA_TELNO
+		       ,A.MENU_ID
+		       ,B.MENU_NM
+		       ,B.MENU_TY
+		       ,C.SYS_NM
+		FROM TAP_DT_DTA_MANAGER A, 
+			TAP_MN_MENU_MANAGE B, 
+			TAP_SM_SYS_MANAGE C
+		WHERE A.MENU_ID = B.MENU_ID 
+			AND A.SYS_ID = C.SYS_ID
+			AND A.SYS_ID = #{sysId}
+	]]>	
+		<if test="@egovframework.MybatisUtils@isNotEmpty(srchMenuNm)">
+			AND B.MENU_NM like '%'||#{srchMenuNm}||'%'
+		</if>
+		<if test="@egovframework.MybatisUtils@isNotEmpty(menuId)">
+			AND B.MENU_ID = #{menuId}
+		</if>
+	<![CDATA[
+		ORDER BY A.DTA_SN DESC
+	]]>	
+	</sql>
+	
+	
+	<!--자료관리자 리스트 -->
+    <select id="selectDtaList" parameterType="map" resultType="egovMap">
+   		<include refid="selectDtaList" /> 
+    </select>
+    
+    <!-- 자료관리관리  리스트(페이징) -->
+    <select id="selectDtaListPaging" parameterType="map" resultType="egovMap">
+    	SELECT
+    		PL.*
+    	FROM (
+        	SELECT 
+        		PO.*
+        		,rownum as rsn
+			FROM (
+	    		<include refid="selectDtaList" /> 
+				) PO
+		) PL
+		WHERE
+		<![CDATA[
+			rsn <= #{maxSn} 
+			AND rsn > #{minSn}
+		]]>
+    </select>
+    
+    <!-- 자료관리관리  리스트 (페이징 전체 카운트) -->
+    <select id="selectDtaListPagingCount" parameterType="map" resultType="int">
+    	SELECT   COUNT(*)
+	      FROM  ( <include refid="selectDtaList" /> )
+    </select>
+    
+    <!-- 사이트 메뉴별 자료관리자 리스트 -->
+    <select id="selectDtaListBySite" parameterType="map" resultType="egovMap">
+   	<![CDATA[
+	    SELECT  DTA_SN
+		       ,SYS_ID
+		       ,DTA_PSITN
+		       ,DTA_NM
+		       ,DTA_TELNO
+		       ,MENU_ID
+		FROM TAP_DT_DTA_MANAGER
+		WHERE MENU_ID = #{menuId}
+		ORDER BY DTA_SN DESC
+	]]>	
+    </select>
+    
+	<!--자료관리자 상세조회 -->
+    <select id="selectDtaInfo" parameterType="map" resultType="egovMap">
+   	<![CDATA[
+       	SELECT A.DTA_SN
+		       ,A.SYS_ID
+		       ,A.DTA_PSITN
+		       ,A.DTA_NM
+		       ,A.DTA_TELNO
+		       ,A.MENU_ID
+		       ,B.MENU_NM
+		       ,B.MENU_TY
+		       ,C.SYS_NM
+	   	FROM TAP_DT_DTA_MANAGER A, 
+	   		TAP_MN_MENU_MANAGE B, 
+	   		TAP_SM_SYS_MANAGE C
+       	WHERE A.MENU_ID = B.MENU_ID 
+	  		AND A.SYS_ID = C.SYS_ID
+	   		AND A.DTA_SN = #{dtaSn}
+	]]>
+    </select>
+  
+  	<!-- 자료관리자 등록 -->
+	<insert id="insertDtaInfo" parameterType="map" >
+	<![CDATA[
+    	INSERT INTO TAP_DT_DTA_MANAGER (
+             DTA_SN
+            ,SYS_ID
+            ,DTA_PSITN
+            ,DTA_NM
+            ,DTA_TELNO
+            ,MENU_ID
+        ) VALUES (
+            SEQ_DTA_SN.NEXTVAL
+           ,#{sysId} 
+           ,#{dtaPsitn} 
+           ,#{dtaNm} 
+           ,#{dtaTelno} 
+           ,#{menuId} 
+        )
+    ]]>
+	</insert>
+
+    <!-- 자료관리자 수정 -->
+    <update id="updateDtaInfo" parameterType ="map">
+	<![CDATA[
+		UPDATE TAP_DT_DTA_MANAGER	
+		SET DTA_PSITN  = #{dtaPsitn}
+			,DTA_NM     = #{dtaNm}
+		    ,DTA_TELNO  = #{dtaTelno}
+		    ,MENU_ID    = #{menuId}
+		WHERE DTA_SN = #{dtaSn}
+	]]>	
+	</update>
+		
+	<!--자료관리자 삭제 -->
+	<delete id="deleteDtaInfo" parameterType="map" >
+    <![CDATA[
+    	DELETE FROM TAP_DT_DTA_MANAGER
+        WHERE DTA_SN = #{dtaSn}
+    ]]>       	   
+   	</delete>
+
+</mapper>

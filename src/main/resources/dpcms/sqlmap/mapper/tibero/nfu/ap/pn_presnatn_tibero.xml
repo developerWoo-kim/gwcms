@@ -1,0 +1,590 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!-- 
+	이름 : 발표 관리
+	설명 : 발표 관리 관련 테이블 CRUD
+	
+	수정일		수정자	수정내용
+	2021.08.30	sjlee	최초 생성
+-->
+
+<mapper namespace="pn_presnatn">
+
+    <!-- +++++++++++++++++++++++++++++++++++++ 발표 관리 리스트 (sql)++++++++++++++++++++++++++++++++++++++++ -->
+	<sql id="selectPresnatnListSql">
+		SELECT PRESNATN_SN,
+			   SYS_ID,
+			   PRESNATN_SJ,
+			   PRESNATN_CN,
+			   <!-- TO_CHAR(BGNDE,'YYYY/MM/DD HH24:MI:SS') AS BGNDE, -->
+			   TO_CHAR(BGNDE, 'YYYY/MM/DD HH24:MI') AS BGNDE,
+			   TO_CHAR(ENDDE, 'YYYY/MM/DD HH24:MI') AS ENDDE,
+			   CREAT_ID,
+			   CREAT_DE
+		  FROM TAP_PN_PRESNATN_MANAGE
+		 WHERE 1 = 1
+		   AND SYS_ID = #{sysId}
+		<if test="@egovframework.MybatisUtils@isNotEmpty(srchTxt)">
+		   AND PRESNATN_SJ LIKE '%'||#{srchTxt}||'%'
+	    </if>
+	    <if test="@egovframework.MybatisUtils@isNotEmpty(bgnde)">
+	    	<![CDATA[
+		    AND (  
+		    	   (TO_CHAR(BGNDE,'YYYY/MM/DD') <= TO_DATE(#{bgnde},'YYYY/MM/DD') AND TO_DATE(#{bgnde},'YYYY/MM/DD') <= TO_CHAR(ENDDE,'YYYY/MM/DD'))
+		    	OR (TO_CHAR(BGNDE,'YYYY/MM/DD') <= TO_DATE(#{endde},'YYYY/MM/DD') AND TO_DATE(#{bgnde},'YYYY/MM/DD') <= TO_CHAR(ENDDE,'YYYY/MM/DD'))
+		    	OR (TO_CHAR(BGNDE,'YYYY/MM/DD') BETWEEN TO_DATE(#{bgnde},'YYYY/MM/DD') AND TO_DATE(#{endde},'YYYY/MM/DD') ) 
+		    	OR (TO_CHAR(ENDDE,'YYYY/MM/DD') BETWEEN TO_DATE(#{bgnde},'YYYY/MM/DD') AND TO_DATE(#{endde},'YYYY/MM/DD') ) 
+		    	)
+			]]>
+	    </if>
+	    <if test="@egovframework.MybatisUtils@isNotEmpty(dateNow)">
+	    	<![CDATA[
+		   AND BGNDE <= TO_DATE(#{dateNow}, 'YYYY/MM/DD HH24:MI:SS')
+		   AND ENDDE > TO_DATE(#{dateNow}, 'YYYY/MM/DD HH24:MI:SS')
+		   ]]>
+	    </if>
+	  	ORDER BY CREAT_DE DESC
+	</sql>
+    <!-- ++++++++++++++++++++++++++++++++++++  end of 발표 관리 리스트 (sql)++++++++++++++++++++++++++++++++++++++++ -->
+    
+	<!-- 발표 관리 리스트 -->
+    <select id="selectPresnatnMainList" parameterType="map" resultType="egovMap">
+		<include refid="selectPresnatnListSql" />  
+    </select>
+    
+	<!-- 발표 관리 리스트 (페이징) -->
+    <select id="selectPresnatnMainListPaging" parameterType="map" resultType="egovMap">
+		SELECT PL.*
+		  FROM ( SELECT PO.* 
+		  		 	   ,ROW_NUMBER() OVER(ORDER BY PO.PRESNATN_SN DESC) AS RSN
+		           FROM ( <include refid="selectPresnatnListSql" /> ) PO ) PL
+		 WHERE 1 = 1 
+		 <![CDATA[ 
+		   AND RSN <= #{maxSn}
+		   AND RSN > #{minSn} 
+		 ]]>		
+    </select>
+    
+    <!-- 발표 관리 리스트 (페이징 전체 카운트) -->
+    <select id="selectPresnatnMainListPagingCount" parameterType="map" resultType="int">
+		SELECT COUNT(*)
+		  FROM TAP_PN_PRESNATN_MANAGE
+		 WHERE 1 = 1
+		   AND SYS_ID = #{sysId}
+		<if test="@egovframework.MybatisUtils@isNotEmpty(srchTxt)">
+		   AND PRESNATN_SJ LIKE '%'||#{srchTxt}||'%'
+	    </if>
+	    <if test="@egovframework.MybatisUtils@isNotEmpty(bgnde)">
+	    	<![CDATA[
+		    AND (  
+		    	   (TO_CHAR(BGNDE,'YYYY/MM/DD') <= TO_DATE(#{bgnde},'YYYY/MM/DD') AND TO_DATE(#{bgnde},'YYYY/MM/DD') <= TO_CHAR(ENDDE,'YYYY/MM/DD'))
+		    	OR (TO_CHAR(BGNDE,'YYYY/MM/DD') <= TO_DATE(#{endde},'YYYY/MM/DD') AND TO_DATE(#{bgnde},'YYYY/MM/DD') <= TO_CHAR(ENDDE,'YYYY/MM/DD'))
+		    	OR (TO_CHAR(BGNDE,'YYYY/MM/DD') BETWEEN TO_DATE(#{bgnde},'YYYY/MM/DD') AND TO_DATE(#{endde},'YYYY/MM/DD') ) 
+		    	OR (TO_CHAR(ENDDE,'YYYY/MM/DD') BETWEEN TO_DATE(#{bgnde},'YYYY/MM/DD') AND TO_DATE(#{endde},'YYYY/MM/DD') ) 
+		    	)
+			]]>
+	    </if>
+	    <if test="@egovframework.MybatisUtils@isNotEmpty(dateNow)">
+	    	<![CDATA[
+		   AND BGNDE <= TO_DATE(#{dateNow}, 'YYYY/MM/DD HH24:MI:SS')
+		   AND ENDDE > TO_DATE(#{dateNow}, 'YYYY/MM/DD HH24:MI:SS')
+		   ]]>
+	    </if>
+    </select>
+	
+	<!-- ++++++++++++++++++++++++++++++++++++ '관리자페이지-관리자페이지' sm 리스트 ++++++++++++++++++++++++++++++++++++++++ -->
+    <!-- 발표관리 시스템 리스트 통계 sql -->
+	<sql id="selectPresnatnState">
+		  SELECT COUNT(*) AS CNT
+			FROM TAP_PN_PRESNATN_MANAGE
+		   WHERE SYS_ID= SM.SYS_ID
+	    <if test="@egovframework.MybatisUtils@isNotEmpty(bgnde)">
+	    	<![CDATA[
+		     AND (  
+		    	   (TO_CHAR(BGNDE,'YYYY/MM/DD') <= TO_DATE(#{bgnde},'YYYY/MM/DD') AND TO_DATE(#{bgnde},'YYYY/MM/DD') <= TO_CHAR(ENDDE,'YYYY/MM/DD'))
+		    	OR (TO_CHAR(BGNDE,'YYYY/MM/DD') <= TO_DATE(#{endde},'YYYY/MM/DD') AND TO_DATE(#{bgnde},'YYYY/MM/DD') <= TO_CHAR(ENDDE,'YYYY/MM/DD'))
+		    	OR (TO_CHAR(BGNDE,'YYYY/MM/DD') BETWEEN TO_DATE(#{bgnde},'YYYY/MM/DD') AND TO_DATE(#{endde},'YYYY/MM/DD') ) 
+		    	OR (TO_CHAR(ENDDE,'YYYY/MM/DD') BETWEEN TO_DATE(#{bgnde},'YYYY/MM/DD') AND TO_DATE(#{endde},'YYYY/MM/DD') ) 
+		    	)
+			]]>
+	    </if>
+	</sql>
+	
+	<!-- 발표관리 시스템 리스트 sql -->
+	<sql id="selectPresnatnSmList">
+		SELECT IT.INSTT_CODE
+	          ,IT.INSTT_NM
+	          ,IT.INSTT_TY
+	          ,SM.SYS_ID
+			  ,SM.SYS_NM 
+			  ,( <include refid="selectPresnatnState" /> ) AS TOTAL_CNT   
+			   ,ROW_NUMBER() OVER(ORDER BY IT.INSTT_CODE, IT.INSTT_LEVEL DESC) AS RSN                                                              
+			  FROM TAP_IM_INSTT_MANAGE IT, TAP_SM_SYS_MANAGE SM 
+			  WHERE IT.INSTT_CODE = SM.INSTT_CODE
+			  AND SM.SYS_STTUS = 'O'
+			
+			<if test='@egovframework.MybatisUtils@isEmpty(author) || author != "master"'>
+	         AND SM.SYS_ID NOT IN ('apple')
+	        </if>
+	        
+	        <if test="@egovframework.MybatisUtils@isNotEmpty(mberId)">
+		      AND SM.SYS_ID IN (
+					SELECT SYS_ID
+					  FROM TAP_AU_AUTHOR_MBER 
+					 WHERE MBER_ID = #{mberId}
+						   AND SYS_ID != 'apple'
+					   AND AUTHOR_CODE IN (1,2)	
+	        	)
+		     </if>
+		     
+	        <if test="@egovframework.MybatisUtils@isNotEmpty(insttCode)">
+		     AND   ( IT.INSTT_CODE =  #{insttCode}
+	                    OR  IT.UPPER_INSTT_CODE = #{upperInsttCode}
+	                    OR  IT.BSIS_INSTT_CODE = #{bsisInsttCode}
+	               	)
+	         </if>
+	         
+		     <if test="@egovframework.MybatisUtils@isNotEmpty(insttGrad)">
+		     AND   ( IT.INSTT_GRAD IS NULL
+		     		 <if test="@egovframework.MybatisUtils@isNotEmpty(dtnt)">
+		                OR IT.INSTT_GRAD = #{dtnt}
+		             </if>
+		             <if test="@egovframework.MybatisUtils@isNotEmpty(elesch)">
+		                OR IT.INSTT_GRAD = #{elesch}
+		             </if>
+		             <if test="@egovframework.MybatisUtils@isNotEmpty(mskul)">    
+		                OR IT.INSTT_GRAD = #{mskul}
+		             </if> 
+		             <if test="@egovframework.MybatisUtils@isNotEmpty(hgschl)">
+		                OR IT.INSTT_GRAD = #{hgschl}
+		             </if>
+		             <if test="@egovframework.MybatisUtils@isNotEmpty(kndrgr)">     
+		                OR IT.INSTT_GRAD = #{kndrgr}
+		             </if>
+		             <if test="@egovframework.MybatisUtils@isNotEmpty(spcl)">
+		                OR IT.INSTT_GRAD = #{spcl}
+		             </if>
+		           )
+		     </if>
+		     
+		     <if test="@egovframework.MybatisUtils@isNotEmpty(sysTy)">
+		      AND   SM.SYS_TY = #{sysTy}
+		     </if>
+		     
+		     <if test="@egovframework.MybatisUtils@isNotEmpty(srchTxt)">
+		       AND  (  		 
+       				 SM.SYS_NM LIKE '%'||#{srchTxt}||'%'
+              	  OR SM.SYS_TY LIKE '%'||#{srchTxt}||'%' 
+		       )
+		    </if>
+			 
+<!-- 			 ORDER BY   IT.INSTT_CODE, IT.INSTT_LEVEL DESC -->
+	</sql>
+	
+	<!-- 발표관리 시스템 리스트 -->
+	<select id="selectPresnatnSmList" parameterType="map" resultType="egovMap">
+		<include refid="selectPresnatnSmList"/>
+	</select>
+	
+	<!-- 발표관리 시스템 페이징 -->
+	<select id="selectPresnatnSmListPaging" parameterType="map" resultType="egovMap">
+		SELECT
+    		PL.*
+    	FROM (
+        	SELECT 
+        		PO.*
+			FROM (
+	    		<include refid="selectPresnatnSmList" /> 
+				) PO
+		) PL
+		WHERE
+		<![CDATA[
+			rsn <= #{maxSn} 
+			AND rsn > #{minSn}
+		]]>
+	</select>
+	
+	<!-- 발표관리 시스템 페이징 카운트 -->
+	<select id="selectPresnatnSmListPagingCount" parameterType="map" resultType="int">
+		SELECT 
+			COUNT(*)
+			FROM TAP_IM_INSTT_MANAGE IT, TAP_SM_SYS_MANAGE SM 
+			  WHERE IT.INSTT_CODE = SM.INSTT_CODE
+			  AND SM.SYS_STTUS = 'O'
+			
+			<if test='@egovframework.MybatisUtils@isEmpty(author) || author != "master"'>
+	         AND SM.SYS_ID NOT IN ('apple')
+	        </if>
+	        
+	        <if test="@egovframework.MybatisUtils@isNotEmpty(insttCode)">
+		     AND   ( IT.INSTT_CODE =  #{insttCode}
+                    OR  IT.UPPER_INSTT_CODE = #{upperInsttCode}
+                    OR  IT.BSIS_INSTT_CODE = #{bsisInsttCode}
+	               	)
+	         </if>
+	         
+		     <if test="@egovframework.MybatisUtils@isNotEmpty(insttGrad)">
+		     AND   ( IT.INSTT_GRAD IS NULL
+		     		 <if test="@egovframework.MybatisUtils@isNotEmpty(dtnt)">
+		                OR IT.INSTT_GRAD = #{dtnt}
+		             </if>
+		             <if test="@egovframework.MybatisUtils@isNotEmpty(elesch)">
+		                OR IT.INSTT_GRAD = #{elesch}
+		             </if>
+		             <if test="@egovframework.MybatisUtils@isNotEmpty(mskul)">    
+		                OR IT.INSTT_GRAD = #{mskul}
+		             </if> 
+		             <if test="@egovframework.MybatisUtils@isNotEmpty(hgschl)">
+		                OR IT.INSTT_GRAD = #{hgschl}
+		             </if>
+		             <if test="@egovframework.MybatisUtils@isNotEmpty(kndrgr)">     
+		                OR IT.INSTT_GRAD = #{kndrgr}
+		             </if>
+		             <if test="@egovframework.MybatisUtils@isNotEmpty(spcl)">
+		                OR IT.INSTT_GRAD = #{spcl}
+		             </if>
+		           )
+		     </if>
+	        
+	        <if test="@egovframework.MybatisUtils@isNotEmpty(mberId)">
+		      AND SM.SYS_ID IN (
+					SELECT SYS_ID
+					  FROM TAP_AU_AUTHOR_MBER 
+					 WHERE MBER_ID = #{mberId}
+						   AND SYS_ID != 'apple'
+					   AND AUTHOR_CODE IN (1,2)	
+	        	)
+		     </if>
+		     
+		     <if test="@egovframework.MybatisUtils@isNotEmpty(sysTy)">
+		      AND   SM.SYS_TY = #{sysTy}
+		     </if>
+		     
+		     <if test="@egovframework.MybatisUtils@isNotEmpty(srchTxt)">
+		       AND  (  		 
+       				 SM.SYS_NM LIKE '%'||#{srchTxt}||'%'
+              	  OR SM.SYS_TY LIKE '%'||#{srchTxt}||'%' 
+		       )
+		    </if>
+			 
+	</select>
+	
+	<!-- ++++++++++++++++++++++++++++++++++++ end of '관리자페이지-관리자페이지' sm 리스트 (sql)++++++++++++++++++++++++++++++++++++++++ -->
+	
+    <!-- 발표 조회 -->
+    <select id="selectPresnatnInfo" parameterType="map" resultType="egovMap">
+       	SELECT PRESNATN_SN,
+       		   PRESNATN_SJ,
+       		   PRESNATN_CN,
+			   TO_CHAR(BGNDE, 'YYYY/MM/DD') AS BGNDE,
+			   TO_CHAR(ENDDE, 'YYYY/MM/DD') AS ENDDE,
+			   TO_CHAR(BGNDE, 'HH24') AS BGNTM,
+			   TO_CHAR(ENDDE, 'HH24') AS ENDTM,
+       		   INQIRE_CND_CNT,
+       		   PRESNATN_CND_CNT,
+       		   INQIRE_CND_NM_01,
+       		   INQIRE_CND_NM_02,
+       		   INQIRE_CND_NM_03,
+       		   INQIRE_CND_NM_04,
+       		   INQIRE_CND_NM_05,
+       		   PRESNATN_CND_NM_01,
+       		   PRESNATN_CND_NM_02,
+       		   PRESNATN_CND_NM_03,
+       		   PRESNATN_CND_NM_04,
+       		   PRESNATN_CND_NM_05
+	   	  FROM TAP_PN_PRESNATN_MANAGE
+	  	 WHERE 1=1
+	       AND SYS_ID = #{sysId}
+	       AND PRESNATN_SN = #{presnatnSn}
+    </select>
+	
+    <!-- 발표관리 등록 -->
+	<insert id="insertPresnatnInfo" parameterType="map" >
+		INSERT INTO TAP_PN_PRESNATN_MANAGE (
+		    PRESNATN_SN,
+		    SYS_ID,
+		    PRESNATN_SJ,
+		    PRESNATN_CN,
+		    BGNDE,
+		    ENDDE,
+		    INQIRE_CND_CNT,
+		    PRESNATN_CND_CNT,
+		    INQIRE_CND_NM_01,
+		    INQIRE_CND_NM_02,
+		    INQIRE_CND_NM_03,
+		    INQIRE_CND_NM_04,
+		    INQIRE_CND_NM_05,
+		    PRESNATN_CND_NM_01,
+		    PRESNATN_CND_NM_02,
+		    PRESNATN_CND_NM_03,
+		    PRESNATN_CND_NM_04,
+		    PRESNATN_CND_NM_05,
+		    CREAT_DE,
+		    CREAT_ID
+		) VALUES (
+		    SEQ_PRESNATN_MANAGE_SN.NEXTVAL,
+		    #{sysId},
+		    #{presnatnSj},
+		    #{presnatnCn},
+		    TO_DATE(#{bgnde},'YYYY/MM/DD HH24:MI:SS'),
+		    TO_DATE(#{endde},'YYYY/MM/DD HH24:MI:SS'),
+		    #{inqireCndCnt},
+		    #{presnatnCndCnt},
+		    #{inqireCndNm01},
+		    #{inqireCndNm02},
+		    #{inqireCndNm03},
+		    #{inqireCndNm04},
+		    #{inqireCndNm05},
+		    #{presnatnCndNm01},
+		    #{presnatnCndNm02},
+		    #{presnatnCndNm03},
+		    #{presnatnCndNm04},
+		    #{presnatnCndNm05},
+		    SYSDATE,
+		    #{creatId}
+		)
+	</insert>
+	
+    <!-- 발표 수정 -->
+    <update id="updatePresnatnInfo" parameterType="map">
+		UPDATE TAP_PN_PRESNATN_MANAGE
+		   SET PRESNATN_SJ = #{presnatnSj},
+		       PRESNATN_CN = #{presnatnCn},
+		       BGNDE = TO_DATE(#{bgnde},'YYYY/MM/DD HH24:MI:SS'),
+		       ENDDE = TO_DATE(#{endde},'YYYY/MM/DD HH24:MI:SS'),
+		       INQIRE_CND_CNT = #{inqireCndCnt},
+		       PRESNATN_CND_CNT = #{presnatnCndCnt},
+		       INQIRE_CND_NM_01 = #{inqireCndNm01},
+		       INQIRE_CND_NM_02 = #{inqireCndNm02},
+		       INQIRE_CND_NM_03 = #{inqireCndNm03},
+		       INQIRE_CND_NM_04 = #{inqireCndNm04},
+		       INQIRE_CND_NM_05 = #{inqireCndNm05},
+		       PRESNATN_CND_NM_01 = #{presnatnCndNm01},
+		       PRESNATN_CND_NM_02 = #{presnatnCndNm02},
+		       PRESNATN_CND_NM_03 = #{presnatnCndNm03},
+		       PRESNATN_CND_NM_04 = #{presnatnCndNm04},
+		       PRESNATN_CND_NM_05 = #{presnatnCndNm05},
+		       UPDT_DE = SYSDATE,
+		       UPDT_ID = #{updtId}
+		 WHERE PRESNATN_SN = #{presnatnSn}
+    </update>
+	
+    <!-- 발표 삭제 -->
+    <delete id="deletePresnatnInfo" parameterType="map">
+		DELETE FROM TAP_PN_PRESNATN_MANAGE
+		 WHERE PRESNATN_SN = #{presnatnSn}
+    </delete>
+
+    <!-- 발표 내용 삭제 -->
+    <delete id="deletePresnatnResultList" parameterType="map">
+		DELETE FROM TAP_PN_PRESNATN_MANAGE_RESULT
+		 WHERE PRESNATN_SN = #{presnatnSn}
+    </delete>
+	
+    <!-- 발표 결과 등록 -->
+	<insert id="insertPresnatnResultInfo" parameterType="map" >
+		INSERT INTO TAP_PN_PRESNATN_MANAGE_RESULT (
+		    PRESNATN_RESULT_SN,
+		    PRESNATN_SN,
+		    INQIRE_CND_VAL_01,
+		    INQIRE_CND_VAL_02,
+		    INQIRE_CND_VAL_03,
+		    INQIRE_CND_VAL_04,
+		    INQIRE_CND_VAL_05,
+		    PRESNATN_CND_VAL_01,
+		    PRESNATN_CND_VAL_02,
+		    PRESNATN_CND_VAL_03,
+		    PRESNATN_CND_VAL_04,
+		    PRESNATN_CND_VAL_05,
+		    CREAT_DE,
+		    CREAT_ID
+		) VALUES (
+		    SEQ_PRESNATN_RESULT_SN.NEXTVAL,
+		    #{presnatnSn},
+		    #{inqireCndVal01},
+		    #{inqireCndVal02},
+		    #{inqireCndVal03},
+		    #{inqireCndVal04},
+		    #{inqireCndVal05},
+		    #{presnatnCndVal01},
+		    #{presnatnCndVal02},
+		    #{presnatnCndVal03},
+		    #{presnatnCndVal04},
+		    #{presnatnCndVal05},
+		    SYSDATE,
+		    #{creatId}
+		)
+	</insert>
+	
+    <!-- +++++++++++++++++++++++++++++++++++++ 발표 결과 리스트 (sql)++++++++++++++++++++++++++++++++++++++++ -->
+	<sql id="selectPresnatnResultListSql">
+		SELECT B.PRESNATN_RESULT_SN,
+			   B.PRESNATN_SN,
+			   B.INQIRE_CND_VAL_01,
+			   B.INQIRE_CND_VAL_02,
+			   B.INQIRE_CND_VAL_03,
+			   B.INQIRE_CND_VAL_04,
+			   B.INQIRE_CND_VAL_05,
+			   B.PRESNATN_CND_VAL_01,
+			   B.PRESNATN_CND_VAL_02,
+			   B.PRESNATN_CND_VAL_03,
+			   B.PRESNATN_CND_VAL_04,
+			   B.PRESNATN_CND_VAL_05,
+			   A.INQIRE_CND_CNT,
+			   A.PRESNATN_CND_CNT,
+       		   A.INQIRE_CND_NM_01,
+       		   A.INQIRE_CND_NM_02,
+       		   A.INQIRE_CND_NM_03,
+       		   A.INQIRE_CND_NM_04,
+       		   A.INQIRE_CND_NM_05,
+       		   A.PRESNATN_CND_NM_01,
+       		   A.PRESNATN_CND_NM_02,
+       		   A.PRESNATN_CND_NM_03,
+       		   A.PRESNATN_CND_NM_04,
+       		   A.PRESNATN_CND_NM_05
+		  FROM TAP_PN_PRESNATN_MANAGE A,
+		       TAP_PN_PRESNATN_MANAGE_RESULT B
+		 WHERE 1 = 1
+		   AND B.PRESNATN_SN = #{presnatnSn}
+		   AND A.PRESNATN_SN = B.PRESNATN_SN
+		<if test="@egovframework.MybatisUtils@isNotEmpty(inqireCndSrch01)">
+	   		AND B.INQIRE_CND_VAL_01 = #{inqireCndSrch01}
+	    </if>
+		<if test="@egovframework.MybatisUtils@isNotEmpty(inqireCndSrch02)">
+	   		AND B.INQIRE_CND_VAL_02 = #{inqireCndSrch02}
+	    </if>
+		<if test="@egovframework.MybatisUtils@isNotEmpty(inqireCndSrch03)">
+	   		AND B.INQIRE_CND_VAL_03 = #{inqireCndSrch03}
+	    </if>
+		<if test="@egovframework.MybatisUtils@isNotEmpty(inqireCndSrch04)">
+	   		AND B.INQIRE_CND_VAL_04 = #{inqireCndSrch04}
+	    </if>
+		<if test="@egovframework.MybatisUtils@isNotEmpty(inqireCndSrch05)">
+	   		AND B.INQIRE_CND_VAL_05 = #{inqireCndSrch05}
+	    </if>
+		<!-- 발표항목 제거
+		<if test="@egovframework.MybatisUtils@isNotEmpty(presnatnSrchTxt)">
+			<choose>
+				<when test=' presnatnSrchTxt == "합격" || presnatnSrchTxt == "불합격" '>
+					<if test="@egovframework.MybatisUtils@isNotEmpty(presnatnCndIf01)">
+				   		AND B.PRESNATN_CND_VAL_01 = #{presnatnSrchTxt}
+				    </if>
+					<if test="@egovframework.MybatisUtils@isNotEmpty(presnatnCndIf02)">
+				   		AND B.PRESNATN_CND_VAL_02 = #{presnatnSrchTxt}
+				    </if>
+					<if test="@egovframework.MybatisUtils@isNotEmpty(presnatnCndIf03)">
+				   		AND B.PRESNATN_CND_VAL_03 = #{presnatnSrchTxt}
+				    </if>
+					<if test="@egovframework.MybatisUtils@isNotEmpty(presnatnCndIf04)">
+				   		AND B.PRESNATN_CND_VAL_04 = #{presnatnSrchTxt}
+				    </if>
+					<if test="@egovframework.MybatisUtils@isNotEmpty(presnatnCndIf05)">
+				   		AND B.PRESNATN_CND_VAL_05 = #{presnatnSrchTxt}
+				    </if>
+				</when>
+				<otherwise>
+					<if test="@egovframework.MybatisUtils@isNotEmpty(presnatnCndIf01)">
+				   		AND B.PRESNATN_CND_VAL_01 LIKE '%'||#{presnatnSrchTxt}||'%'
+				    </if>
+					<if test="@egovframework.MybatisUtils@isNotEmpty(presnatnCndIf02)">
+				   		AND B.PRESNATN_CND_VAL_02 LIKE '%'||#{presnatnSrchTxt}||'%'
+				    </if>
+					<if test="@egovframework.MybatisUtils@isNotEmpty(presnatnCndIf03)">
+				   		AND B.PRESNATN_CND_VAL_03 LIKE '%'||#{presnatnSrchTxt}||'%'
+				    </if>
+					<if test="@egovframework.MybatisUtils@isNotEmpty(presnatnCndIf04)">
+				   		AND B.PRESNATN_CND_VAL_04 LIKE '%'||#{presnatnSrchTxt}||'%'
+				    </if>
+					<if test="@egovframework.MybatisUtils@isNotEmpty(presnatnCndIf05)">
+				   		AND B.PRESNATN_CND_VAL_05 LIKE '%'||#{presnatnSrchTxt}||'%'
+				    </if>
+				</otherwise>
+			</choose>
+	    </if> 
+	    -->
+	  	ORDER BY B.PRESNATN_RESULT_SN DESC
+	</sql>
+    <!-- ++++++++++++++++++++++++++++++++++++  end of 발표 결과 리스트 (sql)++++++++++++++++++++++++++++++++++++++++ -->
+    
+    <!-- 발표 결과 엑셀 -->
+	<select id="selectPresnatnResultExcel" parameterType="map" resultType="egovMap" >
+		SELECT PRESNATN_RESULT_SN,
+			   PRESNATN_SN,
+			   INQIRE_CND_VAL_01,
+			   INQIRE_CND_VAL_02,
+			   INQIRE_CND_VAL_03,
+			   INQIRE_CND_VAL_04,
+			   INQIRE_CND_VAL_05,
+			   PRESNATN_CND_VAL_01,
+			   PRESNATN_CND_VAL_02,
+			   PRESNATN_CND_VAL_03,
+			   PRESNATN_CND_VAL_04,
+			   PRESNATN_CND_VAL_05
+       		   FROM TAP_PN_PRESNATN_MANAGE_RESULT
+		 WHERE 1 = 1
+		   AND PRESNATN_SN = #{presnatnSn}
+	  	ORDER BY PRESNATN_RESULT_SN
+	</select>
+	
+	<!-- 발표 결과 리스트 -->
+    <select id="selectPresnatnResultList" parameterType="map" resultType="egovMap">
+		<include refid="selectPresnatnResultListSql" />  
+    </select>
+    
+	<!-- 발표 결과 리스트 (페이징) -->
+    <select id="selectPresnatnResultListPaging" parameterType="map" resultType="egovMap">
+		SELECT PL.*
+		  FROM ( SELECT PO.* 
+		  		 	   ,ROW_NUMBER() OVER(ORDER BY PO.PRESNATN_RESULT_SN DESC) AS RSN
+		           FROM ( <include refid="selectPresnatnResultListSql" /> ) PO ) PL
+		 WHERE 1 = 1 
+		 <![CDATA[ 
+		   AND RSN <= #{maxSn}
+		   AND RSN > #{minSn} 
+		 ]]>		
+    </select>
+    
+    <!-- 발표 결과 리스트 (페이징 전체 카운트) -->
+    <select id="selectPresnatnResultListPagingCount" parameterType="map" resultType="int">
+		SELECT COUNT(*)
+		  FROM TAP_PN_PRESNATN_MANAGE A,
+		       TAP_PN_PRESNATN_MANAGE_RESULT B
+		 WHERE 1 = 1
+		   AND B.PRESNATN_SN = #{presnatnSn}
+		   AND A.PRESNATN_SN = B.PRESNATN_SN
+		<if test="@egovframework.MybatisUtils@isNotEmpty(inqireCndSrch01)">
+	   		AND B.INQIRE_CND_VAL_01 = #{inqireCndSrch01}
+	    </if>
+		<if test="@egovframework.MybatisUtils@isNotEmpty(inqireCndSrch02)">
+	   		AND B.INQIRE_CND_VAL_02 = #{inqireCndSrch02}
+	    </if>
+		<if test="@egovframework.MybatisUtils@isNotEmpty(inqireCndSrch03)">
+	   		AND B.INQIRE_CND_VAL_03 = #{inqireCndSrch03}
+	    </if>
+		<if test="@egovframework.MybatisUtils@isNotEmpty(inqireCndSrch04)">
+	   		AND B.INQIRE_CND_VAL_04 = #{inqireCndSrch04}
+	    </if>
+		<if test="@egovframework.MybatisUtils@isNotEmpty(inqireCndSrch05)">
+	   		AND B.INQIRE_CND_VAL_05 = #{inqireCndSrch05}
+	    </if>
+		<!-- <if test="@egovframework.MybatisUtils@isNotEmpty(presnatnSrchTxt)">
+			<if test="@egovframework.MybatisUtils@isNotEmpty(presnatnCndIf01)">
+		   		AND B.PRESNATN_CND_VAL_01 LIKE '%'||#{presnatnSrchTxt}||'%'
+		    </if>
+			<if test="@egovframework.MybatisUtils@isNotEmpty(presnatnCndIf02)">
+		   		AND B.PRESNATN_CND_VAL_02 LIKE '%'||#{presnatnSrchTxt}||'%'
+		    </if>
+			<if test="@egovframework.MybatisUtils@isNotEmpty(presnatnCndIf03)">
+		   		AND B.PRESNATN_CND_VAL_03 LIKE '%'||#{presnatnSrchTxt}||'%'
+		    </if>
+			<if test="@egovframework.MybatisUtils@isNotEmpty(presnatnCndIf04)">
+		   		AND B.PRESNATN_CND_VAL_04 LIKE '%'||#{presnatnSrchTxt}||'%'
+		    </if>
+			<if test="@egovframework.MybatisUtils@isNotEmpty(presnatnCndIf05)">
+		   		AND B.PRESNATN_CND_VAL_05 LIKE '%'||#{presnatnSrchTxt}||'%'
+		    </if>
+	    </if> -->
+    </select>
+	
+</mapper>

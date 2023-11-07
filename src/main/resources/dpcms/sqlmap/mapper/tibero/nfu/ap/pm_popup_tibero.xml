@@ -1,0 +1,732 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="pm_popup">
+
+	<!-- 팝업관리 시스템  리스트 sql-->
+	<sql id ="selectPopupSmList">
+	  SELECT   IT.INSTT_CODE
+	          ,IT.INSTT_NM
+	          ,IT.INSTT_TY
+	          ,SM.SYS_ID
+	          ,SM.SYS_NM
+	          ,SM.SYS_TY
+              ,( <include refid="selectPopupStats" />  ) AS TOTAL_CNT
+              ,( <include refid="selectPopupStats" />  AND PM.ALL_AT  = 'Y' ) AS ALL_POPUP_CNT
+              ,( <include refid="selectPopupStats" />  AND PM.ALL_AT  = 'N' ) AS INDVDLZ_POPUP_CNT
+              ,(
+              	 <include refid="selectPopupStats" />
+					<![CDATA[
+						AND PT.BGNDE <= SYSDATE
+					    AND PT.ENDDE >= SYSDATE
+					 ]]>
+
+               ) AS NOW_POPUP_CNT
+             ,(
+              	  ( <include refid="selectPopupStats" /> )
+              	  	- ( <include refid="selectPopupStats" />
+              	  		<![CDATA[
+						AND PT.BGNDE <= SYSDATE
+					    AND PT.ENDDE >= SYSDATE
+					 	]]>
+              	      )
+
+              ) AS NOT_POPUP_CNT
+	    FROM   TAP_IM_INSTT_MANAGE IT, TAP_SM_SYS_MANAGE SM
+	   WHERE   IT.INSTT_CODE = SM.INSTT_CODE
+         AND   SM.SYS_STTUS = 'O'
+	   <include refid="srchPopupSmList" />
+	ORDER BY   IT.INSTT_CODE, IT.INSTT_LEVEL DESC
+	</sql>
+
+	<!--  팝업관리 시스템  리스트 팝업 통계 sql-->
+	<sql id ="selectPopupStats">
+		SELECT COUNT(*)
+          FROM TAP_PM_POPUP_MANAGE PM, TAP_PM_POPUP_INSTT PT
+         WHERE PM.POPUP_SN = PT.POPUP_SN
+           AND PT.SYS_ID = SM.SYS_ID
+	</sql>
+
+	 <!--  팝업관리 시스템  리스트 검색조건 sql-->
+	<sql id ="srchPopupSmList">
+
+        <if test='@egovframework.MybatisUtils@isEmpty(author) || author != "master"'>
+         AND SM.SYS_ID NOT IN ('apple')
+        </if>
+
+        <if test="@egovframework.MybatisUtils@isNotEmpty(insttCode)">
+	     AND   ( IT.INSTT_CODE =  #{insttCode}
+
+                    OR  IT.UPPER_INSTT_CODE = #{upperInsttCode}
+                    OR  IT.BSIS_INSTT_CODE = #{bsisInsttCode}
+
+               	)
+         </if>
+
+	     <if test="@egovframework.MybatisUtils@isNotEmpty(srchSmTxt)">
+	       AND  (
+	       				 SM.SYS_NM like '%'||#{srchSmTxt}||'%'
+	              	  OR SM.SYS_TY like '%'||#{srchSmTxt}||'%'
+
+	            )
+	    </if>
+
+	</sql>
+
+	<!--  팝업관리 시스템  리스트  -->
+    <select id="selectPopupSmList" parameterType="egovMap" resultType="egovMap">
+	 	<include refid="selectPopupSmList" />
+	 </select>
+
+	<!-- 팝업관리 시스템  리스트(페이징) -->
+    <select id="selectPopupSmListPaging" parameterType="map" resultType="egovMap">
+    	SELECT
+    		PL.*
+    	FROM (
+        	SELECT
+        		PO.*
+        		,rownum as rsn
+			FROM (
+	    		<include refid="selectPopupSmList" />
+				) PO
+		) PL
+		WHERE
+		<![CDATA[
+			rsn <= #{maxSn}
+			AND rsn > #{minSn}
+		]]>
+    </select>
+
+    <!-- 팝업관리 시스템  리스트 (페이징 전체 카운트) -->
+    <select id="selectPopupSmListPagingCount" parameterType="map" resultType="int">
+    	SELECT   COUNT(*)
+	      FROM   TAP_IM_INSTT_MANAGE IT, TAP_SM_SYS_MANAGE SM
+	     WHERE   IT.INSTT_CODE = SM.INSTT_CODE
+           AND   SM.SYS_STTUS = 'O'
+	   <include refid="srchPopupSmList" />
+	  ORDER BY   IT.INSTT_CODE, IT.INSTT_LEVEL DESC
+    </select>
+
+	<!-- 팝업 시퀀스 획득 -->
+	<select id="selectPopupSnInfo" resultType="string">
+        SELECT SEQ_POPUP_SN.NEXTVAL
+        FROM DUAL
+    </select>
+
+	<!--팝업리스트 -->
+     <sql id="selectPopupList">
+         SELECT   A.POPUP_SN,
+           		  A.POPUP_TITLE,
+          		  A.POPUP_TY,
+          		  A.ATCHMNFL_ID,
+          		  A.IMAGE_ID,
+          		  A.ALL_AT,
+           		  B.SYS_ID,
+           		  B.SYS_NM,
+           		  B.BGNDE,
+           		  B.ENDDE
+           FROM   TAP_PM_POPUP_MANAGE A, TAP_PM_POPUP_INSTT B
+          WHERE   A.POPUP_SN = B.POPUP_SN
+            AND   A.ALL_AT = 'N'
+     		<!-- <![CDATA[
+     		AND (TO_CHAR(B.BGNDE,'YYYY/MM/DD') BETWEEN TO_DATE(#{bgnde},'YYYY/MM/DD') and TO_DATE(#{endde},'YYYY/MM/DD')
+		    OR TO_CHAR(B.ENDDE,'YYYY/MM/DD') BETWEEN TO_DATE(#{bgnde},'YYYY/MM/DD') and TO_DATE(#{endde},'YYYY/MM/DD'))
+	   		]]> -->
+     		<!-- 21/03/02 날짜 검색오류로 인한 수정
+     		AND ( TO_DATE('2021/02/01','YYYY/MM/DD') BETWEEN TO_CHAR(B.BGNDE,'YYYY/MM/DD') AND TO_CHAR(B.ENDDE,'YYYY/MM/DD')
+                 OR TO_DATE('2021/02/28','YYYY/MM/DD') BETWEEN TO_CHAR(B.BGNDE,'YYYY/MM/DD') AND TO_CHAR(B.ENDDE,'YYYY/MM/DD') ) -->
+	  <![CDATA[
+		    AND (
+		    	   (TO_CHAR(B.BGNDE,'YYYY/MM/DD') <= TO_DATE(#{bgnde},'YYYY/MM/DD') AND TO_DATE(#{bgnde},'YYYY/MM/DD') <= TO_CHAR(B.ENDDE,'YYYY/MM/DD'))
+		    	OR (TO_CHAR(B.BGNDE,'YYYY/MM/DD') <= TO_DATE(#{endde},'YYYY/MM/DD') AND TO_DATE(#{bgnde},'YYYY/MM/DD') <= TO_CHAR(B.ENDDE,'YYYY/MM/DD'))
+		    	OR (TO_CHAR(B.BGNDE,'YYYY/MM/DD') BETWEEN TO_DATE(#{bgnde},'YYYY/MM/DD') AND TO_DATE(#{endde},'YYYY/MM/DD') )
+		    	OR (TO_CHAR(B.ENDDE,'YYYY/MM/DD') BETWEEN TO_DATE(#{bgnde},'YYYY/MM/DD') AND TO_DATE(#{endde},'YYYY/MM/DD') )
+		    	)
+		    ]]>
+
+		  <if test="@egovframework.MybatisUtils@isNotEmpty(popupTy)">
+            AND   A.POPUP_TY = #{popupTy}
+       	  </if>
+          <if test="@egovframework.MybatisUtils@isNotEmpty(sysId)">
+            AND   B.SYS_ID = #{sysId}
+       	   </if>
+       	  <if test="@egovframework.MybatisUtils@isNotEmpty(srchPopTxt)">
+            AND   (B.SYS_NM like '%'||#{srchPopTxt}||'%' or A.POPUP_TITLE like '%'||#{srchPopTxt}||'%' or A.POPUP_TY like '%'||#{srchPopTxt}||'%')
+          </if>
+       ORDER BY   A.POPUP_SN DESC
+     </sql>
+
+     <!--팝업리스트조회 -->
+    <select id="selectPopupList" parameterType="map" resultType="egovMap">
+	    <include refid="selectPopupList" />
+    </select>
+
+    <!-- 팝업리스트조회(페이징) -->
+    <select id="selectPopupListPaging" parameterType="map" resultType="egovMap">
+    	SELECT
+    		PL.*
+    	FROM (
+        	SELECT
+        		PO.*
+        		,rownum as rsn
+			FROM (
+	    		<include refid="selectPopupList" />
+				) PO
+		) PL
+		WHERE
+		<![CDATA[
+			rsn <= #{maxSn}
+			AND rsn > #{minSn}
+		]]>
+    </select>
+
+    <!-- 팝업리스트조회 (페이징 전체 카운트) -->
+    <select id="selectPopupListPagingCount" parameterType="map" resultType="int">
+    	SELECT   COUNT(*)
+	      FROM   TAP_PM_POPUP_MANAGE A, TAP_PM_POPUP_INSTT B
+	     WHERE   A.POPUP_SN = B.POPUP_SN
+	       AND   A.ALL_AT = 'N'
+     		<!-- 21/03/02 날짜 검색오류로 인한 수정
+     			AND (   TO_CHAR(B.BGNDE,'YYYY/MM/DD') BETWEEN TO_DATE(#{bgnde},'YYYY/MM/DD') AND TO_DATE(#{endde},'YYYY/MM/DD')
+                 OR TO_CHAR(B.ENDDE,'YYYY/MM/DD') BETWEEN TO_DATE(#{bgnde},'YYYY/MM/DD') AND TO_DATE(#{endde},'YYYY/MM/DD') ) -->
+		  <![CDATA[
+		    AND (
+		    	   (TO_CHAR(B.BGNDE,'YYYY/MM/DD') <= TO_DATE(#{bgnde},'YYYY/MM/DD') AND TO_DATE(#{bgnde},'YYYY/MM/DD') <= TO_CHAR(B.ENDDE,'YYYY/MM/DD'))
+		    	OR (TO_CHAR(B.BGNDE,'YYYY/MM/DD') <= TO_DATE(#{endde},'YYYY/MM/DD') AND TO_DATE(#{bgnde},'YYYY/MM/DD') <= TO_CHAR(B.ENDDE,'YYYY/MM/DD'))
+		    	OR (TO_CHAR(B.BGNDE,'YYYY/MM/DD') BETWEEN TO_DATE(#{bgnde},'YYYY/MM/DD') AND TO_DATE(#{endde},'YYYY/MM/DD') )
+		    	OR (TO_CHAR(B.ENDDE,'YYYY/MM/DD') BETWEEN TO_DATE(#{bgnde},'YYYY/MM/DD') AND TO_DATE(#{endde},'YYYY/MM/DD') )
+		    	)
+	   		]]>
+	      <if test="@egovframework.MybatisUtils@isNotEmpty(popupTy)">
+            AND   A.POPUP_TY = #{popupTy}
+       	  </if>
+          <if test="@egovframework.MybatisUtils@isNotEmpty(sysId)">
+            AND   B.SYS_ID = #{sysId}
+       	   </if>
+       	  <if test="@egovframework.MybatisUtils@isNotEmpty(srchPopTxt)">
+            AND   (B.SYS_NM like '%'||#{srchPopTxt}||'%' or A.POPUP_TITLE like '%'||#{srchPopTxt}||'%' or A.POPUP_TY like '%'||#{srchPopTxt}||'%')
+          </if>
+    </select>
+
+    <!--공통팝업리스트 -->
+     <sql id="selectAllPopupList">
+         SELECT   DISTINCT
+         		  A.POPUP_SN,
+           		  A.POPUP_TITLE,
+          		  A.POPUP_TY,
+          		  A.ATCHMNFL_ID,
+          		  A.IMAGE_ID,
+          		  A.ALL_AT,
+           		  B.BGNDE,
+           		  B.ENDDE
+           FROM   TAP_PM_POPUP_MANAGE A, TAP_PM_POPUP_INSTT B
+          WHERE   A.POPUP_SN = B.POPUP_SN
+            AND   A.ALL_AT = 'Y'
+            <!-- 21/03/02 날짜 검색오류로 인한 수정
+            AND TO_CHAR(B.BGNDE,'YYYY/MM/DD')  >= TO_DATE(#{bgnde},'YYYY/MM/DD')
+ 			AND TO_DATE(#{endde},'YYYY/MM/DD') >= TO_CHAR(B.ENDDE,'YYYY/MM/DD') -->
+		   <![CDATA[
+		    AND (
+		    	   (TO_CHAR(B.BGNDE,'YYYY/MM/DD') <= TO_DATE(#{bgnde},'YYYY/MM/DD') AND TO_DATE(#{bgnde},'YYYY/MM/DD') <= TO_CHAR(B.ENDDE,'YYYY/MM/DD'))
+		    	OR (TO_CHAR(B.BGNDE,'YYYY/MM/DD') <= TO_DATE(#{endde},'YYYY/MM/DD') AND TO_DATE(#{bgnde},'YYYY/MM/DD') <= TO_CHAR(B.ENDDE,'YYYY/MM/DD'))
+		    	OR (TO_CHAR(B.BGNDE,'YYYY/MM/DD') BETWEEN TO_DATE(#{bgnde},'YYYY/MM/DD') AND TO_DATE(#{endde},'YYYY/MM/DD') )
+		    	OR (TO_CHAR(B.ENDDE,'YYYY/MM/DD') BETWEEN TO_DATE(#{bgnde},'YYYY/MM/DD') AND TO_DATE(#{endde},'YYYY/MM/DD') )
+		    	)
+	   		]]>
+       	   <if test="@egovframework.MybatisUtils@isNotEmpty(popupTy)">
+            AND   A.POPUP_TY = #{popupTy}
+       	  </if>
+
+       	  <if test="@egovframework.MybatisUtils@isNotEmpty(srchAllTxt)">
+            AND  ( A.POPUP_TITLE like '%'||#{srchAllTxt}||'%' or A.POPUP_TY like '%'||#{srchAllTxt}||'%')
+          </if>
+       ORDER BY   A.POPUP_SN DESC
+     </sql>
+
+    <!--공통팝업리스트조회 -->
+    <select id="selectAllPopupList" parameterType="map" resultType="egovMap">
+	    <include refid="selectAllPopupList" />
+    </select>
+
+    <!-- 공통팝업리스트조회(페이징) -->
+    <select id="selectAllPopupListPaging" parameterType="map" resultType="egovMap">
+    	SELECT
+    		PL.*
+    	FROM (
+        	SELECT
+        		PO.*
+        		,rownum as rsn
+			FROM (
+	    		<include refid="selectAllPopupList" />
+				) PO
+		) PL
+		WHERE
+		<![CDATA[
+			rsn <= #{maxSn}
+			AND rsn > #{minSn}
+		]]>
+    </select>
+
+    <!-- 공통팝업리스트조회 (페이징 전체 카운트) -->
+    <select id="selectAllPopupListPagingCount" parameterType="map" resultType="int">
+    	SELECT   COUNT(DISTINCT A.POPUP_SN)
+	      FROM   TAP_PM_POPUP_MANAGE A, TAP_PM_POPUP_INSTT B
+	     WHERE   A.POPUP_SN = B.POPUP_SN
+	      AND    A.ALL_AT = 'Y'
+     		<!-- 21/03/02 날짜 검색오류로 인한 수정
+     			AND (   TO_CHAR(B.BGNDE,'YYYY/MM/DD') BETWEEN TO_DATE(#{bgnde},'YYYY/MM/DD') AND TO_DATE(#{endde},'YYYY/MM/DD')
+                 OR TO_CHAR(B.ENDDE,'YYYY/MM/DD') BETWEEN TO_DATE(#{bgnde},'YYYY/MM/DD') AND TO_DATE(#{endde},'YYYY/MM/DD') ) -->
+		  <![CDATA[
+		    AND (
+		    	   (TO_CHAR(B.BGNDE,'YYYY/MM/DD') <= TO_DATE(#{bgnde},'YYYY/MM/DD') AND TO_DATE(#{bgnde},'YYYY/MM/DD') <= TO_CHAR(B.ENDDE,'YYYY/MM/DD'))
+		    	OR (TO_CHAR(B.BGNDE,'YYYY/MM/DD') <= TO_DATE(#{endde},'YYYY/MM/DD') AND TO_DATE(#{bgnde},'YYYY/MM/DD') <= TO_CHAR(B.ENDDE,'YYYY/MM/DD'))
+		    	OR (TO_CHAR(B.BGNDE,'YYYY/MM/DD') BETWEEN TO_DATE(#{bgnde},'YYYY/MM/DD') AND TO_DATE(#{endde},'YYYY/MM/DD') )
+		    	OR (TO_CHAR(B.ENDDE,'YYYY/MM/DD') BETWEEN TO_DATE(#{bgnde},'YYYY/MM/DD') AND TO_DATE(#{endde},'YYYY/MM/DD') )
+		    	)
+	   		]]>
+       	   <if test="@egovframework.MybatisUtils@isNotEmpty(popupTy)">
+          AND   A.POPUP_TY = #{popupTy}
+       	  </if>
+
+	      <if test="@egovframework.MybatisUtils@isNotEmpty(srchAllTxt)">
+          AND  ( A.POPUP_TITLE like '%'||#{srchAllTxt}||'%' or A.POPUP_TY like '%'||#{srchAllTxt}||'%')
+         </if>
+    </select>
+
+     <!--공통팝업 상세 조회 -->
+     <select id="selectAllPopupInfo" parameterType="map" resultType="egovMap">
+           SELECT
+           		   A.POPUP_SN,
+           		   A.POPUP_TITLE,
+           		   A.POPUP_TEMP,
+           		   A.POPUP_TY,
+           		   A.BCRN_TY,
+			       A.CNRS_AT,
+			       A.POPUP_CN,
+			       A.URL,
+			       A.NEW_WIN_AT,
+           	       A.HEIGHT_LC,
+           	       A.WIDTH_LC,
+				   A.POPUP_WIDTH,
+				   A.POPUP_HEIGHT,
+				   A.ATCHMNFL_ID,
+          		   A.IMAGE_ID,
+          		   A.ALL_AT,
+                   TO_CHAR(B.BGNDE, 'YYYY/MM/DD') as BGNDE,
+                   TO_CHAR(B.ENDDE, 'YYYY/MM/DD') as ENDDE,
+           		   B.BEGIN_TIME,
+           		   B.END_TIME,
+           		   B.USE_AT
+            FROM  TAP_PM_POPUP_MANAGE A, TAP_PM_POPUP_INSTT B
+           WHERE  A.POPUP_SN = B.POPUP_SN
+           	 AND  A.ALL_AT = 'Y'
+             AND  A.POPUP_SN = #{popupSn}
+             AND  B.ROWID IN (SELECT MAX(ROWID) FROM TAP_PM_POPUP_INSTT WHERE POPUP_SN = #{popupSn} GROUP BY POPUP_SN)
+     </select>
+
+    <!--공유팝업리스트 -->
+     <sql id="selectPopupCnrsList">
+         SELECT   A.POPUP_SN,
+           		  A.POPUP_TITLE,
+          		  A.POPUP_TY,
+          		  A.ATCHMNFL_ID,
+          		  A.IMAGE_ID,
+          		  A.CNRS_AT,
+          		  A.ALL_AT,
+           		  B.SYS_ID,
+           		  B.SYS_NM,
+           		  B.BGNDE,
+           		  B.ENDDE
+           FROM   TAP_PM_POPUP_MANAGE A, TAP_PM_POPUP_INSTT B
+          WHERE   A.POPUP_SN = B.POPUP_SN
+          	AND   A.CNRS_AT = 'Y'
+          	AND   A.ALL_AT = 'N'
+       	  <if test="@egovframework.MybatisUtils@isNotEmpty(srchCnrsTxt)">
+            AND   (B.SYS_NM like '%'||#{srchCnrsTxt}||'%' or A.POPUP_TITLE like '%'||#{srchCnrsTxt}||'%' or A.POPUP_TY like '%'||#{srchCnrsTxt}||'%')
+          </if>
+            <!-- 21/03/02 날짜 검색오류로 인한 수정
+            AND TO_CHAR(B.BGNDE,'YYYY/MM/DD')  >= TO_DATE(#{bgnde},'YYYY/MM/DD')
+ 			AND TO_DATE(#{endde},'YYYY/MM/DD') >= TO_CHAR(B.ENDDE,'YYYY/MM/DD') -->
+       	   <![CDATA[
+		    AND (
+		    	   (TO_CHAR(B.BGNDE,'YYYY/MM/DD') <= TO_DATE(#{bgnde},'YYYY/MM/DD') AND TO_DATE(#{bgnde},'YYYY/MM/DD') <= TO_CHAR(B.ENDDE,'YYYY/MM/DD'))
+		    	OR (TO_CHAR(B.BGNDE,'YYYY/MM/DD') <= TO_DATE(#{endde},'YYYY/MM/DD') AND TO_DATE(#{bgnde},'YYYY/MM/DD') <= TO_CHAR(B.ENDDE,'YYYY/MM/DD'))
+		    	OR (TO_CHAR(B.BGNDE,'YYYY/MM/DD') BETWEEN TO_DATE(#{bgnde},'YYYY/MM/DD') AND TO_DATE(#{endde},'YYYY/MM/DD') )
+		    	OR (TO_CHAR(B.ENDDE,'YYYY/MM/DD') BETWEEN TO_DATE(#{bgnde},'YYYY/MM/DD') AND TO_DATE(#{endde},'YYYY/MM/DD') )
+		    	)
+	   		]]>
+       	   <if test="@egovframework.MybatisUtils@isNotEmpty(popupTy)">
+            AND   A.POPUP_TY = #{popupTy}
+       	  </if>
+       ORDER BY   A.POPUP_SN DESC
+     </sql>
+
+     <!--공유팝업리스트조회 -->
+    <select id="selectPopupCnrsList" parameterType="map" resultType="egovMap">
+	    <include refid="selectPopupCnrsList" />
+    </select>
+
+    <!-- 공유팝업리스트조회(페이징) -->
+    <select id="selectPopupCnrsListPaging" parameterType="map" resultType="egovMap">
+    	SELECT
+    		PL.*
+    	FROM (
+        	SELECT
+        		PO.*
+        		,rownum as rsn
+			FROM (
+	    		<include refid="selectPopupCnrsList" />
+				) PO
+		) PL
+		WHERE
+		<![CDATA[
+			rsn <= #{maxSn}
+			AND rsn > #{minSn}
+		]]>
+    </select>
+
+    <!-- 공유팝업리스트조회 (페이징 전체 카운트) -->
+    <select id="selectPopupCnrsListPagingCount" parameterType="map" resultType="int">
+    	SELECT   COUNT(*)
+	      FROM   TAP_PM_POPUP_MANAGE A, TAP_PM_POPUP_INSTT B
+	     WHERE   A.POPUP_SN = B.POPUP_SN
+	       AND   A.CNRS_AT = 'Y'
+	       AND   A.ALL_AT = 'N'
+	    <if test="@egovframework.MybatisUtils@isNotEmpty(srchCnrsTxt)">
+	       AND  (B.SYS_NM like '%'||#{srchCnrsTxt}||'%' or A.POPUP_TITLE like '%'||#{srchCnrsTxt}||'%' or A.POPUP_TY like '%'||#{srchCnrsTxt}||'%')
+	    </if>
+            <!-- 21/03/02 날짜 검색오류로 인한 수정
+            AND TO_CHAR(B.BGNDE,'YYYY/MM/DD')  >= TO_DATE(#{bgnde},'YYYY/MM/DD')
+ 			AND TO_DATE(#{endde},'YYYY/MM/DD') >= TO_CHAR(B.ENDDE,'YYYY/MM/DD') -->
+		 <![CDATA[
+		    AND (
+		    	   (TO_CHAR(B.BGNDE,'YYYY/MM/DD') <= TO_DATE(#{bgnde},'YYYY/MM/DD') AND TO_DATE(#{bgnde},'YYYY/MM/DD') <= TO_CHAR(B.ENDDE,'YYYY/MM/DD'))
+		    	OR (TO_CHAR(B.BGNDE,'YYYY/MM/DD') <= TO_DATE(#{endde},'YYYY/MM/DD') AND TO_DATE(#{bgnde},'YYYY/MM/DD') <= TO_CHAR(B.ENDDE,'YYYY/MM/DD'))
+		    	OR (TO_CHAR(B.BGNDE,'YYYY/MM/DD') BETWEEN TO_DATE(#{bgnde},'YYYY/MM/DD') AND TO_DATE(#{endde},'YYYY/MM/DD') )
+		    	OR (TO_CHAR(B.ENDDE,'YYYY/MM/DD') BETWEEN TO_DATE(#{bgnde},'YYYY/MM/DD') AND TO_DATE(#{endde},'YYYY/MM/DD') )
+		    	)
+	   		]]>
+       	 <if test="@egovframework.MybatisUtils@isNotEmpty(popupTy)">
+            AND   A.POPUP_TY = #{popupTy}
+       	  </if>
+    </select>
+
+    <!--팝업정보조회 -->
+     <select id="selectPopupInfo" parameterType="map" resultType="egovMap">
+           SELECT  B.SYS_ID,
+           		   B.SYS_NM,
+           		   A.POPUP_SN,
+           		   A.POPUP_TITLE,
+           		   A.POPUP_TEMP,
+           		   A.POPUP_TY,
+           		   A.BCRN_TY,
+			       A.CNRS_AT,
+			       A.POPUP_CN,
+			       A.URL,
+			       A.NEW_WIN_AT,
+           	       A.HEIGHT_LC,
+           	       A.WIDTH_LC,
+				   A.POPUP_WIDTH,
+				   A.POPUP_HEIGHT,
+				   A.ATCHMNFL_ID,
+          		   A.IMAGE_ID,
+          		   A.ALL_AT,
+                   TO_CHAR(B.BGNDE, 'YYYY/MM/DD') as BGNDE,
+                   TO_CHAR(B.ENDDE, 'YYYY/MM/DD') as ENDDE,
+           		   B.BEGIN_TIME,
+           		   B.END_TIME,
+           		   B.USE_AT
+            FROM  TAP_PM_POPUP_MANAGE A, TAP_PM_POPUP_INSTT B
+           WHERE  A.POPUP_SN = B.POPUP_SN
+             AND  A.POPUP_SN = #{popupSn}
+<!--              AND  B.SYS_ID = #{sysId} -->
+     </select>
+
+	<!--팝업 수정 -->
+     <update id="updatePopupInfo" parameterType ="map">
+			UPDATE TAP_PM_POPUP_MANAGE
+			   SET POPUP_TITLE	   = #{popupTitle},
+				   POPUP_CN        = #{popupCn},
+				   POPUP_TY        = #{popupTy},
+				   POPUP_TEMP      = #{popupTemp},
+				   BCRN_TY		   = #{bcrnTy},
+				   CNRS_AT	       = #{cnrsAt},
+				   URL		       = #{url},
+				   POPUP_WIDTH	   = #{popupWidth},
+			       POPUP_HEIGHT    = #{popupHeight},
+			       WIDTH_LC		   = #{widthLc},
+                   HEIGHT_LC	   = #{heightLc},
+			       NEW_WIN_AT      = #{newWinAt},
+			       ATCHMNFL_ID     = #{atchmnflId},
+          		   IMAGE_ID        = #{imageId},
+          		   BCRN_IMAGE_PATH = #{bcrnImagePath},
+           		   BCRN_IMAGE_NM   = #{bcrnImageNm},
+           		   ALL_AT		   = #{allAt}
+			 WHERE POPUP_SN = #{popupSn}
+	</update>
+
+	<!--팝업등록 -->
+      <insert id="insertPopupInfo" parameterType="map">
+          INSERT INTO TAP_PM_POPUP_MANAGE (
+            POPUP_SN
+           ,POPUP_TITLE
+           ,POPUP_TY
+           ,BCRN_TY
+           ,BCRN_IMAGE_PATH
+           ,BCRN_IMAGE_NM
+           ,POPUP_WIDTH
+           ,POPUP_HEIGHT
+           ,WIDTH_LC
+           ,HEIGHT_LC
+           ,URL
+           ,NEW_WIN_AT
+           ,POPUP_TEMP
+           ,POPUP_CN
+           ,CNRS_AT
+           ,ATCHMNFL_ID
+           ,IMAGE_ID
+           ,ALL_AT
+
+        ) VALUES (
+        	#{popupSn}
+           ,#{popupTitle}
+           ,#{popupTy}
+           ,#{bcrnTy}
+           ,#{bcrnImagePath}
+           ,#{bcrnImageNm}
+           ,#{popupWidth}
+           ,#{popupHeight}
+           ,#{widthLc}
+           ,#{heightLc}
+           ,#{url}
+           ,#{newWinAt}
+           ,#{popupTemp}
+           ,#{popupCn}
+           ,#{cnrsAt}
+           ,#{atchmnflId}
+           ,#{imageId}
+           ,#{allAt}
+         )
+     </insert>
+
+     <!--팝업 사용여부 업데이트   -->
+     <update id="updatePopupUseAt" parameterType ="map">
+		<![CDATA[
+	     UPDATE  TAP_PM_POPUP_INSTT
+			SET  USE_AT = #{useAt}
+	      WHERE  POPUP_SN = #{popupSn}
+		]]>
+	</update>
+
+     <!--팝업삭제-->
+   <delete id="deletePopupInfo" parameterType="map" >
+       DELETE
+         FROM  TAP_PM_POPUP_MANAGE
+        WHERE  POPUP_SN = #{popupSn}
+   </delete>
+
+   <!--팝업 기관 등록 -->
+   <insert id="insertPopupInsttInfo" parameterType="map">
+     <![CDATA[
+          INSERT INTO TAP_PM_POPUP_INSTT (
+            POPUP_INSTT_SN
+           ,POPUP_SN
+           ,BGNDE
+           ,ENDDE
+           ,BEGIN_TIME
+           ,END_TIME
+           ,SYS_ID
+           ,SYS_NM
+           ,USE_AT
+
+        ) VALUES (
+            SEQ_POPUP_INSTT_SN.NEXTVAL
+           ,#{popupSn}
+           ,TO_DATE(#{bgnde}||' '||#{beginTime},'YYYY/MM/DD HH24:MI:SS')
+           ,TO_DATE(#{endde}||' '||#{endTime},'YYYY/MM/DD HH24:MI:SS')
+           ,#{beginTime}
+           ,#{endTime}
+           ,#{sysId}
+           ,#{sysNm}
+           ,'Y'
+           )
+    ]]>
+     </insert>
+
+   <!--팝업 이력 등록 -->
+   <insert id="insertPopupHist" parameterType="map">
+     <![CDATA[
+          INSERT INTO TAP_PM_POPUP_HIST (
+           	 HIST_SN
+			,HIST_GROUP_SN
+			,POPUP_SN
+			,HIST_MBER_ID
+			,HIST_MBER_NM
+			,HIST_MBER_IP
+			,HIST_DATE
+			,HIST_TY
+
+        ) VALUES (
+            SEQ_POPUP_HIST_SN.NEXTVAL
+           ,SEQ_HIST_GROUP_SEQ.NEXTVAL
+           ,#{popupSn}
+           ,#{histMberId}
+           ,#{histMberNm}
+           ,#{histMberIp}
+           ,sysdate
+           ,#{histTy}
+           )
+    ]]>
+     </insert>
+
+     <!--팝업기관정보수정 -->
+     <update id="updatePopupInsttInfo" parameterType ="map">
+		<![CDATA[
+	     UPDATE  TAP_PM_POPUP_INSTT
+			SET  BGNDE = TO_DATE(#{bgnde}||' '||#{beginTime},'YYYY/MM/DD HH24:MI:SS')
+           		,ENDDE = TO_DATE(#{endde}||' '||#{endTime},'YYYY/MM/DD HH24:MI:SS')
+				,BEGIN_TIME = #{beginTime}
+				,END_TIME = #{endTime}
+			    ,USE_AT = #{useAt}
+	      WHERE  POPUP_SN = #{popupSn}
+	      ]]>
+	</update>
+
+	 <!--팝업 순서 저장 -->
+     <update id="updatePopupOrdr" parameterType ="map">
+		<![CDATA[
+			UPDATE  TAP_PM_POPUP_INSTT
+			   SET  POPUP_ORDR = #{popupOrdr}
+			 WHERE  POPUP_INSTT_SN = #{insttSeq}
+		]]>
+	 </update>
+
+	<!--팝업기관정보삭제 -->
+	 <delete id="deletePopupInsttInfo" parameterType="map" >
+          DELETE
+            FROM TAP_PM_POPUP_INSTT
+           WHERE POPUP_SN = #{popupSn}
+     </delete>
+
+     <!-- 시스템별 팝업리스트 조회 -->
+    <select id="selectPopupListBySysId" parameterType="map" resultType="egovMap">
+		SELECT
+        	A.*,
+           	B.SYS_ID,
+           	B.SYS_NM,
+           	B.BGNDE,
+           	B.ENDDE,
+           	B.POPUP_INSTT_SN,
+           	C.FILE_STRE_COURS,
+           	C.ORIGNL_FILE_NM
+       	FROM
+           	TAP_PM_POPUP_MANAGE A
+           	LEFT OUTER JOIN
+           		TSA_ATCH_FILE_DETAIL C
+           	ON
+           		A.IMAGE_ID = C.FILE_ID
+            ,TAP_PM_POPUP_INSTT B
+        WHERE
+           	A.POPUP_SN = B.POPUP_SN
+        	AND B.SYS_ID = #{sysId}
+        	AND B.USE_AT = 'Y'
+        <if test="@egovframework.MybatisUtils@isNotEmpty(popupTy)">
+        	AND POPUP_TY = #{popupTy}
+        </if>
+        <![CDATA[
+        	AND TO_CHAR(B.BGNDE,'YYYY/MM/DD HH24:MI') <= TO_CHAR(SYSDATE,'YYYY/MM/DD HH24:MI')
+        	AND TO_CHAR(B.ENDDE,'YYYY/MM/DD HH24:MI') >= TO_CHAR(SYSDATE,'YYYY/MM/DD HH24:MI')
+        ]]>
+    ORDER BY
+      		B.POPUP_ORDR, B.POPUP_INSTT_SN DESC
+
+    </select>
+
+    <!--팝업 호출 방식 조회 -->
+    <select id="selectPopCallInfo" parameterType="map" resultType="egovMap">
+	    SELECT SYS_ID
+	      FROM TAP_PM_POPUP_CALL
+	     WHERE SYS_ID = #{sysId}
+    </select>
+
+   <!--팝업 호출 등록 -->
+   <insert id="insertPopCallInfo" parameterType="map">
+     <![CDATA[
+          INSERT INTO TAP_PM_POPUP_CALL (
+           	 SYS_ID
+			,CREAT_USID
+			,CREAT_USNM
+			,CREAT_USIP
+			,CREAT_DT
+
+        ) VALUES (
+            #{sysId}
+           ,#{creatUsid}
+           ,#{creatUsnm}
+           ,#{creatUsip}
+           ,sysdate
+        )
+    ]]>
+    </insert>
+
+    <!--팝업 호출 방식 삭제 -->
+	 <delete id="deletePopCallInfo" parameterType="map" >
+          DELETE FROM TAP_PM_POPUP_CALL
+           WHERE SYS_ID = #{sysId}
+     </delete>
+
+     <!-- 팝업옵션 등록 -->
+     <insert id="insertPopupOptn" parameterType="map">
+     	INSERT INTO TAP_PM_POPUP_OPTN(
+     		POPUP_SN
+     		,INSTT_GRAD_LIST
+     		,ADIT_INSTT_LIST
+     		,EXCL_INSTT_LIST
+     	) VALUES (
+     		#{popupSn}
+     		,#{insttGradList}
+     		,#{aditInsttList}
+     		,#{exclInsttList}
+     	)
+     </insert>
+
+     <!-- 팝업옵션 삭제 -->
+     <delete id="deletePopupOptn" parameterType="map">
+     	DELETE FROM TAP_PM_POPUP_OPTN
+     	WHERE POPUP_SN = #{popupSn}
+     </delete>
+
+     <!-- 팝업옵션 수정 -->
+     <update id="updatePopupOptn" parameterType="map">
+     	UPDATE TAP_PM_POPUP_OPTN
+     	SET INSTT_GRAD_LIST = #{insttGradList}
+     		,ADIT_INSTT_LIST = #{aditInsttList}
+     		,EXCL_INSTT_LIST = #{exclInsttList}
+     	WHERE POPUP_SN = #{popupSn}
+     </update>
+
+     <!-- 팝업옵션 조회 -->
+     <select id="selectPopupOptn" parameterType="map" resultType="egovMap">
+     	SELECT POPUP_SN
+     		,INSTT_GRAD_LIST
+     		,ADIT_INSTT_LIST
+     		,EXCL_INSTT_LIST
+     	FROM TAP_PM_POPUP_OPTN
+     	WHERE POPUP_SN = #{popupSn}
+     </select>
+
+     <!-- 팝업 추가/제외기관 조회 -->
+     <select id="selectPopupOptnInsttList" parameterType="map" resultType="egovMap">
+     	SELECT SM.SYS_ID
+     		,SM.SYS_NM
+     		,IT.INSTT_GRAD
+     	FROM TAP_IM_INSTT_MANAGE IT, TAP_SM_SYS_MANAGE SM
+     	WHERE IT.INSTT_CODE = SM.INSTT_CODE
+     	AND SM.SYS_ID IN
+     	<foreach collection="optnInsttListArr" item="optnInsttSysId" open="(" close=")" separator=",">
+     		#{optnInsttSysId}
+     	</foreach>
+     </select>
+</mapper>
+
+

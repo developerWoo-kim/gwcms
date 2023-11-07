@@ -1,0 +1,287 @@
+@charset "UTF-8";
+
+/* 일정관리 추가 210219 */
+.top_sche_box{position:relative; overflow:hidden; border:1px solid #b2b7c7; }
+.top_sche_list{position:relative; width:50%; padding:20px 0; float:left; font-size:14px; }
+.top_sche_box .top_sche_list:first-child:before{content:""; display:block; position:absolute; right:0; top:0; height:100%; border-right:1px dashed #b2b7c7; }
+.top_sche_list h3{margin:0 30px; line-height:30px; padding-bottom:18px; font-size:17px; border-bottom:2px solid #000; }
+.top_sche_list ul{height:100px; margin:20px 30px 0; overflow:auto; }
+.top_sche_list ul li{line-height:25px; }
+.top_sche_list ul li a{display:block; white-space:nowrap; text-overflow:ellipsis; overflow:hidden; }
+.top_sche_list ul li a span{margin-right:15px; }
+
+.tab_check_box{position:relative; margin-top:30px; }
+.tab_check_box .tab_st1{width:100%; }
+
+.cal_box{position:relative; overflow:hidden; }
+.cal_box .sche_check{ margin:.5rem -2.5px 1rem; overflow:hidden; }
+.cal_box .sche_check li{margin:2.5px; padding:0 15px; float:left; line-height:30px; color:#fff; border-radius:5px; }
+.cal_box .sche_check li.bg_sch_sky{background:#e7ebf5; }
+.cal_box .sche_check li.bg_sch_red{background:#FF0000; }
+.cal_box .sche_check li.bg_sch_green{background:#dff4f5; }
+.cal_box .sche_check li.bg_sch_pink{background:#f7f7f7; }
+.cal_box .sche_check li.bg_sch_blue{background:#e9e1da; }
+.cal_box .sche_check li.bg_sch_green2{background:#fdedd9; }
+.cal_box .sche_check li.bg_sch_pink2{background:#dc143c; }
+.cal_box .sche_check li.bg_sch_purple{background:#f5edf9; }
+.cal_box .sche_check li input{margin-right:5px; border:none; }
+.cal_box .sche_check a{color:#000; }
+.cal_box .sche_check .btn_dark a {color:#fff;}
+.cal_top{position:relative; overflow:hidden; text-align:center; }
+.cal_top .cal_ctrl{position:relative; padding:0; line-height:2.5rem;}
+.cal_top .cal_ctrl a{display:inline-block; vertical-align:middle; -webkit-transition:all 0.3s ease; -moz-transition:all 0.3s ease; -ms-transition:all 0.3s ease; transition:all 0.3s ease;}
+.cal_top .cal_ctrl .date{margin:0 1rem; font-family:'SCDream'; font-size:1.6rem; color:#000; font-weight:700; vertical-align: middle;}
+.cal_top .cal_ctrl .btn_cal_pre{font-size:1.6rem; color:#b7b7b7; -webkit-transition:transform .3s, color .3s; transition:transform .3s, color .3s; }
+.cal_top .cal_ctrl .btn_cal_next{font-size:1.6rem; color:#b7b7b7; -webkit-transition:transform .3s, color .3s; transition:transform .3s, color .3s; }
+.cal_top .cal_ctrl .btn_cal_pre:hover,
+.cal_top .cal_ctrl .btn_cal_pre:focus{-webkit-transform:translateX(-3px); transform:translateX(-3px); color:#22499d; }
+.cal_top .cal_ctrl .btn_cal_next:hover,
+.cal_top .cal_ctrl .btn_cal_next:focus{-webkit-transform:translateX(3px); transform:translateX(3px); color:#22499d; }
+.cal_top .cal_ctrl .btn_cal_today{position:absolute; top:.25rem; left:0; width:auto; padding:0 .75rem; line-height:2rem; font-size:.8rem; border:1px solid #22499d; background:#fff; color:#22499d; border-radius:1rem; }
+.cal_top .cal_ctrl .btn_cal_today i {margin-right:.5rem; vertical-align: middle; }
+.cal_top .cal_ctrl .btn_cal_today:hover,
+.cal_top .cal_ctrl .btn_cal_today:focus {color:#fff; background:#22499d;}
+.cal_top .cal_ctrl .btn_cal_add{position:absolute; bottom:0; left:53px; width:auto; padding:0 .5rem; line-height:32px; font-size:15px; border:1px solid #b2b7c7; background:#eee; color:#000;}
+.cal_top .cal_ctrl .btn_cal_com2 {position:absolute; right:0; top:.25rem; padding:0 .75rem; line-height:2rem; font-size:.8rem; border:1px solid #22499d; background:#fff; color:#22499d; border-radius:1rem; }
+.cal_top .cal_ctrl .btn_cal_com2 i {margin-right:.5rem;}
+.cal_top .cal_ctrl .btn_cal_com2:hover,
+.cal_top .cal_ctrl .btn_cal_com2:focus {color:#fff; background:#22499d;}
+
+.cal_top .cal_ctrl4 {position:relative; min-height:3rem; margin:.4rem 0 0; padding:.5rem .5rem; text-align:left; background:#f7f7f7;}
+.cal_top .cal_ctrl4 a {display:inline-block;}
+.cal_top .cal_ctrl4 .btn_cal_com { width:auto; padding:0 .5rem; line-height:2rem; font-size:16px; border:1px solid #999; background:#fff; color:#000; }
+.cal_top .cal_ctrl4 .schl_view {position:relative;margin-top:.5rem; padding:.5rem 0; border-top:1px dotted #e0e0e0;}
+.cal_top .cal_ctrl4 .schl_view p {position:absolute; right:0; top:.5rem;}
+.cal_top .cal_ctrl4 .schl_view p a {padding:0 .5rem; line-height:1.5rem; font-size:.8rem; border:1px solid #666; background:#666; color:#fff;}
+.cal_top .cal_ctrSear {position:absolute; right:.5rem; top:.5rem;}
+.cal_top .cal_ctrSear select{height:2rem; color:#444; font-family:'NotoSans'; border:1px solid #b2b7c7; }
+.cal_top .cal_ctrSear button{height:2rem; padding:0 15px 0 34px; color:#fff; background:#454545 url('/images/web/syu/sub_cnt/btn_cal_search.png') no-repeat left top; }
+.cal_top .cal_ctrSear a.searchBtn{display:inline-block; height:2rem; line-height:2rem; padding:0 10px; color:#fff; vertical-align:middle; background:#394758; }
+
+
+.cal_top .cal_ctrl2{position:relative; margin:.5rem 0 1rem; float:right; line-height:34px; font-size:15px; text-align:center; }
+.cal_top .cal_ctrl2 select{height:34px; color:#444; font-family:'NotoR'; border:1px solid #b2b7c7; }
+.cal_top .cal_ctrl2 button{height:34px; padding:0 15px 0 34px; color:#fff; background:#454545 url('/images/web/syu/sub_cnt/btn_cal_search.png') no-repeat left top; }
+.cal_top .cal_ctrl2 a.searchBtn{display:inline-block; height:34px; line-height:34px; padding:0 10px; color:#fff; vertical-align:middle; background:#394758; } /* 190907 */
+
+.cal_top .cal_ctrl3{position:relative; margin:.5rem 0 1rem; /* float:right; */ line-height:34px; font-size:15px; text-align:center; }
+.cal_top .cal_ctrl3 a.goBtn{display:inline-block; height:34px; line-height:34px; padding:0 10px; color:#fff; vertical-align:middle; background:#394758; }
+
+
+
+/* 달력 월간 */
+.cal_box .inner table{border-top:3px solid #22499d; table-layout:fixed; border-bottom:1px solid #d3d3d3;;width: 100%;}
+.cal_box .inner table thead th{padding:5px; font-size:15px; color:#111; line-height:40px; border-left:1px solid #b2b7c7; background:#f1f7fb; }
+.cal_box .inner table td{height:140px; padding:5px; font-size:14px; font-family:'NotoR'; vertical-align:top; border-left:1px solid #b2b7c7; border-top:1px solid #b2b7c7; }
+.cal_box .inner table thead th:first-child, .cal_box .inner table td:first-child{border-left:none; }
+.cal_box .inner table td div ul{position:relative; padding:5px; font-size:13px; line-height:21px; }
+.cal_box .inner table td div ul li{margin:1px 0; }
+.cal_box .inner table td div ul li a{display:block; color:#444; white-space:nowrap; text-overflow:ellipsis; overflow:hidden; }
+.cal_box .inner table td div ul li a span{margin-right:5px; }
+
+/* 달력 주간 / 일간 */
+.cal_box .inner2{position:relative; height:650px; padding-top:52px; border-bottom:1px solid #d3d3d3; }
+.cal_box .inner2 .tbl_thead{position:absolute; top:0; left:0; width:100%; height:75px; overflow-y:scroll; }
+.cal_box .inner2 .tbl_tbody{position:absolute; width:100%; top:0px; left:0px; height:100%; overflow-y:scroll;-webkit-overflow-scrolling:touch; }
+.cal_box .inner2 .tbl_tbody tbody tr:nth-child(odd) td{border-top:1px dashed #b2b7c7; }
+.cal_box .inner2 .tbl_thead_day{position:absolute; top:0; left:0; width:100%; height:70px; overflow-y:scroll; }
+.cal_box .inner2 .tbl_tbody_day{position:absolute; left:0; top:0; width:100%; height:100%; overflow-y:scroll; border-bottom:1px solid #d3d3d3; }
+.cal_box .inner2 table{width:100%; table-layout:fixed; }
+
+.cal_box .inner2 table thead th{padding:5px; font-size:.8rem; color:#091f46; padding:1rem; border-left:1px solid #d3d3d3; border-top:3px solid #22499d; background:#fbfcfd; font-weight:500; }
+.cal_box .inner2 table thead th:first-child, .cal_box .inner table td:first-child{border-left:none; }
+.cal_box .inner2 table tbody th{padding:1rem; font-size:15px; font-weight:600; color:#111; vertical-align:top; border-top:1px solid #d3d3d3; background:#fbfcfd; }
+.cal_box .inner2 table tbody td{padding:0 1px; vertical-align:top; border-left:1px solid #d3d3d3; border-top:1px solid #d3d3d3; color:#555; font-size:.8rem; padding:1rem; }
+.cal_box .inner2 table tbody tr:first-child td{background:#fbfcfd; }
+
+/* 종일 시간대 */
+.cal_box .inner2 table td div ul.all_sch li{position:relative; height:20px; line-height:20px; margin:1px 0; padding:0 5px; border-radius:2px; overflow:hidden; -webkit-box-sizing:border-box; -moz-box-sizing:border-box; box-sizing:border-box; }
+.cal_box .inner2 table td div ul.all_sch li a{white-space:nowrap; text-overflow:ellipsis; overflow:hidden; }
+
+/* 동 시간대 일정 여러개 */
+.cal_box .inner2 table td div ul.sch_li1, .cal_box .inner2 table td div ul.sch_li2, .cal_box .inner2 table td div ul.sch_li3, .cal_box .inner2 table td div ul.sch_li4{position:absolute; left:0; top:0; width:100%; font-size:13px; line-height:20px; -webkit-box-sizing:border-box; -moz-box-sizing:border-box; box-sizing:border-box; }
+.cal_box .inner2 table td div ul.sch_li1:after, .cal_box .inner2 table td div ul.sch_li2:after, .cal_box .inner2 table td div ul.sch_li3:after, .cal_box .inner2 table td div ul.sch_li4:after{content:""; display:block; clear:both; overflow:hidden; }
+
+.cal_box .inner2 table td div ul li a{display:block; height:100%; overflow:hidden; word-break:break-word; word-wrap:break-word; font-size:.7rem; }
+
+.cal_box .inner2 table td div ul.sch_li li{position:absolute; top:0; width:99%; padding:0 5px; margin:0 1px; border-radius:2px; overflow:hidden; -webkit-box-sizing:border-box; -moz-box-sizing:border-box; box-sizing:border-box; }
+.cal_box .inner2 table td div ul.sch_li li span{display:block; }
+.cal_box .inner2 table td div ul.sch_li1 li{position:absolute; top:0; width:99%; padding:0 5px; margin:0 1px; border-radius:2px; overflow:hidden; -webkit-box-sizing:border-box; -moz-box-sizing:border-box; box-sizing:border-box; }
+.cal_box .inner2 table td div ul.sch_li1 li span{display:block; }
+.cal_box .inner2 table td div ul.sch_li2 li{position:absolute; top:0; width:48%; padding:0 5px; margin:0 1px; border-radius:2px; overflow:hidden; -webkit-box-sizing:border-box; -moz-box-sizing:border-box; box-sizing:border-box; }
+.cal_box .inner2 table td div ul.sch_li2 li span{display:block; }
+.cal_box .inner2 table td div ul.sch_li3 li{position:absolute; top:0; width:31%; padding:0 5px; margin:0 1px; border-radius:2px; overflow:hidden; -webkit-box-sizing:border-box; -moz-box-sizing:border-box; box-sizing:border-box; }
+.cal_box .inner2 table td div ul.sch_li3 li span{display:block; }
+.cal_box .inner2 table td div ul.sch_li4 li{position:absolute; top:0; width:23%; padding:0 5px; margin:0 1px; border-radius:2px; overflow:hidden; -webkit-box-sizing:border-box; -moz-box-sizing:border-box; box-sizing:border-box; }
+.cal_box .inner2 table td div ul.sch_li4 li span{display:block; }
+
+.cal_box .inner2 table td div ul li.cbg_sch_hldy:before,
+.cal_box .inner2 table td div ul li.cbg_sch_sky:before,
+.cal_box .inner2 table td div ul li.cbg_sch_red:before,
+.cal_box .inner2 table td div ul li.cbg_sch_green:before,
+.cal_box .inner2 table td div ul li.cbg_sch_pink:before,
+.cal_box .inner2 table td div ul li.cbg_sch_blue:before,
+.cal_box .inner2 table td div ul li.cbg_sch_green2:before,
+.cal_box .inner2 table td div ul li.cbg_sch_pink2:before{left:0; padding:0; }
+
+/* 달력 연간 */
+.cal_box .inner3{position:relative; }
+.cal_box .inner3 .tbl_tbody_year{position:relative; width:100%; height:100%; overflow-y:auto; border-bottom:1px solid #d3d3d3; }
+.cal_box .inner3 table{width:100%;}
+
+.cal_box .inner3 table thead th{padding:5px; font-size:.8rem; color:#091f46; padding:1rem; border-left:1px solid #d3d3d3; border-top:3px solid #22499d; background:#fbfcfd; font-weight:500; }
+.cal_box .inner3 table tbody th{padding:1rem; font-size:15px; font-weight:600; color:#111; vertical-align:middle; border-top:1px solid #d3d3d3; background:#fbfcfd; }
+.cal_box .inner3 table tbody td{padding:0 1px; vertical-align:top; border-left:1px solid #d3d3d3; border-top:1px solid #d3d3d3; color:#555; font-size:.8rem; padding:1rem; }
+.cal_box .inner3 table tbody tr:first-child th,
+.cal_box .inner3 table tbody tr:first-child td{background:#fbfcfd; border-top:3px solid #22499d;}
+.cal_box .inner3 table tbody td.nowrap {white-space:nowrap;} /* KSY 추가 : 210624 */
+.cal_box .inner3 table tbody td.nowrap span {display:inline-block;}/* KSY 추가 : 210624 */
+
+/* 달력 공통 ****************************************************************************************************************/
+/* 달력 공통 */
+.cal_box table td.op50 span.pre_day{opacity:0.5; }
+.cal_box table td div{position:relative; }
+
+.cal_box table th.sun{color:#ff0000 !important; }
+.cal_box table th.sat{color:#104ca6 !important; }
+.cal_box table td.sun{color:#ff0000; background:#f7f7f7; }
+.cal_box table td.sat{color:#104ca6; background:#f7f7f7; }
+.cal_box table td.today{background:#f0f7ff; }
+
+
+/* 일정 공통 텍스트구분 */
+.sch_hldy{color:#ff0000; } /* 공휴일 */
+.sch_blue{color:#104ca6; } /* 개인 */
+.sch_red{color:#e33d65; } /* 부서 */
+.sch_purp{color:#8329c7; } /* 학교 */
+.sch_green{color:#39891e; } /* 그룹 */
+
+/* 일정 공통 bg구분 */
+li.cbg_sch_hldy, li.cbg_sch_sky, li.cbg_sch_red, li.cbg_sch_green, li.cbg_sch_pink, li.cbg_sch_blue, li.cbg_sch_green2, li.cbg_sch_pink2, li.cbg_sch_purple{position:relative; }
+li.cbg_sch_hldy:before{content:""; display:block; clear:both; position:absolute; left:-10px; top:0; width:calc(100% + 20px); height:100%; padding:0 10px; background:#ff0000; } /* 공휴일 */
+li.cbg_sch_hldy a{position:relative; color:#fff !important; z-index:2; }
+
+li.cbg_sch_sky:before{content:""; display:block; clear:both; position:absolute; left:-10px; top:0; width:calc(100% + 20px); height:100%; padding:0 10px; background-color:#e7ebf5; border-color:#e7ebf5; } /* 하늘색 */
+li.cbg_sch_sky a{position:relative; color:#000 !important; z-index:2; }
+
+li.cbg_sch_red:before{content:""; display:block; clear:both; position:absolute; left:-10px; top:0; width:calc(100% + 20px); height:100%; padding:0 10px; background-color:#FF0000; border-color:#FF0000; } /* 빨간색 */
+li.cbg_sch_red a{position:relative; color:#fff !important; z-index:2; }
+
+li.cbg_sch_green:before{content:""; display:block; clear:both; position:absolute; left:-10px; top:0; width:calc(100% + 20px); height:100%; padding:0 10px; background-color:#dff4f5; border-color:#dff4f5; } /* 초록색 */
+li.cbg_sch_green a{position:relative; color:#000 !important; z-index:2; }
+
+li.cbg_sch_pink:before{content:""; display:block; clear:both; position:absolute; left:-10px; top:0; width:calc(100% + 20px); height:100%; padding:0 10px; background-color:#f7f7f7; border-color:#f7f7f7; } /* 분홍색 */
+li.cbg_sch_pink a{position:relative; color:#000 !important; z-index:2; }
+
+li.cbg_sch_blue:before{content:""; display:block; clear:both; position:absolute; left:-10px; top:0; width:calc(100% + 20px); height:100%; padding:0 10px; background-color:#e9e1da; border-color:#e9e1da; } /* 파랑색 */
+li.cbg_sch_blue a{position:relative; color:#000 !important; z-index:2; }
+
+li.cbg_sch_green2:before{content:""; display:block; clear:both; position:absolute; left:-10px; top:0; width:calc(100% + 20px); height:100%; padding:0 10px; background-color:#fdedd9; border-color:#fdedd9; } /* 초록색2 */
+li.cbg_sch_green2 a{position:relative; color:#000 !important; z-index:2; }
+
+li.cbg_sch_pink2:before{content:""; display:block; clear:both; position:absolute; left:-10px; top:0; width:calc(100% + 20px); height:100%; padding:0 10px; background-color:#DC143C; border-color:#DC143C; } /* 삼홍색 */
+li.cbg_sch_pink2 a{position:relative; color:#fff !important; z-index:2; }
+
+li.cbg_sch_purple:before{content:""; display:block; clear:both; position:absolute; left:-10px; top:0; width:calc(100% + 20px); height:100%; padding:0 10px; background-color:#f5edf9; border-color:#f5edf9; } /* 분홍색 */
+li.cbg_sch_purple a{position:relative; color:#000 !important; z-index:2; }
+
+.cal_box .cal_top .cal_ctrl .sr-only {position: absolute;margin: -1px;padding: 0;width: 1px;height: 1px;overflow: hidden;border: 0;clip: rect(0, 0, 0, 0);}
+/* //달력 공통 ****************************************************************************************************************/
+
+
+/*일정*/
+label[for="colorChk1"] {background-color: #E6E6FA; }
+label[for="colorChk2"] {background-color: #E1FFFF; }
+label[for="colorChk3"] {background-color: #F5F5F5; }
+label[for="colorChk4"] {background-color: #F5F5DC; }
+label[for="colorChk5"] {background-color: #FFEFD5; }
+label[for="colorChk6"] {background-color: #D8BFD8; }
+
+.lavender {background-color: #E6E6FA; }
+.lightCyan {background-color: #E1FFFF; }
+.whiteSmoke {background-color: #F5F5F5; }
+.beige {background-color: #F5F5DC; }
+.papayaWhip {background-color: #FFEFD5; }
+ .thistle {background-color: #D8BFD8; }
+ 
+#insertAllDiv {opacity:0;display:none;position:relative;border:5px solid #fff;padding:20px;background-color:#fff;padding: 20px;overflow-y: scroll;}
+.bbs_WriteA {-webkit-text-size-adjust: none;font-family: 'NotoSans', '돋움', 'Dotum', '굴림', 'Gulim', AppleGothic, UnDotum, Arial, Tahoma, Verdana, sans-serif;font-weight: 200;color: #666;line-height: 1;box-sizing: border-box;margin: 0;padding: 0;border: 0;font-size: 0.7rem;border-top: 0.1rem solid #505c78;}
+.bbs_WriteA table{width: 100%;border-collapse: separate;border-spacing: 0;}
+#insertAllDiv th{padding: 0.65rem 0.5rem; color: #111;font-weight: 400;text-align: left;border-bottom: 1px solid #eaecf1;background: #f9fafb;vertical-align: middle;}
+#insertAllDiv td{padding: 0.65rem 0.5rem;border-bottom: 1px solid #eaecf1;}
+#excelFile{border:0px solid #fff;}
+.btn_bl{font-family: inherit;cursor: pointer;appearance: none;display: inline-block;padding: 0.6rem 1rem;min-width: 5.5rem;line-height: 1.5;text-align: center;vertical-align: middle;font-size: 0.8rem;font-weight: 400;color: #fff;border: 1px solid;-webkit-transition: all 0.3s ease;border-color: #0079d0;background: #005592;}
+.btn_gr{margin: 0;font-family: inherit;cursor: pointer;appearance: none;display: inline-block;padding: 0.6rem 1rem;min-width: 5.5rem;line-height: 1.5;text-align: center;vertical-align: middle;font-size: 0.8rem;font-weight: 400;color: #fff;border: 1px solid;-webkit-transition: all 0.3s ease;background: #53657c;border-color: #46576b;}
+.btn_blL{text-decoration: none;display: inline-block;line-height: 1.5;text-align: center;vertical-align: middle;font-weight: 400;-webkit-transition: all 0.3s ease;border: 2px solid;margin: .15rem;border-color: #0081dd;color: #fff;background: #005592;padding: 0.375rem 0.5rem;min-width: 4.5rem;font-size: 0.7rem;}
+
+@media screen and (max-width:1199px){
+	/* 달력 월간 */
+	.cal_box .inner table colgroup, .cal_box .inner table thead, .cal_box .inner table td.op50{display:none; }
+	.cal_box .inner table td{display:block; height:auto; border-left:none; border-top:1px solid #b2b7c7; }
+	.cal_box .inner table td div ul{height:auto; padding:0 10px 10px; }
+
+	/* 달력 주간 / 일간 */
+	.cal_box .inner2{height:553px; overflow:scroll; -webkit-overflow-scrolling:touch; }
+	.cal_box .inner2 .tbl_thead{width:1200px; }
+	.cal_box .inner2 .tbl_tbody{width:1200px; }
+
+	.cal_box .inner3 table tbody td.nowrap {text-align:center;} /* KSY 추가 : 210624 */
+    .cal_box .inner3 table tbody td.nowrap span {display:block;}/* KSY 추가 : 210624 */
+
+}
+@media screen and (max-width:768px){
+	/* 일정관리 추가 210219 */
+	.cal_top .cal_ctrl .btn_cal_pre,
+	.cal_top .cal_ctrl .btn_cal_next{font-size:1.5rem; }
+	.cal_top .cal_ctrl .date{font-size:1.5rem; }
+	.cal_box .sche_check{position:relative; top:auto; left:auto; }
+	.cal_top .cal_ctrl2{border:1px solid #ddd; background:#f5f5f5; float:none; padding:1rem; }
+
+    .cal_top .cal_ctrl p {overflow:hidden;}
+	.cal_top .cal_ctrl .btn_cal_today{position:relative; top:auto; left:auto; width:48%; margin:0 1%; float:left; display:block; padding:0;}
+	.cal_top .cal_ctrl .btn_cal_com2 {position:relative; right:auto; top:auto; width:48%; margin:0 1%; float:left; display:block; padding:0;}
+
+	.cal_top .cal_ctrl4 {position:relative; margin:.4rem 0 0; padding:.5rem .5rem; text-align:left; background:#f7f7f7;}
+	.cal_top .cal_ctrl4 a {display:inline-block;}
+	.cal_top .cal_ctrl4 .btn_cal_com { width:auto; padding:0 .5rem; line-height:2rem; font-size:16px; border:1px solid #999; background:#fff; color:#000; }
+	.cal_top .cal_ctrl4 .schl_view {position:relative;margin-top:.5rem; padding:.5rem 0; border-top:1px dotted #e0e0e0;}
+	.cal_top .cal_ctrl4 .schl_view p {position:absolute; right:0; top:.5rem;}
+	.cal_top .cal_ctrl4 .schl_view p a {padding:0 .5rem; line-height:1.5rem; font-size:.8rem; border:1px solid #666; background:#666; color:#fff;}
+	.cal_top .cal_ctrSear {position:absolute; right:.5rem; top:.5rem;}
+	.cal_top .cal_ctrSear select{height:2rem; color:#444; font-family:'NotoSans'; border:1px solid #b2b7c7; }
+	.cal_top .cal_ctrSear button{height:2rem; padding:0 15px 0 34px; color:#fff; background:#454545 url('/images/web/syu/sub_cnt/btn_cal_search.png') no-repeat left top; }
+	.cal_top .cal_ctrSear a.searchBtn{display:inline-block; height:2rem; line-height:2rem; padding:0 10px; color:#fff; vertical-align:middle; background:#394758; }
+
+
+}
+
+@media screen and (max-width:580px){
+	.cal_top .cal_ctrl .btn_cal_today{width:100%; margin:.25rem 0; float:none;}
+	.cal_top .cal_ctrl .btn_cal_com2 {width:100%; margin:.25rem 0; float:none;}
+
+	.cal_top .cal_ctrl4 {position:relative; margin:.4rem 0 0; padding:.5rem .5rem; text-align:left; background:#f7f7f7;}
+	.cal_top .cal_ctrl4 a {display:inline-block;}
+	.cal_top .cal_ctrl4 .btn_cal_com { width:auto; padding:0 .5rem; line-height:2rem; font-size:16px; border:1px solid #999; background:#fff; color:#000; }
+	.cal_top .cal_ctrl4 .schl_view {position:relative;margin-top:.5rem; padding:.5rem 0; border-top:1px dotted #e0e0e0;}
+	.cal_top .cal_ctrl4 .schl_view p {position:relative; right:auto; top:auto; margin-top:.25rem; text-align:center;}
+	
+
+
+}
+
+@media screen and (max-width:480px){
+	/* 일정관리 추가 210219 */
+	.cal_top .cal_ctrl .btn_cal_pre,
+	.cal_top .cal_ctrl .btn_cal_next{font-size:1.3rem; }
+	.cal_top .cal_ctrl .date{margin:0 .5rem; font-size:1.3rem; }
+	.cal_top .cal_ctrl2 select{width:100%; }
+	.cal_top .cal_ctrl2 a.searchBtn{width:100%; }
+	
+	.cal_box .inner3 table thead th,
+	.cal_box .inner3 table tbody th,
+	.cal_box .inner3 table tbody td{padding:.5rem; font-size:.75rem; line-height:1.5; }
+
+	.cal_top .cal_ctrSear {position:relative; right:auto; top:auto;}
+	.cal_top .cal_ctrSear select{width:100%;}
+	.cal_top .cal_ctrSear a.searchBtn{display:block; width:100%; margin-top:.25rem;}
+}

@@ -1,0 +1,183 @@
+@charset "utf-8";
+@import url(common.css);
+
+
+#container { position:relative; overflow:hidden; background-color:#213048; min-width:1020px}
+#container:after {content:""; display:block; clear:both;}
+
+.main_content {padding:10px 20px 0; background:#F7F7F7; margin-left: 230px; z-index:2; min-height:900px}
+body.nav-sm #container .main_content {margin-left:0; z-index:2;}
+
+body { margin:0; color: #2a3f54; background: #ffffff; font-family:'돋움',Dotum,'굴림',Gulim,Helvetica,sans-serif; font-size: 13px; line-height: 1.471;}
+
+.clearfix:after, .clearfix:before, .container:after, .container:before, .nav:after, .nav:before{display: table; content: " "}
+.clearfix:after, .container:after, .nav:after{clear: both}
+.container {width: 100%; padding: 0;}
+a:focus, a:hover {color: #23527c; text-decoration: underline}
+
+footer {background: #f7f7f7; margin-left:230px; padding: 15px 20px; display: block; border-top:1px solid #e6e9ed}
+
+/********************************************************************************************
+									::: 공통 :::
+********************************************************************************************/
+/* 타이틀 */
+h3.page-title {margin:15px 0; font-family:"NanumSquareR"; font-size:28px; color:#222; letter-spacing:-1px}
+.tit1 { font-family:"NanumBold"; font-size:18px; color:#222; line-height:25px; letter-spacing:-1px; background:url('/images/ap/tit1.png') no-repeat 0 4px; padding-left:22px; margin-bottom:5px}
+.tit2 { font-family:"NanumBold"; font-size:14px; color:#2b415a; line-height:20px; letter-spacing:-1px; background:url('/images/ap/tit2.png') no-repeat 3px 2px; padding-left:22px; margin-bottom:5px}
+
+/* 텍스트스타일 */
+.bul { font-size:13px; font-family:"NanumBold"; color:#000; line-height:22px; letter-spacing:-1px; background:url("/images/ap/bul.png") no-repeat 0 4px; padding-left:22px} /* 블렛 */
+/* 폰트 */
+.font_n { font-family:'Nanum' !important;}
+.font_b { font-family:'NanumBold' !important;}
+.fs12 {font-size:12px !important; font-family:'Nanum'; color:#555; line-height:18px !important; letter-spacing:-0.5px}
+.fs13 {font-size:13px !important; font-family:'Nanum'; color:#222; line-height:20px !important; letter-spacing:-0.5px}
+.fs14 {font-size:14px !important; font-family:'Nanum'; color:#222; line-height:22px !important; letter-spacing:-1px}
+.fs16 {font-size:16px !important; font-family:'NanumBold'; color:#222; line-height:24px !important; letter-spacing:-1px}
+.fs18 {font-size:18px !important; font-family:'NanumBold'; color:#222; line-height:28px !important; letter-spacing:-1px}
+.fs22 {font-size:22px !important; font-family:'NanumBold'; color:#222; line-height:30px !important; letter-spacing:-1px}
+
+
+.col_red { color:#eb1c24 !important}
+.col_blue { color:#3d70cb !important}
+.col_green { color:#22b766 !important}
+
+/* 리스트 */
+.list_Ty li {font-size:13px; font-family:"Nanum"; color:#222; line-height:22px; letter-spacing:-1px; margin:5px 0 5px 15px; background:url("/images/ap/bul1.png") no-repeat 0 7px; padding-left:8px}
+
+/* 박스 */
+.txtbox { background-color:#fff; border:1px solid #e5e5e5; border-bottom-color:#c4c4c4; border-radius:7px; padding:15px 20px; margin-bottom:15px;}
+.txtbox p { font-size:14px; font-family:"Nanum"; color:#222; line-height:20px}
+
+.txtbox02 { background-color:#e8ebf0; border:1px solid #cdd2d9; border-radius:5px; padding:15px 20px; margin-bottom:15px;}
+.txtbox02 p { font-size:14px; font-family:"Nanum"; color:#222; line-height:20px}
+
+/* 버튼 */
+.btn { display:inline-block; *display:inline; zoom:1; margin:0 5px 5px 0; font-family:"NanumBold"; font-size:14px; color:#fff; line-height:20px; text-align:center; border-radius:3px; vertical-align:middle; -ms-touch-action:manipulation; touch-action:manipulation; border:1px solid transparent; white-space:nowrap; padding:6px 12px}
+.btn_M {display:inline-block; *display:inline; zoom:1; margin:0 3px 3px 0; font-family:"NanumBold"; font-size:13px; color:#fff; line-height:20px; text-align:center; border-radius:3px; vertical-align:middle; -ms-touch-action:manipulation; touch-action:manipulation; border:1px solid transparent; white-space:nowrap; padding:3px 10px}
+.btn_S {display:inline-block; *display:inline; zoom:1; margin:0; font-family:"NanumBold"; font-size:12px; color:#fff; line-height:20px; text-align:center; border-radius:3px; vertical-align:middle; -ms-touch-action:manipulation; touch-action:manipulation; border:1px solid transparent; white-space:nowrap; padding:0 8px}
+.btn_default {background-color:#fff; border-color:#ccc; color:#364c60 !important}
+.btn_blue { background-color:#1A82C3; border-color:#1A82C3}
+.btn_green { background-color:#26B99A; border-color:#4cae4c}
+.btn_sky {background-color:#5bc0de; border-color:#46b8da}
+.btn_yellow {background-color:#f0ad4e; border-color:#f0ad4e}
+.btn_red {background-color:#d9534f; border-color:#d9534f}
+.btn_dark {background-color:#4b5e70; border-color:#364c60; color:#e9edef !important}
+.btn:hover, .btn_S:hover, .btn_M:hover { opacity:0.9}
+
+/* 상단박스:select, search */
+.top_box { position:relative; border-top:1px solid #637187; border-bottom:1px solid #637187; background:#172d44; height:auto; padding:15px 10px; font-family:"NanumBold"; font-size:12px; color:#fff; margin-bottom:15px; overflow:hidden}
+.top_box select, .top_box input[type="text"] { font-size:12px;}
+.board-total { position:relative; float:left; z-index:1001;}
+.board-total span { display:inline-block; *display:inline; zoom:1; margin:0 5px 0 0; }
+.board-total strong {color:#ffe556;font-weight:normal;font-family:'NanumBold';font-size: 30px;margin-left: 20px;}
+.board-total select { height:28px; border:1px solid #d7d7d7; color:#666; background:#fff; font-size:12px; vertical-align:middle; padding:0}
+.board-srch { position:relative; float:right; overflow:hidden}
+.board-srch .term { position:relative; float:left}
+.board-srch .term input[type="text"] { height:26px; border:0}
+.board-srch .sele { position:relative; float:left; margin-left:10px; overflow:hidden}
+.board-srch .sele select { float:left; width:80px; padding:1px 0; height:28px; font-size:12px; border:0; color:#666; background:#fff; margin-right:5px;}
+.board-srch .sele .search_input { overflow:hidden}
+.board-srch .sele input.txt { float:left; width:140px; height:28px; line-height:28px; padding:0 5px; background:#f7f7f7; border:0;  }
+.board-srch .sele button.btnSearch {position:absolute;right:0;top:0;width:30px;height: 43px;font-size:0;background: url('/images/ap/btnSrch.gif') no-repeat;background-size: 31px;}
+
+/* 검색버튼 */
+.btnSearch { position:absolute; right:0; top:0; width:30px; height:28px; font-size:0; background:url('/images/ap/btnSrch.gif') no-repeat;}
+
+/* 셀렉트table */
+.select_tb { width:100%; border:1px solid #e4e4e4; font-family:"Nanum"; font-size:13px; letter-spacing:-1px;}
+.select_tb th { background:#2a3f54; color:#ecf0f1; font-size:14px; font-family:"NanumBold"}
+.select_tb th,
+.select_tb td { padding:10px 15px; text-align:left}
+.select_tb td { padding:10px 15px; font-family:"Nanum" color:#222; font-size:13px; border:1px solid #ddd}
+.select_tb tr.selected { background:#dcf4ef;}
+.selectedRow { background:#dcf4ef;}
+.select_tb tr.selected td {border-top:1px solid #c8ede6; border-bottom: 1px solid #93dccd;}
+.select_tb tr:hover td { background:#f0faf8; border-top: 1px solid #e7f7f4; border-bottom: 1px solid #e7f7f4; color:#222}
+
+/* 기본table */
+.basic_tb {width:100%; border:1px solid #cdd2d9; border-top:3px solid #405467; font-family:"Nanum"; font-size:13px; letter-spacing:-1px;}
+.basic_tb th { font-size:14px; background:#f5f5f5; font-family:"NanumBold"}
+.basic_tb th, 
+.basic_tb td { color:#222; padding:10px 15px; border:1px solid #cdd2d9}
+.basic_tb td { font-size:13px; font-family:"Nanum";}
+
+/* 상단th고정table */
+.top_tb { width:100%; border-top:3px solid #405467; font-family:"Nanum"; font-size:13px; letter-spacing:-1px;}
+.top_tb thead th {border-bottom:1px solid #405467; font-family:"NanumBold"}
+.top_tb th { color:#222; font-size:14px }
+.top_tb th, 
+.top_tb td { padding:10px 15px; border:1px solid #ddd}
+.top_tb td { color:#222; font-size:13px; font-family:"Nanum"}
+
+/* 디테일table */
+.detail_tb { width:100%; border:1px solid #cdd2d9; font-family:"Nanum"; font-size:13px; letter-spacing:-1px;}
+.detail_tb th { font-size:14px; background:#e8ebf0; font-family:"NanumBold"}
+.detail_tb th, 
+.detail_tb td { color:#222; line-height:20px; padding:15px; border:1px solid #cdd2d9}
+.detail_tb td { font-size:13px; font-family:"Nanum";}
+.detail_tb td button.btn, .detail_tb td button.btn_default { margin:0 !important}
+
+/* Form */
+.form-group { margin-bottom:10px; font-family:"NanumBold"; font-size:14px; color:#222; line-height:20px; overflow:hidden}
+.form-group label { width:25%; float:left; line-height:25px; text-align:right}
+.form-group .col-md { position:relative; width:50%; min-height:1px; float:left; padding:0 10px}
+.form-group .col-md input, .form-group .col-md select { width:100%; font-family:"Nanum"; font-size:13px;}
+.required { color:#f00}
+
+/* 페이징 */
+.BD_paging {position:relative; margin-top:15px; font-size:13px; text-align:center;}
+.BD_paging a {width:33px; line-height:33px; display:inline-block; margin-right:-1px; padding:0; color:#666; text-align:center; vertical-align:middle; border:1px solid #9298af;}
+.BD_paging a.on {font-weight:400; color:#fff; text-decoration:underline; border-color:#0467b3; background:#0467b3;}
+
+/* 페이징 */
+	.pagination {display: inline-block; padding-left: 0; margin:20px 0 0; border-radius: 3px; white-space: nowrap; font-family:Nanum}
+	.pagination > li {color: #7a878e}
+	.pagination > li {display: inline}
+	.pagination > li:first-child > a, .pagination > li:first-child > span {border-top-left-radius: 3px; border-bottom-left-radius: 3px}
+	.pagination > li:last-child > a, .pagination > li:last-child > span {border-top-right-radius: 3px; border-bottom-right-radius: 3px}
+	
+	.pagination > li > a:focus,
+	.pagination > li > a:hover,
+	.pagination > li > span:focus,
+	.pagination > li > span:hover{z-index:2; color:#23527c; background-color:#eee; border-color:#ddd}
+	
+	.pagination .disabled > a, .pagination .disabled > span {box-shadow: none !important; color: #dbdee0 !important;}
+	.pagination > .disabled > a, 
+	.pagination > .disabled > a:focus, 
+	.pagination > .disabled > a:hover, 
+	.pagination > .disabled > span, 
+	.pagination > .disabled > span:focus, 
+	.pagination > .disabled > span:hover {color: #777 !important; cursor: not-allowed; background-color: #fff; border-color: #ddd;}
+	
+	.pagination > li > a, .pagination > li > span {position: relative; float: left; padding: 6px 12px; margin-left: -1px; line-height: 1.4285; color: #7a878e; text-decoration: none; background-color: #fff;
+    border: 1px solid #ddd}
+	
+	.pagination > .active > a, 
+	.pagination > .active > span, 
+	.pagination > .active > a:hover, 
+	.pagination > .active > span:hover, 
+	.pagination > .active > a:focus, 
+	.pagination > .active > span:focus {background-color: #25476a; border-color: #25476a; z-index:3; color:#fff !important; cursor:default}
+	
+
+
+
+/* deploy */
+.BD_count {line-height:30px; margin:30px 0 0; font-family:'NotoR'}
+.BD_count span {color:#222; font-size:13px}
+.BD_count strong.cnt_point { color:#06F}
+
+.faqList{border-top: 2px solid #ffffff;margin-top:10px;background: #3e5f82;}
+.faqList .list { width:100%}
+.faqList .list > dt{display:block;position:relative;border-bottom:1px solid #e9e9e9}
+.faqList .list > dt button { width:100%; display:block; border-bottom:1px solid #e9e9e9; padding:15px 0; text-align:left; line-height:28px; vertical-align: middle; font-family:'NotoM'; background-color:transparent}
+.faqList .list > dt button .faq_Q {position:absolute;top:16px;left:15px;width:28px;height:28px;color:#fff;line-height:25px;text-align:center;margin:0 10px 0 0;border-radius:6px 0;background-color: #737373;}
+.faqList .list > dt button .faq_question {display:inline-block; *display:inline; zoom:1; margin:0 30px 0 60px; font-size:14px; color:#ffffff;}
+.faqList .list > dd {display:none; position:relative; border-bottom:1px solid #dfdfdf; background:#f9f9f9}
+.faqList .list > dd .faq_answer{ margin:0 15px 0 60px; padding:15px 0; font-family:'NotoR'}
+.faqList .list > dd .faq_answer > span.faq_A {position:absolute; top:12px; left:15px; width:28px; height:28px; color:#fff; line-height:25px; text-align:center; margin:0 10px 0 0; border-radius:6px 0; background:#00a078; font-family:'NotoM';}
+.faqList .list > dd .faq_answer p { font-size:13px}
+.faqList .list > dd .faq_answer p.faq_btn { height:20px}
+.faqList .list > dt{background: url("/images/ad/de/faq_off.png") no-repeat right center}
+.faqList .list > dt.active{background-image:url('/images/ad/de/faq_on.png')}

@@ -1,0 +1,201 @@
+﻿@charset "utf-8";
+
+@import url(common.css);
+
+#container {position:relative; height:100%; }
+#container:after {content:""; display:block; clear:both;}
+
+.main_content {position:relative; z-index:7; width:980px; margin:0 auto; overflow:hidden;}
+.main_content:after {content:""; display:block; clear:both;}
+
+.widgDiv1{ /* main_visual */
+	position:relative; width:450px; height:450px; float:left;
+}
+
+.widgDiv2{ /* M_link01 */
+	position:relative; width:225px; height:225px; float:left; font-family:"NanumBold"; background:#f5d161; overflow:hidden;
+}
+
+.widgDiv3{ /* pop */
+	position:relative; width:255px; height:225px; padding:0 25px; float:left; background:#a4be4b;
+}
+
+.widgDiv4{ /* gallery */
+	position:relative; width:175px; height:225px; padding:0 25px; float:left; background:#937f64;
+}
+
+.widgDiv5{ /* meal_menu */
+	position:relative; width:255px; height:175px; padding:0 25px; float:left; background:#e0922f;
+}
+
+.widgDiv6{ /* M_link02 */
+	position:relative; width:305px; height:50px; float:left; font-family:"Nanum"; background:#6b4e2b; overflow:hidden;
+}
+
+.widgDiv7{ /* M_link03 */
+	position:relative; width:175px; height:185px; padding:20px 25px; float:left; font-family:"Nanum"; background:#71b77b; overflow:hidden;
+}
+
+.widgDiv8{ /* drawSchedule */
+	position:relative; width:225px; height:225px; float:left; background:#7783ce;
+}
+
+.widgDiv9{ /* notice01 */
+	position:relative; width:530px; height:225px; float:left; background:url('/images/template/00005/main/pattern2.png') repeat-x left 60px;
+}
+
+.widgDiv10{ /* M_link04 */
+	position:relative; width:675px; height:60px; float:left; font-family:"Nanum"; background:#bbcee3; overflow:hidden;
+}
+
+.widgDiv11{ /* M_link05 */
+	position:relative; width:305px; height:60px; float:left; font-family:"Nanum"; background:#9298af; overflow:hidden;
+}
+
+/* 배너존 */
+.banner_zone {position:relative; width:100%; margin-top:30px; border-top:1px solid #c3c6d4; background:#fff;}
+.banner_zone .inner {position:relative; width:980px; height:70px; margin:0 auto; overflow:hidden;}
+.banner_zone .inner h2  {font-size:15px; font-family:"NanumBold"; color:#1d1d1d; position:absolute; top:15px; left:0;}
+.banner_zone .inner .btn {position:absolute; left:0; top:40px}
+.banner_zone .inner .btn a { float:left; font-size:0; text-indent:-10000em; width:14px; height:15px; vertical-align:top}
+.banner_zone .inner .btn a.pre {background:url(/images/template/00005/main/btn_b_prev.gif) no-repeat}
+.banner_zone .inner .btn a.stop {background:url(/images/template/00005/main/btn_b_stop.gif) no-repeat}
+.banner_zone .inner .btn a.next {background:url(/images/template/00005/main/btn_b_next.gif) no-repeat}
+.banner_zone .inner .btn a.play {background:url(/images/template/00005/main/btn_b_play.gif) no-repeat}
+.banner_zone .inner .btn a.list {background:url(/images/template/00005/main/btn_b_list.gif) no-repeat}
+.banner_zone .inner ul {padding-top:12px; margin-left:70px; height:47px; overflow:hidden}
+.banner_zone .inner ul li {width:172px; float:left; margin-left:10px;}
+.banner_zone .inner ul li a {display:block; border:1px solid #c8d1db;}
+.banner_zone .inner ul li a img {width:100%; height:45px}
+  
+@media (max-width: 800px) {
+	
+	#container,
+	.main_content,
+	.banner_zone,
+	.widgDiv3, .widgDiv4, .widgDiv5, .widgDiv7 {-webkit-box-sizing:border-box; -moz-box-sizing:border-box; -ms-box-sizing:border-box; box-sizing:border-box}
+	#container { width:100%; padding-top:69px; }
+	.main_content { width:95%; height:100%; }
+		
+	.widgDiv1, .widgDiv8, .widgDiv9, .widgDiv4, .widgDiv5, .widgDiv2, .widgDiv6, .widgDiv7, .widgDiv10, .widgDiv11, .widgDiv3, .banner_zone {-webkit-transition:all 0.3s ease; -moz-transition:all 0.3s ease; -ms-transition:all 0.3s ease; transition:all 0.3s ease}
+
+	/* 메인비주얼 */
+	.widgDiv1 {width:67%;}
+
+	/* 바로가기01 */
+	.widgDiv2 {width:33%;}
+
+	/* 팝업존 */
+	.widgDiv3 {width:34%;}
+
+	/* 포토앨범 */
+	.widgDiv4 {position:absolute; right:0; top:225px; width:33%; float:none;}
+
+	/* 식단 */
+	.widgDiv5 {width:33%;}
+
+	/* 바로가기02 */
+	.widgDiv6 {position:absolute; left:34%; top:625px; width:33%;}
+
+	/* 바로가기03 */
+	.widgDiv7 {width:33%; height:225px;}
+
+	/* 학사일정 */
+	.widgDiv8 {width:34%;}
+
+	/* 게시판 */
+	.widgDiv9 {width:66%;}
+
+	/* 바로가기04 */
+	.widgDiv10 {width:67%;}
+
+	/* 바로가기05 */
+	.widgDiv11 {width:33%;}
+
+	/* 배너존 */
+	.banner_zone .inner {width:95%;}
+	.banner_zone .inner ul li {width:30%; float:left; margin-left:3%;}
+	.banner_zone ul li a img {width:100%}	
+
+}
+
+@media (max-width: 690px) {	
+	
+	/* 메인비주얼 */
+	.widgDiv1 {width:100%; height:380px; float:none; overflow:hidden;}
+
+	/* 바로가기01 */
+	.widgDiv2 {width:50%; float:none;}
+
+	/* 팝업존 */
+	.widgDiv3 {width:50%;}
+
+	/* 포토앨범 */
+	.widgDiv4 {position:absolute; right:0; top:380px; width:50.01%; float:none;}
+
+	/* 식단 */
+	.widgDiv5 {width:50%; margin-bottom:50px;}
+
+	/* 바로가기02 */
+	.widgDiv6 {left:50%; top:780px; width:50%;}
+
+	/* 바로가기03 */
+	.widgDiv7 {width:50%;}
+
+	/* 학사일정 */
+	.widgDiv8 {width:50%;}
+
+	/* 게시판 */
+	.widgDiv9 {width:100%;}
+
+
+}
+
+@media (max-width: 560px) {	
+	
+	/* 바로가기04 */
+	.widgDiv10 {width:100%;}
+
+	/* 바로가기05 */
+	.widgDiv11 {width:100%;}
+
+	/* 배너존 */
+	.banner_zone .inner ul li {width:48%; float:left; margin-left:2%;}
+		
+}
+
+@media (max-width: 480px) {		
+	
+	/* 바로가기01 */
+	.widgDiv2 {width:100%; height:60px; float:none;}
+
+	/* 팝업존 */
+	.widgDiv3 {width:100%; float:none; margin-top:225px;}
+
+	/* 포토앨범 */
+	.widgDiv4 {top:440px; width:100%;}
+
+	/* 식단 */
+	.widgDiv5 {width:100%; margin-bottom:0; float:none;}
+
+	/* 바로가기02 */
+	.widgDiv6 {position:relative; left:auto; top:auto; width:100%;}
+
+	/* 바로가기03 */
+	.widgDiv7 {width:100%; float:none;}
+
+	/* 학사일정 */
+	.widgDiv8 {width:100%; float:none;}
+
+	/* 게시판 */
+	.widgDiv9 {width:100%; float:none;}
+
+
+}
+
+@media (max-width: 380px) {
+	
+	/* 배너존 */
+	.banner_zone .inner ul li {width:100%; float:left; margin-left:0;}
+			
+}

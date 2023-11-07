@@ -1,0 +1,171 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+ 
+<mapper namespace="ac_acs">
+	     
+	<!-- 접근 관리 리스트 (sql) -->	
+	<sql id="selectAcsList">
+		SELECT 
+			   ACCES_NO
+			  ,ACCES_TRGET
+			  ,ACCES_TRGET_PSITN
+			  ,ATHRI_IP
+			  ,PVTESBL_IP
+			  ,MACADRS
+			  ,IP_SCOPE
+			  ,MBER_ID
+			  ,CREAT_USID
+			  ,CREAT_IP
+			  ,TO_CHAR(CREAT_DT, 'YYYY/MM/DD HH24:MI:SS') AS CREAT_DT
+			  ,CONFM_AT
+			  ,CONFM_ID
+			  ,CONFM_IP
+			  ,CONFM_DT           	   
+		  FROM 
+		  	   TAP_AC_ACS_MANAGE
+		 WHERE 1 = 1
+		<if test="@egovframework.MybatisUtils@isNotEmpty(srchTxt)">
+		   AND ACCES_TRGET like '%'||#{srchTxt}||'%' OR ACCES_TRGET_PSITN like '%'||#{srchTxt}||'%'  
+		</if>
+	  ORDER BY ACCES_NO DESC	       
+	</sql>
+     
+    <!-- 접근 관리 리스트 -->
+	<select id="selectAcsList" parameterType="map" resultType="egovMap">
+		<include refid="selectAcsList" /> 
+	</select>
+    
+    <!-- 접근 관리 리스트 (페이징) -->
+    <select id="selectAcsListPaging" parameterType="map" resultType="egovMap">
+		SELECT PL.*
+		  FROM ( SELECT PO.* 
+		  		 	   ,ROWNUM AS RSN
+		           FROM ( <include refid="selectAcsList" /> ) PO ) PL
+		 WHERE 1 = 1 
+		 <![CDATA[ 
+		   AND RSN <= #{maxSn}
+		   AND RSN > #{minSn} 
+		 ]]>		
+    </select>
+    
+    <!-- 접근 관리 리스트 (페이징 전체 카운트) -->
+    <select id="selectAcsListPagingCount" parameterType="map" resultType="int">
+		SELECT COUNT(*)
+		  FROM TAP_AC_ACS_MANAGE
+		 WHERE 1 = 1
+		<if test="@egovframework.MybatisUtils@isNotEmpty(srchTxt)">
+		   AND ACCES_TRGET like '%'||#{srchTxt}||'%' OR ACCES_TRGET_PSITN like '%'||#{srchTxt}||'%' 
+		</if>
+    </select>
+    
+    <!-- 컨텐츠 정보 추가 -->
+    <insert id="insertAcsInfo" parameterType="egovMap">
+		<selectKey keyProperty="accesNo" resultType="java.lang.Integer" order="BEFORE">
+			SELECT SEQ_ACS_SN.NEXTVAL FROM DUAL
+		</selectKey>    
+		INSERT INTO TAP_AC_ACS_MANAGE
+		(
+			 ACCES_NO
+			,ACCES_TRGET
+			,ACCES_TRGET_PSITN
+			,ATHRI_IP
+			,PVTESBL_IP
+			,MACADRS
+			,IP_SCOPE
+			,MBER_ID
+			,CREAT_USID
+			,CREAT_IP
+			,CREAT_DT
+			,CONFM_AT
+			,CONFM_ID
+			,CONFM_IP
+			,CONFM_DT			      
+		)
+		VALUES
+		(
+			 #{accesNo}
+			,#{accesTrget}
+			,#{accesTrgetPsitn}
+			,#{athriIp}
+			,#{pvtesblIp}
+			,#{macadrs}
+			,#{ipScope}
+			,#{mberId}
+			,#{creatUsid}
+			,#{creatIp}
+			,SYSDATE
+			,'Y'
+			,#{confmId}
+			,#{confmIp}
+			,#{confmDt}
+		)    	
+    </insert> 
+    
+	<!-- 접근 관리 정보 -->	
+	<select id="selectAcsInfo" parameterType="map" resultType="egovMap">
+		SELECT 
+			   ACCES_NO
+			  ,ACCES_TRGET
+			  ,ACCES_TRGET_PSITN
+			  ,ATHRI_IP
+			  ,PVTESBL_IP
+			  ,MACADRS
+			  ,IP_SCOPE
+			  ,MBER_ID
+			  ,CREAT_USID
+			  ,CREAT_IP
+			  ,TO_CHAR(CREAT_DT, 'YYYY/MM/DD HH24:MI:SS') AS CREAT_DT
+			  ,CONFM_AT
+			  ,CONFM_ID
+			  ,CONFM_IP
+			  ,CONFM_DT           	   
+		  FROM 
+		  	   TAP_AC_ACS_MANAGE
+		 WHERE 1 = 1
+		   AND ACCES_NO = #{accesNo}  
+	</select>
+	
+    <!-- 접근 관리 정보 수정 -->
+    <update id="updateAcsInfo" parameterType="map">
+		UPDATE 
+			   TAP_AC_ACS_MANAGE
+		   SET 
+		       ACCES_TRGET = #{accesTrget}
+		      ,ACCES_TRGET_PSITN = #{accesTrgetPsitn}
+		      ,ATHRI_IP = #{athriIp}
+		      ,IP_SCOPE = #{ipScope}
+		      ,MBER_ID = #{mberId}
+		 WHERE 1 = 1 
+		   AND ACCES_NO = #{accesNo}
+    </update>
+    
+    <!-- 접근 관리 정보 삭제 -->
+	<delete id="deleteAcsInfo" parameterType="map">
+		DELETE FROM TAP_AC_ACS_MANAGE WHERE ACCES_NO = #{accesNo}
+	</delete>
+	
+	<!-- 접근 제어 정보 확인 -->	
+	<select id="selectAcsCheck" parameterType="map" resultType="egovMap">
+		SELECT 
+			   ACCES_NO
+			  ,ACCES_TRGET
+			  ,ACCES_TRGET_PSITN
+			  ,ATHRI_IP
+			  ,PVTESBL_IP
+			  ,MACADRS
+			  ,IP_SCOPE
+			  ,MBER_ID
+			  ,CREAT_USID
+			  ,CREAT_IP
+			  ,TO_CHAR(CREAT_DT, 'YYYY/MM/DD HH24:MI:SS') AS CREAT_DT
+			  ,CONFM_AT
+			  ,CONFM_ID
+			  ,CONFM_IP
+			  ,CONFM_DT           	   
+		  FROM 
+		  	   TAP_AC_ACS_MANAGE
+		 WHERE 1 = 1
+		   AND ATHRI_IP = #{athriIp}
+	</select>
+     
+</mapper>

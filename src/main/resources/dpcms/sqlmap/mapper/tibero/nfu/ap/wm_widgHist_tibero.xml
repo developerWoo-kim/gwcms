@@ -1,0 +1,227 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="wm_widgHist">
+
+
+	<!-- 위젯 시퀀스 조회  (TAP_WM_WIDGET_HIST_MANAGE :  HIST_SN) -->
+    <!-- <select id="selectSeqByHistSn" resultType="string">
+		SELECT IFNULL(MAX(HIST_SN + 1), 1) FROM TAP_WM_WIDGET_HIST_MANAGE S
+    </select> -->
+	<!-- 위젯  시퀀스 획득 -->
+	<select id="selectSeqByHistSn" resultType="string">
+        SELECT SEQ_WIDG_HIST_SN.NEXTVAL
+        FROM DUAL
+    </select>
+    
+    <!-- +++++++++++++++++++++++++++++++++++++ 위젯 이력 관리 리스트 (sql)++++++++++++++++++++++++++++++++++++++++ -->
+	<sql id="selectWidgHistListSql">
+		SELECT HIST_SN,
+			   SYS_ID,
+			   HIST_AT,
+			   CREAT_ID,
+			   CREAT_NM,
+			   TO_CHAR(CREAT_DT, 'YYYY/MM/DD HH24:MI:SS') AS CREAT_DT
+		  FROM TAP_WM_WIDGET_HIST_MANAGE
+		 WHERE 1 = 1
+		   AND SYS_ID = #{sysId}
+	    <if test="@egovframework.MybatisUtils@isNotEmpty(bgnde)">
+	    	<![CDATA[
+	       AND (TO_CHAR(CREAT_DT, 'YYYY/MM/DD') BETWEEN #{bgnde} AND #{endde})
+			]]>
+	    </if>
+	  	ORDER BY CREAT_DT DESC
+	</sql>
+    <!-- ++++++++++++++++++++++++++++++++++++  end of 위젯 이력 관리 리스트 (sql)++++++++++++++++++++++++++++++++++++++++ -->
+    
+	<!-- 위젯 이력 관리 리스트 -->
+    <select id="selectWidgHistList" parameterType="map" resultType="egovMap">
+		<include refid="selectWidgHistListSql" />  
+    </select>
+    
+	<!-- 위젯 이력 관리 리스트 (페이징) -->
+    <select id="selectWidgHistListPaging" parameterType="map" resultType="egovMap">
+		SELECT PL.*
+		  FROM ( SELECT PO.* 
+		  		 	   ,ROW_NUMBER() OVER(ORDER BY PO.HIST_SN DESC) AS RSN
+		           FROM ( <include refid="selectWidgHistListSql" /> ) PO ) PL
+		 WHERE 1 = 1 
+		 <![CDATA[ 
+		   AND RSN <= #{maxSn}
+		   AND RSN > #{minSn} 
+		 ]]>		
+    </select>
+    
+    <!-- 위젯 이력 관리 리스트 (페이징 전체 카운트) -->
+    <select id="selectWidgHistListPagingCount" parameterType="map" resultType="int">
+		SELECT COUNT(*)
+		  FROM TAP_WM_WIDGET_HIST_MANAGE
+		 WHERE 1 = 1
+		   AND SYS_ID = #{sysId}
+	    <if test="@egovframework.MybatisUtils@isNotEmpty(bgnde)">
+	    	<![CDATA[
+	       AND (TO_CHAR(CREAT_DT, 'YYYY/MM/DD') BETWEEN #{bgnde} AND #{endde})
+			]]>
+	    </if>
+    </select>
+    
+    <!-- 위젯 가능 여부 조회 -->
+    <select id="selectWidgInfoCnt" parameterType="map" resultType="int">
+		SELECT COUNT(*)
+		  FROM TAP_WM_WIDGET_MANAGE
+		 WHERE 1 = 1
+		   AND SYS_ID = #{sysId}
+    </select>
+    
+	<!-- 위젯 이력 등록 (TAP_WM_WIDGET_HIST_MANAGE) -->
+    <insert id="insertWidgHistInsert" parameterType="map" >
+		INSERT INTO TAP_WM_WIDGET_HIST_MANAGE (
+			HIST_SN,
+			SYS_ID,
+			HIST_AT,
+			CREAT_ID,
+			CREAT_NM,
+			CREAT_IP,
+			CREAT_DT
+		 ) VALUES (
+			#{seqHistSn},
+			#{sysId},
+			'N',
+			#{creatId},
+			#{creatNm},
+			#{creatIp},
+			TO_DATE(#{nowDateHour}, 'YYYY/MM/DD HH24:MI:SS')
+		 )    
+    </insert>
+	
+	<!-- 위젯 관리 이력 등록 (TAP_WM_WIDGET_MANAGE_HIST) -->
+    <select id="insertWidgMngHistInsert" parameterType="map" >
+		INSERT INTO TAP_WM_WIDGET_MANAGE_HIST
+		SELECT 
+			   SEQ_HIST_MANAGE_SN.NEXTVAL,
+			   #{seqHistSn},
+			   C.*
+		  FROM TAP_WM_WIDGET_MANAGE C
+		 WHERE C.SYS_ID = #{sysId}
+    </select>    
+
+	<!-- 위젯 데이터 관리 이력 등록 (TAP_WM_WIDGET_DATA_HIST) -->
+    <select id="insertWidgDataHistInsert" parameterType="map" >
+		INSERT INTO TAP_WM_WIDGET_DATA_HIST
+		SELECT 
+			   SEQ_HIST_DATA_SN.NEXTVAL,
+			   #{seqHistSn},
+			   C.*
+		  FROM 
+		  	   TAP_WM_WIDGET_MANAGE B,
+		  	   TAP_WM_WIDGET_DATA C
+		 WHERE 1=1
+		   AND B.SYS_ID = #{sysId} 
+		   AND B.WIDG_SN = C.WIDG_SN
+    </select>    
+    
+    <!-- 이력 상태 Y -->
+    <update id="updateHistAtY" parameterType="map">
+		UPDATE TAP_WM_WIDGET_HIST_MANAGE  
+		   SET HIST_AT = 'Y'
+		 WHERE HIST_SN = #{histSn}
+    </update>
+	
+    <!-- 이력 상태 N -->
+    <update id="updateHistAtN" parameterType="map">
+		UPDATE TAP_WM_WIDGET_HIST_MANAGE  
+		   SET HIST_AT = 'N'
+		 WHERE HIST_SN NOT IN (#{histSn})
+    </update>
+
+    <!-- 일괄초기화 이력 상태 N -->
+    <update id="updateHistAtAllN" parameterType="map">
+		UPDATE TAP_WM_WIDGET_HIST_MANAGE  
+		   SET HIST_AT = 'N'
+		 WHERE 1=1
+		   AND SYS_ID = #{sysId}
+    </update>
+    
+    <!-- 위젯 데이터 관리 삭제 (백업시 기존데이터 삭제를 위함) -->
+	<delete id="deleteWidgData" parameterType="map">
+		DELETE FROM TAP_WM_WIDGET_DATA
+			   WHERE WIDG_SN IN (
+			  						SELECT WIDG_SN
+			  						  FROM TAP_WM_WIDGET_MANAGE
+			  						 WHERE SYS_ID = #{sysId}
+			 					)
+	</delete>
+	
+    <!-- 위젯 관리 데이터 삭제 (백업시 기존데이터 삭제를 위함) -->
+	<delete id="deleteWidgManage" parameterType="map">
+		DELETE FROM TAP_WM_WIDGET_MANAGE
+			  WHERE SYS_ID = #{sysId}
+	</delete>
+	
+	<!-- 위젯 관리 이력 등록 (TAP_WM_WIDGET_MANAGE) -->
+    <select id="insertWidgMngHistUpdate" parameterType="map" >
+		INSERT INTO TAP_WM_WIDGET_MANAGE
+		SELECT 
+				C.WIDG_SN,
+				C.WIDG_ID,
+				C.SYS_ID,
+				C.TMPLAT_ID,
+				C.WIDG_TY,
+				C.WIDG_CO,
+				C.WIDG_CND1,
+				C.WIDG_CND2,
+				C.WIDG_CND3,
+				C.WIDG_CND4,
+				C.WIDG_CND5,
+				C.CREAT_ID,
+				C.CREAT_NM,
+				C.CREAT_IP,
+				C.CREAT_DT
+		  FROM 
+		  	   TAP_WM_WIDGET_MANAGE_HIST C
+		 WHERE C.SYS_ID = #{sysId}
+		   AND HIST_SN = #{histSn}
+    </select>
+
+	<!-- 위젯 관리 이력 등록 (TAP_WM_WIDGET_DATA) -->
+    <select id="insertWidgDataHistUpdate" parameterType="map" >
+		INSERT INTO TAP_WM_WIDGET_DATA
+		SELECT 
+				C.WIDG_DATA_SN,
+				C.WIDG_SN,
+				C.WIDG_DATA_ID,
+				C.WIDG_DATA_SJ,
+				C.WIDG_DATA_TY,
+				C.WIDG_DATA_CO,
+				C.WIDG_DATA_URL,
+				C.WIDG_DATA_URL_TRGT,
+				C.WIDG_DATA_FLPTH,
+				C.WIDG_DATA_ALTRTV_TEXT,
+				C.WIDG_DATA_BCRN_COLOR,
+				C.WIDG_DATA_SKN_CLASS,
+				C.WIDG_DATA_ORDR,
+				C.WIDG_DATA_CND1,
+				C.WIDG_DATA_CND2,
+				C.WIDG_DATA_CND3,
+				C.WIDG_DATA_CND4,
+				C.WIDG_DATA_CND5,
+				C.CREAT_ID,
+				C.CREAT_NM,
+				C.CREAT_IP,
+				C.CREAT_DT
+		  FROM 
+		  	   TAP_WM_WIDGET_DATA_HIST C
+		 WHERE 1 = 1
+	       AND C.HIST_SN = #{histSn}
+    </select>
+    
+    <!-- 시스템  수정 -->
+    <update id="updateSysInfoFromHist" parameterType="map" >
+    	UPDATE TAP_SM_SYS_MANAGE SET
+    		UPDT_DE = SYSDATE,
+    		UPDT_ID = #{updtId}
+    	WHERE
+    		SYS_ID = #{sysId}
+    </update>
+    
+</mapper>

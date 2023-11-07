@@ -1,0 +1,50 @@
+﻿@charset "utf-8"; 
+
+.MC_wrap1 {padding:1.5rem 0; height:585px; background:#d8f4ee url('/images/template/01001/main/bg_MC_box1.png') no-repeat center center; }/* 전광판,비주얼 */
+.MC_wrap2 {position:relative; padding:3.5rem 0 4.5rem; background:#fff url('/images/template/01001/main/bg_MC_box2_1.png') no-repeat left top; }/* 바로가기,공지사항,오늘의 식단 */
+.MC_wrap2:before {position:absolute; right:0; bottom:0; width:100%; height:100%; background:url('/images/template/01001/main/bg_MC_box2_2.png') no-repeat right bottom; content:""; }
+.MC_wrap3 {position:relative; background:#baf0ff url('/images/template/01001/main/bg_MC_box3.png') no-repeat center center; }/* 포토앨범 */
+.MC_wrap3:after {position:absolute; top:-130px; right:120px; content:url('/images/template/01001/main/bg_MC_box3_1.png'); }
+
+.MC_box1 {}/* 전광판 */
+.MC_box2 {}/* 비주얼 */
+.MC_box3 {position:absolute; top:-19rem; left:0; padding:2rem 1rem; width:14.45rem; height:14.45rem; background:url('/images/template/01001/main/2001_v_popup1.png') no-repeat center; }/* 행사일정 */
+.MC_box4 {position:absolute; top:-19rem; right:0; padding:2rem 1rem; width:14.45rem; height:14.45rem; background:url('/images/template/01001/main/2001_v_popup2.png') no-repeat center; }/* 팝업존 */
+.MC_box5 {}/* 바로가기 */
+.MC_box6 {margin-top:4rem; height:16.25rem; overflow:hidden; }/* 공지사항 */
+.MC_box7 {margin-top:3.5rem; }/* 오늘의 식단 */
+.MC_box8 {}/* 포토앨범 */
+
+@media (max-width:1600px) {
+	.MC_wrap3:after {display:none; }
+}
+
+@media (max-width:1200px) {
+	.MC_wrap1 {height:auto; }
+
+	/* 행사일정 */
+	.MC_box3 {position:relative; top:auto; left:auto; float:left; margin-top:1rem; padding:1rem; width:49%; background:#0094e9; border-radius:20px; }
+	.MC_box4 {position:relative; top:auto; right:auto; float:left; margin-top:1rem; padding:1rem; width:49%; background:#ffb900; border-radius:20px; }
+	.MC_box3 + .MC_box4 {margin-left:2%; }
+}
+
+@media (max-width:1024px) {
+}
+
+@media (max-width:800px) {
+}
+
+@media (max-width:680px) {
+	.MC_box3 {width:100%; height:auto; }
+	.MC_box4 {width:100%; height:auto; }
+	.MC_box3 + .MC_box4 {margin-left:0; }
+}
+
+@media (max-width:580px) {	
+}
+
+@media (max-width:480px) {	
+}
+
+@media (max-width:380px) {
+}

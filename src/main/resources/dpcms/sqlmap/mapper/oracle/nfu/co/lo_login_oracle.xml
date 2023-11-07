@@ -1,0 +1,288 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="lo_login">
+	<!--사용자 정보 조회  (아이디, 비밀번호, 시스템 아이디)-->
+    <select id="selectMberInfo" parameterType="map" resultType="egovMap">
+       	  SELECT MM.MBER_SEQ
+		      	,MT.INSTT_NM
+		      	,MT.INSTT_CODE
+		      	,MM.MBER_ID
+		      	,MM.MBER_NM
+		      	,MM.MBER_PASSWORD
+		      	,MM.MBTLNUM
+		      	,MM.TELNO
+		      	,MM.EMAIL
+		      	,MM.CI_KEY
+		      	,MM.CERTI_KEY
+		      	,TO_CHAR(MM.CREAT_DT, 'YYYY/MM/DD') AS CREAT_DT
+		      	,MM.CREAT_USIP
+		     	,MT.MBER_TY_SEQ
+		      	,MT.MBER_TY
+		      	,MT.CLSF
+		      	,MT.DEPT
+		      	,MT.PRTCTOR_NM
+		      	,MT.STDNT_NO
+		      	,MT.CONFM_YN
+		      	,MT.CONFM_MBER_NM
+		      	,MT.CONFM_MBER_ID
+		      	,MT.CONFM_DATE
+		      	,MT.SKLSTF_TY
+		      	,SM.SYS_ID
+		      	,SM.SYS_NM
+		   FROM TAP_MM_MBER_MANAGE MM, TAP_MM_MBER_TY MT, TAP_SM_SYS_MANAGE SM
+		  WHERE MT.INSTT_CODE = SM.INSTT_CODE
+		    AND MM.MBER_ID = MT.MBER_ID
+		    AND MM.MBER_ID = #{mberId}
+		  	AND MM.MBER_PASSWORD = #{mberPassword}
+		  	<if test='@egovframework.MybatisUtils@isEmpty(author) and author != "apple"'>
+		  	AND SM.SYS_ID = #{sysId}
+		  	</if>
+		  	<if test='@egovframework.MybatisUtils@isNotEmpty(author) || author == "apple"'>
+			AND SM.INSTT_CODE = (
+									 SELECT MIN( SM.INSTT_CODE )
+									   FROM TAP_MM_MBER_TY MT, TAP_SM_SYS_MANAGE SM
+									  WHERE MT.INSTT_CODE = SM.INSTT_CODE
+									    AND MT.MBER_ID = #{mberId}
+							     )
+		  	</if>
+    </select>
+
+	<!--로그인 시도 횟수 체크-->
+    <select id="selectMberCnt" parameterType="map" resultType="egovMap">
+       	 SELECT MBER_ID,
+       	 	    LOGIN_CNT
+		   FROM TAP_MM_MBER_MANAGE
+		  WHERE 1=1
+		    AND MBER_ID = #{mberId}
+    </select>
+
+	<!--사용자 정보 조회 (아이디, 비밀번호) -->
+    <select id="selectMberBaseInfo" parameterType="map" resultType="egovMap">
+		<![CDATA[
+       	  SELECT  MM.MBER_SEQ
+		      	 ,MM.MBER_ID
+		      	 ,MM.MBER_NM
+		      	 ,MM.MBER_PASSWORD
+		      	 ,MM.MBTLNUM
+		      	 ,MM.TELNO
+		      	 ,MM.EMAIL
+		      	 ,MM.CI_KEY
+		      	 ,MM.CERTI_KEY
+		      	 ,TO_CHAR(MM.CREAT_DT, 'YYYY/MM/DD') AS CREAT_DT
+		      	 ,MM.CREAT_USIP
+		      	 ,MT.CLSF
+		      	 ,MT.DEPT
+		      	 ,MT.INSTT_NM
+		      	 ,MT.INSTT_CODE
+		    FROM TAP_MM_MBER_MANAGE MM, TAP_MM_MBER_TY MT, TAP_SM_SYS_MANAGE SM
+		   WHERE MT.INSTT_CODE = SM.INSTT_CODE
+		     AND MM.MBER_ID = MT.MBER_ID
+		     AND MM.MBER_ID = #{mberId}
+		  	 AND MM.MBER_PASSWORD = #{mberPassword}
+		]]>
+    </select>
+
+	<!--사용자 솔트값 조회 -->
+    <select id="selectMberSaltInfo" parameterType="map" resultType="egovMap">
+       	  SELECT  PW_SALT
+		    FROM  TAP_MM_MBER_MANAGE
+		   WHERE  MBER_ID = #{mberId}
+    </select>
+
+    <!-- 비밀번호 변경 여부 조회 -->
+    <select id="selectCpmInfo" parameterType="map" resultType="egovMap">
+	  <![CDATA[
+		    SELECT COUNT(*) AS CHANGE_CNT
+			  FROM TAP_MM_PASSWORD_HIST
+			 WHERE MBER_ID = #{mberId}
+			   AND UPDT_DT >= ( SELECT TO_CHAR(ADD_MONTHS( SYSDATE, -#{changeCycle} ), 'YYYY/MM/DD') FROM DUAL )
+			   AND UPDT_DT <= SYSDATE
+	  ]]>
+    </select>
+
+    <!-- 개인정보 제공 동의 재동의 여부 조회 -->
+    <select id="selectMberAgreAt" parameterType="map" resultType="egovMap">
+	  <![CDATA[
+		SELECT COUNT(*)
+		  FROM TAP_MM_AGRE_HIST
+         WHERE HIST_TY IN ('U','I')
+           AND INSTT_CODE = #{insttCode}
+           AND MBER_ID = #{mberId}
+           AND HIST_DT <= SYSDATE
+           AND HIST_DT >= ( SELECT TO_CHAR( ( SYSDATE - ( #{agreCnt} * 365) ), 'YYYY/MM/DD') FROM DUAL )
+	  ]]>
+    </select>
+    <!-- 가장 최근 개인정보 제공 동의 날짜 조회 -->
+    <select id="selectMberAgreDt" parameterType="map" resultType="egovMap">
+    	SELECT
+			ROWNUM,
+			A.*
+		FROM (
+			SELECT
+				*
+			FROM
+				TAP_MM_AGRE_HIST
+			WHERE
+				HIST_TY IN ('U','I')
+			AND
+				MBER_ID = #{mberId}
+			ORDER BY HIST_DT DESC
+		) A
+		<![CDATA[
+		WHERE ROWNUM <=1
+		]]>
+    </select>
+
+ <!--사용자가 가지고 있는 권한  -->
+	 <select id="selectAllAuthList" parameterType="map" resultType="egovMap">
+			<!--사용자가 가지고 있는 권한 조회 -->
+			SELECT
+				A.AUTHOR_SEQ
+				,A.AUTHOR_CODE
+				,A.AUTHOR_NM
+				,A.SYS_ID
+			FROM
+				TAP_AU_AUTHOR_MANAGE A
+				,TAP_AU_AUTHOR_MBER B
+			WHERE
+				A.AUTHOR_CODE = B.AUTHOR_CODE
+				AND A.SYS_ID = B.SYS_ID
+				AND B.MBER_ID = #{mberId}
+			UNION
+			<!--사용자가 속한 그룹이 가지고 있는 권한 조회  -->
+			SELECT
+				C.AUTHOR_SEQ
+				,A.AUTHOR_CODE
+				,C.AUTHOR_NM
+				,C.SYS_ID
+			FROM
+				TAP_GR_GROUP_AUTHOR A
+				,TAP_GR_GROUP_MBER B
+				,TAP_AU_AUTHOR_MANAGE C
+			WHERE
+				A.GROUP_CODE = B.GROUP_CODE
+				AND A.AUTHOR_CODE = C.AUTHOR_CODE
+				AND A.SYS_ID = B.SYS_ID
+				AND A.SYS_ID = C.SYS_ID
+				AND B.MBER_ID = #{mberId}
+			    <if test='@egovframework.MybatisUtils@isNotEmpty(sysId)'>
+     			AND A.SYS_ID = #{sysId}
+     			</if>
+     			<if test='@egovframework.MybatisUtils@isEmpty(sysId)'>
+				AND A.SYS_ID IN (
+					SELECT
+						SYS_ID
+					FROM
+						TAP_GR_GROUP_MBER
+					WHERE MBER_ID = #{mberId}
+				)
+				</if>
+			<!-- 사용자가 속한 그룹이 메뉴권한에 적용되어있는 그룹인지 조회 -->	<!-- 위치를 바꾼이유는 메뉴 아이디 매칭시 seq를 따지는데 그룹은 code가 seq로 들어가있다 -->
+			UNION
+				SELECT
+				B.GROUP_CODE
+				,B.GROUP_SEQ
+				,B.GROUP_NM
+				,B.SYS_ID
+				FROM TAP_MN_MENU_AUTHOR A, TAP_GR_GROUP_MANAGE B,  TAP_GR_GROUP_MBER C
+				WHERE A.AUTHOR_NO = B.GROUP_CODE
+				AND B.GROUP_CODE = C.GROUP_CODE
+				AND A.AUTHOR_TY = 'G'
+				AND C.MBER_ID = #{mberId}
+    </select>
+
+	<!-- 사용자 그룹 조회 -->
+    <select id="selectMberGrpList" parameterType="map" resultType="egovMap">
+		 SELECT  A.MBERGRP_SEQ
+		        ,A.GROUP_CODE
+                ,B.GROUP_NM
+                ,B.SYS_ID
+	    FROM  TAP_GR_GROUP_MBER A, TAP_GR_GROUP_MANAGE B
+	    WHERE MBER_ID = #{mberId}
+        AND A.GROUP_CODE = B.GROUP_CODE
+        AND A.SYS_ID = B.SYS_ID
+      	<if test='@egovframework.MybatisUtils@isNotEmpty(sysId)'>
+ 		AND A.SYS_ID = #{sysId}
+   		</if>
+   		<if test='@egovframework.MybatisUtils@isEmpty(sysId)'>
+		AND A.SYS_ID IN (
+			SELECT
+				SYS_ID
+			FROM
+				TAP_GR_GROUP_MBER
+			WHERE MBER_ID = #{mberId}
+		)
+		</if>
+    </select>
+
+    <!-- 아이디찾기 -->
+    <select id="searchMberIdList" parameterType="map" resultType="egovMap">
+		    SELECT MBER_ID
+		    FROM  TAP_MM_MBER_MANAGE
+		    WHERE  CI_KEY = #{ciKey}
+    </select>
+
+    <!-- 비밀번호찾기 본인확인 -->
+    <select id="searchMberPwCheck" parameterType="map" resultType="int">
+	    SELECT COUNT(*)
+	    FROM  TAP_MM_MBER_MANAGE
+	    WHERE  CI_KEY = #{ciKey}
+	    	AND MBER_ID = #{mberId}
+    </select>
+
+    <!-- 승인대기 회원 카운트 -->
+    <select id="selectConfmCount" parameterType="map" resultType="egovMap">
+	   SELECT COUNT(*) AS CONFM_CNT
+ 		 FROM TAP_MM_MBER_TY MT, TAP_SM_SYS_MANAGE SM
+ 		WHERE MT.INSTT_CODE = SM.INSTT_CODE
+ 		  AND MT.CONFM_YN = 'N'
+ 		  AND SM.SYS_ID = #{sysId}
+    </select>
+
+    <!--비밀번호변경 -->
+    <update id="updateMberPwInfo" parameterType ="map">
+	<![CDATA[
+		UPDATE
+			TAP_MM_MBER_MANAGE
+		SET
+		    MBER_PASSWORD = #{mberPassword}
+		WHERE
+			MBER_ID = #{mberId}
+	]]>
+	</update>
+
+	<!-- 학급홈페이지 승인대기자 조회 시작  -->
+	<select id="selectConfClasCnt" parameterType="map" resultType="egovMap">
+	  SELECT  M.CLAS_HMPG_ID
+			 ,NVL((SELECT CLAS_GRADE_CODE FROM TAP_CL_CLAS_MANAGE WHERE CLAS_CODE = CH.CLAS_CODE), 99) AS CLAS_GRADE_CODE
+			 ,CH.CLAS_HMPG_NM
+			 ,(SELECT COUNT(*) FROM TAP_CL_CLAS_MBER WHERE CLAS_HMPG_ID= M.CLAS_HMPG_ID AND CLAS_CONFM_AT = 'N') AS CLAS_CNT
+		FROM  TAP_CL_CLAS_MBER M, TAP_CL_CLAS_HMPG CH
+	   WHERE  M.CLAS_HMPG_ID = CH.CLAS_HMPG_ID
+		 AND  M.CLAS_AUTHOR_TY = 0
+		 AND  CH.SYS_ID = #{sysId}
+		 AND  M.CLAS_MBER_ID = #{mberId}
+	</select>
+
+     <!-- 최종 로그인 정보 -->
+    <select id="getUsrLogInfo" parameterType="map" resultType="egovMap">
+        <![CDATA[
+            SELECT
+                TO_CHAR(CONECT_DATE,'YYYY-MM-DD hh24:mi:ss') AS CONECT_DATE,
+                CMNUSE_IP
+            FROM
+                (SELECT
+                    CONECT_DATE,
+                    CMNUSE_IP
+                FROM
+                    (SELECT *
+                     FROM TAP_ST_MBER_ACCES
+                     WHERE CONECTR_ID = #{mberId}
+                     ORDER BY CONECT_DATE DESC)
+                WHERE ROWNUM <= 2
+                ORDER BY CONECT_DATE ASC)
+            WHERE ROWNUM <= 1
+        ]]>
+    </select>
+</mapper>

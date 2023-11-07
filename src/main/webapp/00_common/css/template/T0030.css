@@ -1,0 +1,74 @@
+﻿/* 메인 컨테이너 */
+#container { position:relative; z-index:2; width:100%; }
+#container *{ scrollbar-arrow-color: #ddd; scrollbar-Track-Color: #ddd; scrollbar-base-color: #aaa; scrollbar-Face-Color: #aaa; scrollbar-3dLight-Color: #aaa; scrollbar-DarkShadow-Color: #aaa; scrollbar-Highlight-Color: #aaa; scrollbar-Shadow-Color: #aaa;}
+#container ::-webkit-scrollbar { width: 5px; }
+#container ::-webkit-scrollbar-thumb { background-color: #aaa; border-radius:10px; }
+#container ::-webkit-scrollbar-track { background-color: #ddd; border-radius:10px; }
+
+.MC_wrap1 {}
+.MC_wrap2,
+.MC_wrap3 {margin-top: 3rem;}
+.MC_wrap2 {display: flex; flex-wrap: wrap;}
+.MC_wrap3 {position: relative;}
+.MC_wrap3:before {content: ""; display: block; width: calc(50% + 35.65rem); height: calc(100% - 1.75rem); border-radius: 0 1.3rem 1.3rem 0; background: #f6f6f6; position: absolute; left: 0; bottom: 0;}
+.MC_wrap4 {padding: 2.5rem 0; position: relative;}
+
+.MC_box1 {width: 100%; height: 23rem;} /* 메인비주얼 */
+.MC_box2 {width: 20rem; margin-right: 2rem;} /* 캘린더 */
+.MC_box3 {width: 18.5rem; margin-right: 2rem;} /* 오늘의식단 */
+.MC_box4 {width: 17.5rem;} /* 팝업존 */
+.MC_box5 {width: 100%; margin-top: 2rem;} /* 바로가기 */
+
+@media (max-width: 1400px) {
+
+    .container {max-width: 100%; padding-left: 1rem; padding-right: 1rem;}
+
+    .MC_box1 {height: auto;}
+    .MC_box2,
+    .MC_box3 {width: calc(50% - 10.25rem); margin-right: 1.5rem;}
+    .MC_box5 {margin-top: 1.5rem;}
+}
+
+@media (max-width: 1240px) {
+
+    .MC_box2 {width: 16.5rem;}
+    .MC_box3 {width: calc(100% - 37rem);}
+}
+
+@media (max-width: 1024px) {
+
+    #container {padding-top: 3.3rem;}
+
+    .MC_box2 {width: 100%; margin-right: 0; margin-bottom: 1.5rem;}
+    .MC_box3 {width: calc(100% - 19rem);}
+}
+
+@media (max-width: 860px) {
+
+}
+
+@media (max-width: 768px) {
+
+    .MC_wrap2,
+    .MC_wrap3 {margin-top: 1.5rem;}
+    .MC_wrap4 {padding: 0 0 1rem;}
+}
+
+@media (max-width: 640px) {
+
+    .MC_box3 {width: 100%; margin-right: 0; margin-bottom: 1.5rem;}
+    .MC_box4 {width: 100%;}
+}
+
+@media (max-width: 560px) {
+
+}
+
+@media (max-width: 480px) {
+
+}
+
+@media (max-width: 380px) {
+
+    .MC_wrap3:before {height: calc(100% - 1.4rem);}
+}

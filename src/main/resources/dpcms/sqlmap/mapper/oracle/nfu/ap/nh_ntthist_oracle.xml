@@ -1,0 +1,315 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="nh_ntthist">
+
+	<!-- 사용자 조회 -->
+	<sql id="selectNhList">
+		SELECT 
+				 NH.BBS_ID
+				,NH.NTT_SN
+				,NH.UPPER_NTT_SN
+				,NH.NTT_SJ
+				,NH.NTT_CN
+				,NH.REG_ID
+				,NH.REG_NM
+				,NH.REG_IP
+				,NH.REG_DT
+				,NH.NTT_RDCNT
+				,NH.NTT_OPPS_CO
+				,NH.NTT_APPRVL_CO
+				,NH.NTT_STTUS
+				,NH.NTT_USE_AT
+				,NH.SECRET_AT
+				,NH.SMS_AT
+				,NH.EMAIL_AT
+				,NH.NOTICE_AT
+				,NH.NOTICE_BEGIN_DT
+				,NH.NOTICE_END_DT
+				,NH.HIST_SEQ
+				,NH.HIST_GROUP_SEQ
+				,NH.HIST_USER_ID
+				,NH.HIST_USER_NM
+				,NH.HIST_USER_IP
+				,TO_CHAR(NH.HIST_DATE, 'YYYY/MM/DD HH24:MI:SS') AS HIST_DATE
+				,NH.HIST_TY
+				,BB.SYS_ID
+				
+		FROM TCO_NA_NTT_HIST NH, TAP_BM_BBS_MANAGE BB 	
+		WHERE NH.BBS_ID = BB.BBS_ID
+		AND   BB.SYS_ID = #{sysId}
+			<if test="@egovframework.MybatisUtils@isNotEmpty(srchTxt)">
+			   	AND (NH.NTT_SJ LIKE '%'||#{srchTxt}||'%' OR NH.HIST_USER_ID LIKE '%'||#{srchTxt}||'%' OR NH.HIST_USER_NM LIKE '%'||#{srchTxt}||'%')
+			</if>
+			
+		   <if test="@egovframework.MybatisUtils@isNotEmpty(beginDt)">
+			  <![CDATA[
+				AND TO_CHAR(NH.HIST_DATE, 'YYYY/MM/DD') >= #{beginDt}
+				AND TO_CHAR(NH.HIST_DATE, 'YYYY/MM/DD') <=  #{endDt}
+			  ]]>
+		  </if>
+		  
+	</sql>
+	
+    <!-- 메뉴 히스트 리스트 조회(페이징) -->
+    <select id="selectNhListPaging" parameterType="map" resultType="egovMap">
+    	SELECT
+    		PL.*
+    	FROM (
+        	SELECT 
+        		PO.*
+        		,rownum as rsn
+			FROM (
+	    		<include refid="selectNhList" /> 
+	    		ORDER BY NH.HIST_DATE DESC
+				) PO
+		) PL
+		WHERE
+		<![CDATA[
+			rsn <= #{maxSn} 
+			AND rsn > #{minSn}
+		]]>
+    </select>
+    
+    <!-- 사용자 리스트 조회 (페이징 전체 카운트) -->
+    <select id="selectNhListPagingCount" parameterType="map" resultType="int">
+    
+    	SELECT
+	    	      COUNT(*)
+	   
+	    FROM TCO_NA_NTT_HIST NH, TAP_BM_BBS_MANAGE BB 	
+		WHERE NH.BBS_ID = BB.BBS_ID
+		AND   BB.SYS_ID = #{sysId}
+		
+			<if test="@egovframework.MybatisUtils@isNotEmpty(srchTxt)">
+			   	AND (NH.NTT_SJ LIKE '%'||#{srchTxt}||'%' OR NH.HIST_USER_ID LIKE '%'||#{srchTxt}||'%' OR NH.HIST_USER_NM LIKE '%'||#{srchTxt}||'%')
+			</if>
+			
+		   <if test="@egovframework.MybatisUtils@isNotEmpty(beginDt)">
+			  <![CDATA[
+				AND TO_CHAR(NH.HIST_DATE, 'YYYY/MM/DD') >= #{beginDt}
+				AND TO_CHAR(NH.HIST_DATE, 'YYYY/MM/DD') <=  #{endDt}
+			  ]]>
+		  </if>
+		  
+    </select>
+    
+	<!-- 게시물이력 총관리자 리스트 +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ -->
+    <!-- 게시물이력 시스템 리스트 통계 sql -->
+	<sql id="selectNhListState">
+		SELECT COUNT(*) 
+		FROM TCO_NA_NTT_HIST NH, TAP_BM_BBS_MANAGE BB 	
+		WHERE NH.BBS_ID = BB.BBS_ID
+		AND   BB.SYS_ID = SM.SYS_ID
+	</sql>
+	
+	<!-- 게시물이력 시스템 리스트 sql -->
+	<sql id="selectNhSmList">
+		SELECT IT.INSTT_CODE
+	          ,IT.INSTT_NM
+	          ,IT.INSTT_TY
+	          ,SM.SYS_ID
+			  ,SM.SYS_NM 
+			  ,( <include refid="selectNhListState" /> ) AS TOTAL_CNT                                                                
+			  ,( <include refid="selectNhListState" /> AND TO_CHAR(NH.REG_DT, 'YYYY/MM/DD') =TO_CHAR(SYSDATE, 'YYYY/MM/DD')) AS T_CNT
+			  FROM TAP_IM_INSTT_MANAGE IT, TAP_SM_SYS_MANAGE SM 
+			  WHERE IT.INSTT_CODE = SM.INSTT_CODE
+			  AND SM.SYS_STTUS = 'O'
+			
+			<if test='@egovframework.MybatisUtils@isEmpty(author) || author != "master"'>
+	         AND SM.SYS_ID NOT IN ('apple')
+	        </if>
+	        
+	        <if test="@egovframework.MybatisUtils@isNotEmpty(mberId)">
+		      AND SM.SYS_ID IN (
+					SELECT SYS_ID
+					  FROM TAP_AU_AUTHOR_MBER 
+					 WHERE MBER_ID = #{mberId}
+						   AND SYS_ID != 'apple'
+					   AND AUTHOR_CODE IN (1,2)	
+	        	)
+		     </if>
+		     
+	        <if test="@egovframework.MybatisUtils@isNotEmpty(insttCode)">
+		     AND   ( IT.INSTT_CODE =  #{insttCode}
+		     
+	                    OR  IT.UPPER_INSTT_CODE = #{upperInsttCode}
+	                    OR  IT.BSIS_INSTT_CODE = #{bsisInsttCode}
+	                    
+	               	)
+	         </if>
+	         
+		     <if test="@egovframework.MybatisUtils@isNotEmpty(insttGrad)">
+		     AND   ( IT.INSTT_GRAD IS NULL
+		     
+		     		 <if test="@egovframework.MybatisUtils@isNotEmpty(dtnt)">
+		                OR IT.INSTT_GRAD = #{dtnt}
+		             </if>
+		             <if test="@egovframework.MybatisUtils@isNotEmpty(elesch)">
+		                OR IT.INSTT_GRAD = #{elesch}
+		             </if>
+		             <if test="@egovframework.MybatisUtils@isNotEmpty(mskul)">    
+		                OR IT.INSTT_GRAD = #{mskul}
+		             </if> 
+		             <if test="@egovframework.MybatisUtils@isNotEmpty(hgschl)">
+		                OR IT.INSTT_GRAD = #{hgschl}
+		             </if>
+		             <if test="@egovframework.MybatisUtils@isNotEmpty(kndrgr)">     
+		                OR IT.INSTT_GRAD = #{kndrgr}
+		             </if>
+		             <if test="@egovframework.MybatisUtils@isNotEmpty(spcl)">
+		                OR IT.INSTT_GRAD = #{spcl}
+		             </if>
+		             
+		           )
+		     </if>
+		     
+		     <if test="@egovframework.MybatisUtils@isNotEmpty(sysTy)">
+		      AND   SM.SYS_TY = #{sysTy}
+		     </if>
+		     
+		     <if test="@egovframework.MybatisUtils@isNotEmpty(srchTxt)">
+		       AND  (  		 
+       				 SM.SYS_NM like '%'||#{srchTxt}||'%'
+              	  OR SM.SYS_TY like '%'||#{srchTxt}||'%' 
+		              	 
+		       )
+		    </if>
+			 
+			 ORDER BY   IT.INSTT_CODE, IT.INSTT_LEVEL DESC
+	</sql>
+	
+	<!-- 게시물이력 시스템 리스트 -->
+	<select id="selectNhSmList" parameterType="map" resultType="egovMap">
+		<include refid="selectNhSmList"/>
+	</select>
+	
+	<!-- 게시물이력 시스템 페이징 -->
+	<select id="selectNhSmListPaging" parameterType="map" resultType="egovMap">
+		SELECT
+    		PL.*
+    	FROM (
+        	SELECT 
+        		PO.*
+        		,rownum as rsn
+			FROM (
+	    		<include refid="selectNhSmList" /> 
+				) PO
+		) PL
+		WHERE
+		<![CDATA[
+			rsn <= #{maxSn} 
+			AND rsn > #{minSn}
+		]]>
+	</select>
+	
+	<!-- 게시물이력 시스템 페이징 카운트 -->
+	<select id="selectNhSmListPagingCount" parameterType="map" resultType="int">
+		SELECT 
+			COUNT(*)
+			FROM TAP_IM_INSTT_MANAGE IT, TAP_SM_SYS_MANAGE SM 
+			  WHERE IT.INSTT_CODE = SM.INSTT_CODE
+			  AND SM.SYS_STTUS = 'O'
+			
+			<if test='@egovframework.MybatisUtils@isEmpty(author) || author != "master"'>
+	         AND SM.SYS_ID NOT IN ('apple')
+	        </if>
+	        
+	        <if test="@egovframework.MybatisUtils@isNotEmpty(insttCode)">
+		     AND   ( IT.INSTT_CODE =  #{insttCode}
+		     
+	                    OR  IT.UPPER_INSTT_CODE = #{upperInsttCode}
+	                    OR  IT.BSIS_INSTT_CODE = #{bsisInsttCode}
+	                    
+	               	)
+	         </if>
+	         
+		     <if test="@egovframework.MybatisUtils@isNotEmpty(insttGrad)">
+		     AND   ( IT.INSTT_GRAD IS NULL
+		     
+		     		 <if test="@egovframework.MybatisUtils@isNotEmpty(dtnt)">
+		                OR IT.INSTT_GRAD = #{dtnt}
+		             </if>
+		             <if test="@egovframework.MybatisUtils@isNotEmpty(elesch)">
+		                OR IT.INSTT_GRAD = #{elesch}
+		             </if>
+		             <if test="@egovframework.MybatisUtils@isNotEmpty(mskul)">    
+		                OR IT.INSTT_GRAD = #{mskul}
+		             </if> 
+		             <if test="@egovframework.MybatisUtils@isNotEmpty(hgschl)">
+		                OR IT.INSTT_GRAD = #{hgschl}
+		             </if>
+		             <if test="@egovframework.MybatisUtils@isNotEmpty(kndrgr)">     
+		                OR IT.INSTT_GRAD = #{kndrgr}
+		             </if>
+		             <if test="@egovframework.MybatisUtils@isNotEmpty(spcl)">
+		                OR IT.INSTT_GRAD = #{spcl}
+		             </if>
+		             
+		           )
+		     </if>
+	        
+	        <if test="@egovframework.MybatisUtils@isNotEmpty(mberId)">
+		      AND SM.SYS_ID IN (
+					SELECT SYS_ID
+					  FROM TAP_AU_AUTHOR_MBER 
+					 WHERE MBER_ID = #{mberId}
+						   AND SYS_ID != 'apple'
+					   AND AUTHOR_CODE IN (1,2)	
+	        	)
+		     </if>
+		     
+		     <if test="@egovframework.MybatisUtils@isNotEmpty(sysTy)">
+		      AND   SM.SYS_TY = #{sysTy}
+		     </if>
+		     
+		     <if test="@egovframework.MybatisUtils@isNotEmpty(srchTxt)">
+		       AND  (  		 
+       				 SM.SYS_NM like '%'||#{srchTxt}||'%'
+              	  OR SM.SYS_TY like '%'||#{srchTxt}||'%' 
+		              	 
+		       )
+		    </if>
+			 
+			 ORDER BY   IT.INSTT_CODE, IT.INSTT_LEVEL DESC
+	</select>
+    <!-- 게시물이력 총관리자 리스트 +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ --> 
+    
+    <!-- 엑셀다운로드 -->
+	<select id="selectNhNttHistListExcel" parameterType="map" resultType="egovMap">
+		SELECT 
+			ROW_NUMBER() OVER(ORDER BY NH.HIST_DATE DESC) AS RSN,
+			NH.NTT_SN,
+			NH.NTT_SJ,
+			NH.HIST_USER_ID,
+			NH.HIST_USER_NM,
+			NH.HIST_DATE,
+			NH.HIST_TY
+		FROM TCO_NA_NTT_HIST NH, TAP_BM_BBS_MANAGE BB 	
+		WHERE NH.BBS_ID = BB.BBS_ID
+		  AND BB.SYS_ID = #{sysId}
+			<if test="@egovframework.MybatisUtils@isNotEmpty(bbsId)">
+			   	AND BB.BBS_ID = #{bbsId}
+			</if>
+			<if test="@egovframework.MybatisUtils@isNotEmpty(histTy)">
+				<choose>
+					<when test='histTy=="D"'>
+						AND NH.HIST_TY IN ('D','DR','X','DD')
+					</when>
+					<otherwise>
+						AND NH.HIST_TY = #{histTy} 
+					</otherwise>
+				</choose>
+			</if>
+			<if test="@egovframework.MybatisUtils@isNotEmpty(srchTxt)">
+			   	AND (NH.NTT_SJ LIKE '%'||#{srchTxt}||'%' OR NH.HIST_USER_ID LIKE '%'||#{srchTxt}||'%' OR NH.HIST_USER_NM LIKE '%'||#{srchTxt}||'%')
+			</if>
+		   <if test="@egovframework.MybatisUtils@isNotEmpty(beginDt)">
+			  <![CDATA[
+				AND TO_CHAR(NH.HIST_DATE, 'YYYY/MM/DD') >= #{beginDt}
+				AND TO_CHAR(NH.HIST_DATE, 'YYYY/MM/DD') <=  #{endDt}
+			  ]]>
+		  </if>
+   </select>
+   
+</mapper>

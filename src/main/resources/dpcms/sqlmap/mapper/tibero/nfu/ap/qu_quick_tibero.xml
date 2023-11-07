@@ -1,0 +1,233 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="qu_quick">
+
+	<!-- 퀵메뉴 리스트(sql) -->	
+	<sql id="selectQuickList">
+		SELECT
+			   QUICK_ID,
+			   SYS_ID,
+			   QUICK_NM,
+			   URL,
+			   TO_CHAR(CREAT_DT, 'YYYY/MM/DD HH24:MI:SS') AS CREAT_DT,
+			   CREAT_USID,
+			   CREAT_USIP,
+			   TO_CHAR(UPDT_DT, 'YYYY/MM/DD HH24:MI:SS') AS UPDT_DT,
+			   UPDT_USID,
+			   UPDT_USIP,
+			   SORT_ORDR
+		  FROM
+			   TAP_QU_QUICK_MANAGE 
+		 WHERE 1 = 1
+		<if test="@egovframework.MybatisUtils@isNotEmpty(sysId)">
+		   AND SYS_ID = #{sysId}
+		</if>
+	  ORDER BY SORT_ORDR ASC
+	</sql>
+	
+	<!-- 퀵메뉴 리스트 조회 -->
+	<select id="selectQuickList" resultType="egovMap">
+		<include refid="selectQuickList"/>
+	</select>
+	
+    <!-- 퀵메뉴 리스트 페이징 -->
+	<select id="selectQuickListPaging" parameterType="map" resultType="egovMap">
+		SELECT PL.*
+		  FROM ( SELECT PO.*, 
+		  		 	    ROWNUM AS RSN
+		           FROM ( <include refid="selectQuickList"/> ) PO ) PL
+		  WHERE 1 = 1 
+		 <![CDATA[ 
+		    AND RSN <= #{maxSn}
+		    AND RSN > #{minSn} 
+		 ]]>		
+	</select>
+	
+	<!-- 퀵메뉴 리스트 (페이징 전체 카운트) -->
+    <select id="selectQuickListPagingCount" parameterType="map" resultType="int">
+		SELECT 
+			   COUNT(*)
+		  FROM 
+		  	   TAP_QU_QUICK_MANAGE
+		 WHERE 1 = 1
+		   AND SYS_ID = #{sysId}
+    </select>    
+    
+	<!-- 퀵메뉴 정보 조회 -->
+	<select id="selectQuickInfo"  resultType="egovMap"  parameterType="map">
+	SELECT 
+		   QUICK_ID,
+		   SYS_ID,
+		   QUICK_NM,
+		   URL,
+		   CREAT_DT,
+		   CREAT_USID,
+		   CREAT_USIP,
+		   UPDT_DT,
+		   UPDT_USID,
+		   UPDT_USIP 
+	  FROM 
+	       TAP_QU_QUICK_MANAGE
+	 WHERE 
+	       QUICK_ID = #{quickId}
+	</select>
+	
+	<!-- 퀵메뉴 시퀀스 조회 -->
+	<select id="insertQuickSeq" resultType="string"  parameterType="map">
+	SELECT QUICK_MANAGE_SN.NEXTVAL FROM DUAL
+	</select>
+		
+	<!-- 퀵메뉴 정보 추가 -->
+	<insert id="insertQuickInfo" parameterType="map">
+		<selectKey keyProperty="quickId" resultType="java.lang.Integer" order="BEFORE">
+			SELECT NVL(MAX(QUICK_ID + 1), 1) FROM TAP_QU_QUICK_MANAGE
+		</selectKey>
+		
+		INSERT INTO TAP_QU_QUICK_MANAGE
+			  (
+			   SORT_ORDR,
+	    	   QUICK_ID,
+	    	   SYS_ID,
+	    	   QUICK_NM,
+	    	   URL,
+	    	   CREAT_DT,
+	    	   CREAT_USID,
+	    	   CREAT_USIP
+			  )
+		VALUES
+			  (
+			   (SELECT NVL(MAX(SORT_ORDR)+ 1,1) FROM TAP_QU_QUICK_MANAGE WHERE SYS_ID = #{sysId}),
+		   	   QUICK_MANAGE_SN.NEXTVAL,
+		   	   #{sysId},
+		   	   #{quickNm},
+		   	   #{url},
+		   	   SYSDATE,
+		   	   #{creatUsid},
+		   	   #{creatUsip}
+			  )
+	</insert>
+	
+	<!-- 퀵메뉴 정보 수정 -->
+	<update id="updateQuickInfo" parameterType="map">
+		UPDATE 
+			   TAP_QU_QUICK_MANAGE		
+		   SET 
+		   	   QUICK_NM = #{quickNm},
+		       URL = #{url},
+			   UPDT_USID = #{creatUsid},
+			   UPDT_USIP = #{creatUsip},
+			   UPDT_DT = SYSDATE
+		 WHERE 1 = 1
+		   AND QUICK_ID = #{quickId}
+	</update>
+
+	<!--퀵메뉴 순서 저장 -->
+     <update id="updateQuickOrdr" parameterType ="map">
+			UPDATE  
+				    TAP_QU_QUICK_MANAGE	
+			   SET  
+			   	    SORT_ORDR = #{sortOrdr}
+			 WHERE  1 = 1
+			   AND	QUICK_ID = #{quickId} 
+			   AND  SYS_ID = #{sysId} 
+	 </update>
+	 
+	<!-- 퀵메뉴 정보 삭제 -->
+	<delete id="deleteQuickInfo" parameterType="map">
+		DELETE FROM TAP_QU_QUICK_MANAGE WHERE QUICK_ID = #{quickId}
+	</delete>
+
+<!-- ============================홈페이지 목록↓==================================  -->
+
+	<!-- 퀵메뉴 홈페이지 조회 -->
+	<select id="selectQuickSmList" parameterType="map" resultType="egovMap">
+		<include refid="selectQuickSmList"/>
+	</select>
+	
+	<!-- 퀵메뉴 홈페이지 리스트 sql -->
+	<sql id="selectQuickSmList">
+		SELECT 
+			   IM.INSTT_CODE,
+			   IM.INSTT_NM,
+			   IM.INSTT_TY,
+			   SM.SYS_NM,
+			   SM.SYS_ID,
+			   ( <include refid="selectQuickState" /> ) AS QUICK_CO   
+		  FROM 
+		  	   TAP_IM_INSTT_MANAGE IM, TAP_SM_SYS_MANAGE SM
+		 WHERE IM.INSTT_CODE = SM.INSTT_CODE
+		   AND SM.SYS_STTUS = 'O'
+		<if test="@egovframework.MybatisUtils@isNotEmpty(sysId)">
+		   AND SM.SYS_ID = #{sysId}
+		</if>
+		<if test="@egovframework.MybatisUtils@isNotEmpty(srchTxt)">
+		   AND (
+		   		SM.SYS_NM LIKE '%'||#{srchTxt}||'%'
+		     OR	SM.SYS_ID LIKE '%'||#{srchTxt}||'%'
+		        )
+	    </if>
+	    <if test='@egovframework.MybatisUtils@isEmpty(author) || author != "master"'>
+	         AND SM.SYS_ID NOT IN ('apple')
+	    </if>
+	    <if test="@egovframework.MybatisUtils@isNotEmpty(insttCode)">
+		     AND ( 
+		     		IM.INSTT_CODE =  #{insttCode}
+						OR  IM.UPPER_INSTT_CODE = #{upperInsttCode}
+	                    OR  IM.BSIS_INSTT_CODE = #{bsisInsttCode}
+	             )
+		</if>
+		
+		ORDER BY IM.INSTT_CODE, IM.INSTT_LEVEL DESC
+	</sql>
+	
+	<!-- 퀵메뉴 페이징 -->
+	<select id="selectQuickSmListPaging" parameterType="map" resultType="egovMap">
+		SELECT PL.*
+		  FROM ( SELECT PO.*, 
+		  		 	    ROWNUM AS RSN
+		           FROM ( <include refid="selectQuickSmList"/> ) PO ) PL
+		  WHERE 1 = 1 
+		 <![CDATA[ 
+		    AND RSN <= #{maxSn}
+		    AND RSN > #{minSn} 
+		 ]]>		
+	</select>
+	
+	<!-- 퀵메뉴 페이징 카운터 -->
+	<select id="selectQuickSmListPagingCount" parameterType="map" resultType="int">
+		  SELECT 
+			     COUNT(*)
+		    FROM 
+		   	     TAP_IM_INSTT_MANAGE IM, TAP_SM_SYS_MANAGE SM 
+		   WHERE IM.INSTT_CODE = SM.INSTT_CODE
+		     AND SM.SYS_STTUS = 'O'
+		<if test="@egovframework.MybatisUtils@isNotEmpty(srchTxt)">
+		     AND (
+		   		SM.SYS_NM LIKE '%'||#{srchTxt}||'%'
+		     OR	SM.SYS_ID LIKE '%'||#{srchTxt}||'%'
+		        )
+	    </if>
+	    <if test='@egovframework.MybatisUtils@isEmpty(author) || author != "master"'>
+	         AND SM.SYS_ID NOT IN ('apple')
+	    </if>
+	    <if test="@egovframework.MybatisUtils@isNotEmpty(insttCode)">
+		     AND ( 
+		     		IM.INSTT_CODE =  #{insttCode}
+						OR  IM.UPPER_INSTT_CODE = #{upperInsttCode}
+	                    OR  IM.BSIS_INSTT_CODE = #{bsisInsttCode}
+	             )
+		</if>
+	</select>
+
+	<!-- 퀵메뉴 홈페이지 등록건수 -->
+	<sql id="selectQuickState">
+	  SELECT 
+			 COUNT(*)
+		FROM 
+		     TAP_QU_QUICK_MANAGE
+	   WHERE 1 = 1
+	     AND SYS_ID= SM.SYS_ID
+	</sql>
+	
+</mapper>

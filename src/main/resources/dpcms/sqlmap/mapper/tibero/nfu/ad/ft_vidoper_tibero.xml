@@ -1,0 +1,287 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="ft_vidoper">
+
+<!-- 영상정보처리방침 시스템  리스트 sql-->
+	<sql id ="selectVidoperSmList">
+	  SELECT   IT.INSTT_CODE
+	          ,IT.INSTT_NM
+	          ,IT.INSTT_TY
+	          ,SM.SYS_ID
+	          ,SM.SYS_NM
+	          ,SM.SYS_TY
+              ,(SELECT COUNT(*) FROM TCO_NA_NTT_MANAGE NM, TCO_NA_NTT_FILE NF
+				WHERE NM.NTT_SN = NF.NTT_SN
+				AND NM.NTT_USE_AT = 'Y'
+				AND NM.BBS_ID = (SELECT BM.BBS_ID FROM TAP_BM_BBS_MANAGE BM WHERE SM.SYS_ID = BM.SYS_ID AND BM.BBS_TY = 'VIDOPER')) AS TOTAL_CNT
+              <!-- 관리자 페이지에서 각 학교별 게시판 링크를 위한 BBS_ID 조회 추가 hckim 2023.01.26 -->
+              ,(SELECT BM.BBS_ID FROM TAP_BM_BBS_MANAGE BM WHERE SM.SYS_ID = BM.SYS_ID AND BM.BBS_TY = 'VIDOPER') AS VIDOPER_BBS_ID
+	    FROM   TAP_IM_INSTT_MANAGE IT, TAP_SM_SYS_MANAGE SM
+	   WHERE   IT.INSTT_CODE = SM.INSTT_CODE
+         AND   SM.SYS_STTUS = 'O'
+	   <include refid="srchVidoperSmList" />
+	ORDER BY   IT.INSTT_CODE, IT.INSTT_LEVEL DESC
+	</sql>
+
+	 <!--  영상정보처리방침 시스템  리스트 검색조건 sql-->
+	<sql id ="srchVidoperSmList">
+
+        <if test='@egovframework.MybatisUtils@isEmpty(author) || author != "master"'>
+         AND SM.SYS_ID NOT IN ('apple')
+        </if>
+
+        <if test="@egovframework.MybatisUtils@isNotEmpty(insttCode)">
+	     AND   ( IT.INSTT_CODE =  #{insttCode}
+
+                    OR  IT.UPPER_INSTT_CODE = #{upperInsttCode}
+                    OR  IT.BSIS_INSTT_CODE = #{bsisInsttCode}
+
+               	)
+         </if>
+
+	     <if test="@egovframework.MybatisUtils@isNotEmpty(srchSmTxt)">
+	       AND  (
+	       				 SM.SYS_NM like '%'||#{srchSmTxt}||'%'
+	              	  OR SM.SYS_TY like '%'||#{srchSmTxt}||'%'
+
+	            )
+	    </if>
+
+	</sql>
+
+	<!--  영상정보처리방침 시스템  리스트  -->
+    <select id="selectVidoperSmList" parameterType="egovMap" resultType="egovMap">
+	 	<include refid="selectVidoperSmList" />
+	 </select>
+
+	<!-- 영상정보처리방침 시스템  리스트(페이징) -->
+    <select id="selectVidoperSmListPaging" parameterType="map" resultType="egovMap">
+    	SELECT
+    		PL.*
+    	FROM (
+        	SELECT
+        		PO.*
+        		,rownum as rsn
+			FROM (
+	    		<include refid="selectVidoperSmList" />
+				) PO
+		) PL
+		WHERE
+		<![CDATA[
+			rsn <= #{maxSn}
+			AND rsn > #{minSn}
+		]]>
+    </select>
+
+    <!-- 영상정보처리방침 시스템  리스트 (페이징 전체 카운트) -->
+    <select id="selectVidoperSmListPagingCount" parameterType="map" resultType="int">
+    	SELECT   COUNT(*)
+	      FROM   TAP_IM_INSTT_MANAGE IT, TAP_SM_SYS_MANAGE SM
+	     WHERE   IT.INSTT_CODE = SM.INSTT_CODE
+           AND   SM.SYS_STTUS = 'O'
+           <include refid="srchVidoperSmList" />
+	  ORDER BY   IT.INSTT_CODE, IT.INSTT_LEVEL DESC
+    </select>
+
+	<resultMap id="clobMap" type="egovMap">
+        <result property="IN_VEDITR_CN" column="IN_VEDITR_CN" jdbcType="CLOB" javaType="java.lang.String"/>
+    </resultMap>
+
+	<!--영상정보처리기기 시퀀스조회 -->
+    <select id="selectVidoperSnInfo"  resultType="egovMap">
+    	SELECT SEQ_IN_VIDOPER_MANAGE_SN.NEXTVAL FROM DUAL
+    </select>
+
+	<!--영상정보처리기기 검사 -->
+    <select id="selectVidoperCount"  resultType="egovMap">
+    	SELECT COUNT(*) AS INSERT_AT
+      	  FROM TAP_IN_VIDOPER_MANAGE
+      	 WHERE SYS_ID = #{sysId}
+    </select>
+
+	<!--영상정보처리기기 조회 -->
+    <select id="selectVidoperInfo" parameterType="map" resultMap="clobMap">
+       	SELECT   IV.SYS_ID
+				,IV.IN_VIDOPER_SN
+				,IV.IN_CNFIRM_MTH
+				,IV.IN_CNFIRM_PLACE
+				,IV.IN_VEDITR_AT
+				,IV.IN_VEDITR_CN
+				,IV.IN_VRSPNBER_NM
+				,IV.IN_VRSPNBER_OFCPS
+				,IV.IN_VRSPNBER_PSITN
+				,IV.IN_VRSPNBER_TELNO
+				,IV.IN_AUTHORY_NM
+				,IV.IN_AUTHORY_OFCPS
+				,IV.IN_AUTHORY_PSITN
+				,IV.IN_AUTHORY_TELNO
+       	        ,SM.*
+	   	  FROM   TAP_IN_VIDOPER_MANAGE IV, TAP_SM_SYS_MANAGE SM
+	     WHERE   IV.SYS_ID = SM.SYS_ID
+	       AND   IV.SYS_ID = #{sysId}
+    </select>
+
+    <!--영상정보처리기기 설치관리 조회 -->
+    <select id="selectVidoperInstlList" parameterType="map" resultType="egovMap">
+       	SELECT   *
+	   	  FROM   TAP_IN_VIDOPER_INSTL
+	     WHERE   IN_VIDOPER_SN = #{inVidoperSn}
+    </select>
+
+    <!--영상정보처리기기 보관관리 조회 -->
+    <select id="selectVidoperCstdyList" parameterType="map" resultType="egovMap">
+       	SELECT   *
+	   	  FROM   TAP_IN_VIDOPER_CSTDY
+	     WHERE   IN_VIDOPER_SN = #{inVidoperSn}
+    </select>
+
+    <!-- 영상정보처리기기 에디터 사용여부 수정 -->
+    <update id="updateVeditrAtInfo" parameterType ="map">
+		UPDATE   TAP_IN_VIDOPER_MANAGE
+		   SET   IN_VEDITR_AT  = #{inVeditrAt}
+		 WHERE   IN_VIDOPER_SN = #{inVidoperSn}
+	</update>
+
+    <!-- 영상정보처리기기 방침 등록 -->
+	<insert id="insertVidoperInfo" parameterType="map" >
+    	INSERT INTO TAP_IN_VIDOPER_MANAGE (
+             SYS_ID
+			,IN_VIDOPER_SN
+			,IN_CNFIRM_MTH
+			,IN_CNFIRM_PLACE
+			,IN_VEDITR_AT
+			,IN_VEDITR_CN
+			,IN_VRSPNBER_NM
+			,IN_VRSPNBER_OFCPS
+			,IN_VRSPNBER_PSITN
+			,IN_VRSPNBER_TELNO
+			,IN_AUTHORY_NM
+			,IN_AUTHORY_OFCPS
+			,IN_AUTHORY_PSITN
+			,IN_AUTHORY_TELNO
+			,REG_DT
+			,REG_USID
+			,REG_USNM
+			,REG_USIP
+        ) VALUES (
+             #{sysId}
+		    ,#{inVidoperSn}
+			,#{inCnfirmMth}
+			,#{inCnfirmPlace}
+			,#{inVeditrAt}
+			,#{inVeditrCn}
+			,#{inVrspnberNm}
+			,#{inVrspnberOfcps}
+			,#{inVrspnberPsitn}
+			,#{inVrspnberTelno}
+			,#{inAuthoryNm}
+			,#{inAuthoryOfcps}
+			,#{inAuthoryPsitn}
+			,#{inAuthoryTelno}
+			,sysdate
+			,#{regUsid}
+			,#{regUsnm}
+			,#{regUsip}
+        )
+	</insert>
+
+    <!-- 영상정보처리기기 설치관리 등록 -->
+	<insert id="insertVidoperInstlInfo" parameterType="map" >
+    	INSERT INTO TAP_IN_VIDOPER_INSTL (
+             IN_VIDOPER_SN
+			,IN_INSTL_SN
+			,IN_INSTL_CO
+			,IN_INSTL_LC
+			,IN_INSTL_SCOPE
+        ) VALUES (
+             #{inVidoperSn}
+		    ,SEQ_IN_VIDOPER_INSTL_SN.NEXTVAL
+			,#{inInstlCo}
+			,#{inInstlLc}
+			,#{inInstlScope}
+        )
+	</insert>
+
+    <!-- 영상정보처리기기 보관관리 등록 -->
+	<insert id="insertVidoperCstdyInfo" parameterType="map" >
+    	INSERT INTO TAP_IN_VIDOPER_CSTDY (
+             IN_VIDOPER_SN
+			,IN_CSTDY_SN
+			,IN_CSTDY_ORMPM
+			,IN_CSTDY_PD
+			,IN_CSTDY_PLACE
+        ) VALUES (
+             #{inVidoperSn}
+		    ,SEQ_IN_VIDOPER_CSTDY_SN.NEXTVAL
+			,#{inCstdyOrmpm}
+			,#{inCstdyPd}
+			,#{inCstdyPlace}
+        )
+	</insert>
+
+	<!-- 영상정보처리기기 수정 -->
+    <update id="updateVidoperInfo" parameterType ="map">
+		UPDATE   TAP_IN_VIDOPER_MANAGE
+		   SET   SYS_ID 		    = #{sysId}
+				,IN_CNFIRM_MTH      = #{inCnfirmMth}
+				,IN_CNFIRM_PLACE    = #{inCnfirmPlace}
+				,IN_VEDITR_AT	    = #{inVeditrAt}
+				,IN_VEDITR_CN       = #{inVeditrCn}
+				,IN_VRSPNBER_NM 	= #{inVrspnberNm}
+				,IN_VRSPNBER_OFCPS  = #{inVrspnberOfcps}
+				,IN_VRSPNBER_PSITN  = #{inVrspnberPsitn}
+				,IN_VRSPNBER_TELNO  = #{inVrspnberTelno}
+				,IN_AUTHORY_NM      = #{inAuthoryNm}
+				,IN_AUTHORY_OFCPS   = #{inAuthoryOfcps}
+				,IN_AUTHORY_PSITN   = #{inAuthoryPsitn}
+				,IN_AUTHORY_TELNO   = #{inAuthoryTelno}
+		WHERE   IN_VIDOPER_SN       = #{inVidoperSn}
+	</update>
+
+	<!-- 영상정보처리기기 설치관리 수정 -->
+    <update id="updateVidoperInstlInfo" parameterType ="map">
+		UPDATE   TAP_IN_VIDOPER_INSTL
+		   SET   IN_INSTL_CO     = #{inInstlCo}
+				,IN_INSTL_LC     = #{inInstlLc}
+				,IN_INSTL_SCOPE  = #{inInstlScope}
+		 WHERE   IN_INSTL_SN     = #{inInstlSn}
+	</update>
+
+	<!-- 영상정보처리기기 보관관리 수정 -->
+    <update id="updateVidoperCstdyInfo" parameterType ="map">
+		UPDATE   TAP_IN_VIDOPER_CSTDY
+		   SET   IN_CSTDY_ORMPM  = #{inCstdyOrmpm}
+				,IN_CSTDY_PD     = #{inCstdyPd}
+				,IN_CSTDY_PLACE  = #{inCstdyPlace}
+		 WHERE   IN_CSTDY_SN     = #{inCstdySn}
+	</update>
+
+	<!--영상정보처리기기 관리 삭제 -->
+	<delete id="deleteVidoperInfo" parameterType="map" >
+    	DELETE FROM TAP_IN_VIDOPER_MANAGE
+         WHERE IN_VIDOPER_SN = #{inVidoperSn}
+   	</delete>
+	<!--영상정보처리기기 설치관리 삭제 -->
+	<delete id="deleteVidoperInstlInfo" parameterType="map" >
+    	DELETE FROM TAP_IN_VIDOPER_INSTL
+         WHERE IN_INSTL_SN = #{inInstlSn}
+   	</delete>
+	<!--영상정보처리기기 보관관리 삭제 -->
+	<delete id="deleteVidoperCstdyInfo" parameterType="map" >
+    	DELETE FROM TAP_IN_VIDOPER_CSTDY
+         WHERE IN_CSTDY_SN = #{inCstdySn}
+   	</delete>
+
+	<!--영상정보처리기기 설치관리 전체삭제 -->
+	<delete id="deleteAllVidoperInstlInfo" parameterType="map" >
+    	DELETE FROM TAP_IN_VIDOPER_INSTL
+         WHERE IN_VIDOPER_SN = #{inVidoperSn}
+   	</delete>
+	<!--영상정보처리기기 보관관리 전체삭제 -->
+	<delete id="deleteAllVidoperCstdyInfo" parameterType="map" >
+    	DELETE FROM TAP_IN_VIDOPER_CSTDY
+         WHERE IN_VIDOPER_SN = #{inVidoperSn}
+   	</delete>
+
+</mapper>

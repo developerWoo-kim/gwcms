@@ -1,0 +1,182 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="tm_tmplat">
+
+	<!-- 템플릿 이름 조회 -->
+    <select id="selectTmplatNm" parameterType="map" resultType="egovMap">
+        SELECT
+        	*
+        FROM
+        	TAP_TM_TMPLAT_MANAGE
+        ORDER	BY
+        	TMPLAT_TY, TMPLAT_ID
+        	#{tmplatId}
+    </select>
+
+	<!-- 템플릿 전체 리스트 조회 -->
+    <select id="selectTmplatList" parameterType="map" resultType="egovMap">
+        SELECT
+        	*
+        FROM
+        	TAP_TM_TMPLAT_MANAGE
+        WHERE TMPLAT_SN > 1061
+        ORDER	BY
+        	TMPLAT_TY, TMPLAT_ID
+    </select>
+
+    <!-- 템플릿 조회 SQL -->
+    <sql id ="selectTmplatListSql">
+    	SELECT A.*
+    		,B.CMMN_DETAIL_CODE_NM AS TMPLAT_TY_NM
+    		,C.CMMN_DETAIL_CODE_NM AS TMPLAT_GROUP_NM
+    		,( SELECT COUNT(*) FROM TAP_SM_SYS_MANAGE D WHERE A.TMPLAT_ID = D.TMPLAT_ID ) AS TMPLAT_USE_CO
+        FROM TAP_TM_TMPLAT_MANAGE A
+        	LEFT OUTER JOIN TAP_CD_CMMNCODE_DETAIL B ON A.TMPLAT_TY = B.CMMN_DETAIL_CODE AND B.CMMN_CODE = 'tmplatTy'
+        	LEFT OUTER JOIN TAP_CD_CMMNCODE_DETAIL C ON A.TMPLAT_GROUP = C.CMMN_DETAIL_CODE AND C.CMMN_CODE = 'tmplatGroup'
+        WHERE 1=1
+        <if test="@egovframework.MybatisUtils@isNotEmpty(srchTmplatTy)">
+        	AND TMPLAT_TY = #{srchTmplatTy}
+        </if>
+        <if test="@egovframework.MybatisUtils@isNotEmpty(srchTmplatUseAt)">
+        	AND TMPLAT_USE_AT = #{srchTmplatUseAt}
+        </if>
+        <if test="@egovframework.MybatisUtils@isNotEmpty(srchTmplatKey)">
+        	AND ( INSTR(TMPLAT_NM,#{srchTmplatKey}) > 0
+        		OR INSTR(TMPLAT_ID,#{srchTmplatKey}) > 0 )
+        </if>
+    </sql>
+
+    <!-- 템플릿 리스트 조회 (페이징) -->
+    <select id="selectTmplatListPaging" parameterType="map" resultType="egovMap">
+    	SELECT
+    		PL.*
+    	FROM (
+        	SELECT
+        		PO.*
+        		,rownum as rsn
+			FROM (
+	    		<include refid="selectTmplatListSql" />
+	    		ORDER BY TMPLAT_ID DESC
+				) PO
+		) PL
+		WHERE
+		<![CDATA[
+			rsn <= #{maxSn}
+			AND rsn > #{minSn}
+		]]>
+    </select>
+
+    <!-- 템플릿 리스트 조회 (페이징 전체 카운트) -->
+    <select id="selectTmplatListPagingCount" parameterType="map" resultType="int">
+    	SELECT COUNT(*)
+	    FROM TAP_TM_TMPLAT_MANAGE
+	    WHERE 1=1
+        <if test="@egovframework.MybatisUtils@isNotEmpty(srchTmplatTy)">
+        	AND TMPLAT_TY = #{srchTmplatTy}
+        </if>
+        <if test="@egovframework.MybatisUtils@isNotEmpty(srchTmplatUseAt)">
+        	AND TMPLAT_USE_AT = #{srchTmplatUseAt}
+        </if>
+        <if test="@egovframework.MybatisUtils@isNotEmpty(srchTmplatKey)">
+        	AND ( INSTR(TMPLAT_NM,#{srchTmplatKey}) > 0
+        		OR INSTR(TMPLAT_ID,#{srchTmplatKey}) > 0 )
+        </if>
+    </select>
+
+	<!-- 사용가능한 템플릿 리스트 조회 -->
+    <select id="selectTmplatUseList" parameterType="map" resultType="egovMap">
+        SELECT
+             TM.*
+        	,FD.FILE_STRE_COURS AS FILE_PATH
+            ,FD.ORIGNL_FILE_NM
+        FROM
+            TAP_TM_TMPLAT_MANAGE TM
+        	    LEFT OUTER JOIN TSA_ATCH_FILE_DETAIL FD
+                   ON TM.TMPLAT_IMG_ID = FD.FILE_ID
+	   <!-- 사용중인 템플릿만 출력 (SJLEE) -->
+       WHERE 1=1
+         AND TM.TMPLAT_USE_AT = 'Y'
+       <!-- 사용중인 템플릿만 출력 -->
+        ORDER BY
+        	TM.TMPLAT_TY, TM.TMPLAT_ID
+    </select>
+
+    <!-- 템플릿 단건 조회 -->
+    <select id="selectTmplatInfo" parameterType="map" resultType="egovMap">
+        SELECT	A.*
+        	,B.CMMN_DETAIL_CODE_NM AS TMPLAT_TY_NM
+    		,C.CMMN_DETAIL_CODE_NM AS TMPLAT_GROUP_NM
+    		,( SELECT COUNT(*) FROM TAP_SM_SYS_MANAGE D WHERE A.TMPLAT_ID = D.TMPLAT_ID ) AS TMPLAT_USE_CO
+        FROM TAP_TM_TMPLAT_MANAGE A
+        	LEFT OUTER JOIN TAP_CD_CMMNCODE_DETAIL B ON A.TMPLAT_TY = B.CMMN_DETAIL_CODE AND B.CMMN_CODE = 'tmplatTy'
+        	LEFT OUTER JOIN TAP_CD_CMMNCODE_DETAIL C ON A.TMPLAT_GROUP = C.CMMN_DETAIL_CODE AND C.CMMN_CODE = 'tmplatGroup'
+        WHERE
+        	TMPLAT_ID = #{tmplatId}
+    </select>
+
+    <!-- 템플릿 시퀀스 조회 -->
+    <select id="selectSeqByTmplatSn" resultType="string">
+		SELECT SEQ_TMPLAT_SN.NEXTVAL FROM DUAL
+    </select>
+
+    <!-- 템플릿 메뉴아이디 중복 확인 -->
+    <select id="selectTmplatMenuIdChk" parameterType="map" resultType="int">
+    	SELECT COUNT(*)
+    	  FROM TAP_TM_TMPLAT_MANAGE
+    	 WHERE 1=1
+    	   AND TMPLAT_MENU_ID = #{tmplatMenuId}
+    </select>
+
+    <!-- 템플릿  등록 -->
+    <insert id="insertTmplatInfo" parameterType="map" >
+    	INSERT INTO TAP_TM_TMPLAT_MANAGE (
+    		TMPLAT_SN
+    		,TMPLAT_ID
+    		,TMPLAT_NM
+    		,TMPLAT_TY
+    		,TMPLAT_DC
+    		,TMPLAT_GROUP
+    		,TMPLAT_USE_AT
+    		,TMPLAT_MENU_ID
+    		,TMPLAT_IMG_ID
+    	) VALUES (
+    		#{tmplatSn}
+    		,#{tmplatNm}
+    		,#{tmplatNm}
+    		,#{tmplatTy}
+    		,#{tmplatDc}
+    		,#{tmplatGroup}
+    		,#{tmplatUseAt}
+    		,#{tmplatMenuId}
+    		,#{tmplatImgId}
+    	)
+    </insert>
+
+    <!-- 템플릿 수정 -->
+    <update id="updateTmplatInfo" parameterType="map" >
+    	UPDATE TAP_TM_TMPLAT_MANAGE
+    	SET TMPLAT_NM = #{tmplatNm}
+    		,TMPLAT_TY = #{tmplatTy}
+    		,TMPLAT_DC = #{tmplatDc}
+    		,TMPLAT_GROUP = #{tmplatGroup}
+    		,TMPLAT_USE_AT = #{tmplatUseAt}
+    		,TMPLAT_MENU_ID = #{tmplatMenuId}
+    		,TMPLAT_IMG_ID = #{tmplatImgId}
+    	WHERE TMPLAT_ID = #{tmplatId}
+    </update>
+
+    <!-- 템플릿 삭제 -->
+    <update id="deleteTmplatInfo" parameterType="map" >
+    	DELETE FROM TAP_TM_TMPLAT_MANAGE
+    	WHERE TMPLAT_ID = #{tmplatId}
+    </update>
+
+    <!-- 템플릿 전체 리스트 조회 -->
+    <select id="selectTmplatUseSysListCount" parameterType="map" resultType="int">
+        SELECT COUNT(*)
+        FROM TAP_SM_SYS_MANAGE
+        WHERE TMPLAT_ID = #{tmplatId}
+    </select>
+
+</mapper>

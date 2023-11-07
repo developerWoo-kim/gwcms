@@ -1,0 +1,91 @@
+@charset "utf-8";
+
+/* 교직원 소개 */
+.edu_pers_box {position:relative; width:640px; margin:0 auto; overflow:hidden; font-size:12px; font-family:"Dotum"; color:#444;}
+.edu_pers_box .edu_pers01 {position:relative; width:200px; height:106px; padding:20px 0 0 100px; float:left; margin:0 10px 20px; background: url(/images/co/jo/bg_edu_pers01.gif) no-repeat left top;}
+.edu_pers_box .edu_pers02 {position:relative; width:265px; height:98px; padding:50px 0 0 35px; float:left; margin:0 10px 20px; background: url(/images/co/jo/bg_edu_pers02.gif) no-repeat left top;}
+.edu_pers_box .edu_pers03 {position:relative; width:280px; height:125px; padding:50px 0 0 20px; float:left; margin:0 10px 20px; background: url(/images/co/jo/bg_edu_pers03.gif) no-repeat left top;}
+.edu_pers_box .edu_pers04 {position:relative; width:280px; height:114px; padding:54px 0 0 20px; float:left; margin:0 10px 20px; background: url(/images/co/jo/bg_edu_pers04.gif) no-repeat left top;}
+.edu_pers_box .edu_pers05 {position:relative; width:155px; height:159px; padding:20px 0 0 145px; float:left; margin:0 10px 20px; background: url(/images/co/jo/bg_edu_pers05.gif) no-repeat left top;}
+.edu_pers_box .edu_pers06 {position:relative; width:260px; height:85px; padding:50px 0 0 40px; float:left; margin:0 10px 20px; background: url(/images/co/jo/bg_edu_pers06.gif) no-repeat left top;}
+.edu_pers_box .edu_pers07 {position:relative; width:200px; height:90px; padding:55px 0 0 100px; float:left; margin:0 10px 20px; background: url(/images/co/jo/bg_edu_pers07.gif) no-repeat left top;}
+
+.edu_pers_box .edu_pers01 .ep_img {position:absolute; top:21px; left:11px; border-radius:3px; overflow:hidden;}
+.edu_pers_box .edu_pers07 .ep_img {position:absolute; top:21px; left:11px; border-radius:3px; overflow:hidden;}
+.edu_pers_box .edu_pers02 .ep_name {position:absolute; top:12px; left:13px; font-size:14px; font-family:"Dotum"; color:#333; font-weight:bold;}
+.edu_pers_box .edu_pers03 .ep_name {position:absolute; top:14px; left:13px; font-size:14px; padding-left:8px; font-family:"Dotum"; color:#333; font-weight:bold; background: url(/images/co/jo/bu_edu_pers03.gif) no-repeat left 2px;}
+.edu_pers_box .edu_pers04 .ep_name {position:absolute; top:17px; left:13px; font-size:14px; font-family:"Dotum"; color:#333; font-weight:bold;}
+.edu_pers_box .edu_pers05 .ep_name {position:absolute; top:50px; left:15px; width:118px; text-align:center; font-size:14px; font-family:"Dotum"; color:#fff; font-weight:bold;}
+.edu_pers_box .edu_pers05 .ep_task {position:absolute; top:25px; left:15px; width:118px; text-align:center; font-size:12px; font-family:"Dotum"; color:#f8ffce;}
+.edu_pers_box .edu_pers06 .ep_name {position:absolute; top:17px; left:40px; font-size:14px; font-family:"Dotum"; color:#333; font-weight:bold;}
+.edu_pers_box .edu_pers07 .ep_name {position:absolute; top:23px; left:100px; font-size:14px; padding-left:8px; font-family:"Dotum"; color:#333; font-weight:bold; background: url(/images/co/jo/bu_edu_pers07.gif) no-repeat left 2px;}
+
+.edu_pers_box dl.ep_txt1 {position:relative; margin:2px 0 2px; line-height:18px; letter-spacing:-1px;}
+.edu_pers_box dl.ep_txt1 dt {position:absolute; top:0; left:0; width:80px;}
+.edu_pers_box dl.ep_txt1 dd {padding-left:80px; overflow-y: auto; height: 20px; width: 55%;} /* 20190121 */
+.edu_pers_box dl.ep_txt1 dt.bu_epT01 {position:absolute; top:0; left:0; width:72px; padding-left:8px; background: url(/images/co/jo/bu_edu_pers01.gif) no-repeat left 7px;}
+.edu_pers_box dl.ep_txt1 dt.bu_epT02 {position:absolute; top:0; left:0; width:72px; padding-left:8px; background: url(/images/co/jo/bu_edu_pers02.gif) no-repeat left 7px;}
+.edu_pers_box dl.ep_txt1 dt.bu_epT03 {position:absolute; top:7px; left:0; width:80px; color:#333; font-weight:bold;}
+.edu_pers_box dl.ep_txt1 dt.bu_epT04 {position:absolute; top:3px; left:0; width:67px; padding-left:18px; color:#375396; font-weight:bold; background: url(/images/co/jo/bu_edu_pers04.gif) no-repeat left 3px;}
+.edu_pers_box dl.ep_txt1 dt.bu_epT05 {position:relative; top:auto; left:auto; margin-top:5px; color:#f8ffce; font-weight:bold;}
+.edu_pers_box dl.ep_txt1 dt.bu_epT06 {position:absolute; top:0; left:0; width:72px; padding-left:8px; background: url(/images/co/jo/bu_edu_pers06.gif) no-repeat left 7px;}
+.edu_pers_box dl.ep_txt1 dt.bu_epT07 {position:absolute; top:0; left:0; width:70px; padding-left:10px; color:#333; font-weight:bold; background: url(/images/co/jo/bu_edu_pers07_1.gif) no-repeat left 5px;}
+
+.edu_pers_box dl.ep_txt1 dd.bu_epC01 {padding-left:83px; background: url(/images/co/jo/line_edu_pers01.gif) no-repeat 71px 2px; }
+.edu_pers_box dl.ep_txt1 dd.bu_epC03 {padding:7px 23px 7px 80px;}
+.edu_pers_box dl.ep_txt1 dd.bu_epC04 {padding:3px 23px 3px 85px;}
+.edu_pers_box dl.ep_txt1 dd.bu_epC05 {padding:5px 23px 8px 0; color:#fff;}
+
+.ep_tblTy01{width:100%; overflow:hidden; border-top:2px solid #3469c7; color:#4c4d4f; position:relative; margin-top:10px; }
+.ep_tblTy01 table{ width:100%; margin-left:-1px;}
+.ep_tblTy01 th, 
+.ep_tblTy01 td { padding:7px 12px; border-left:1px solid #ddd; border-bottom:1px solid #ddd; line-height:18px; text-align:center;}
+.ep_tblTy01 th {background:#f9f9f9; color:#111; font-family:"NanumBold"; font-size:13px; }
+.ep_tblTy01 td { background:#fff; word-break:keep-all; font-family:"돋움",Dotum !important; font-size:12px;}
+
+/* 20161223 */
+.edu_pers09 .ep_tit {width:100%; height:60px; text-align:center; line-height:50px; font-size:22px; font-family:"NanumBold"; color:#fff; background: url(/images/co/jo/bg_edu_pers09.gif) no-repeat center top;}
+.edu_pers09 h5 {font-size:15px; line-height:1.4; font-family:"NanumBold"; color:#111;  background:url("/images/co/jo/bul_03.png") no-repeat 0 5px; padding-left:16px;}
+.edu_pers09_box {overflow:hidden;}
+.edu_pers09_box .edu_w50l {width:48%; float:left;}
+.edu_pers09_box .edu_w50r {width:48%; float:right;}
+
+.edu_pers10_box { padding:0 0 10px 240px; background: url(/images/co/jo/bg_edu_pers10.gif) no-repeat left top;}
+.edu_pers10 h4 {font-size:15px; line-height:1.4; font-family:"NanumBold"; color:#111;  background:url("/images/co/jo/bul_03.png") no-repeat 0 5px; padding-left:16px;}
+
+
+@media screen and (max-width:800px) {
+	/* 교직원 소개 */
+	.edu_pers_box {width:640px; margin:0 auto; }
+
+}
+
+@media screen and (max-width:640px) {
+	/* 교직원 소개 */
+	.edu_pers_box {width:320px; margin:0 auto; }
+
+	/* 20161223 */
+	.edu_pers09 .ep_tit {font-size:18px; background: url(/images/co/jo/bg_edu_pers09_2.gif) no-repeat center top;}
+	.edu_pers09_box {overflow:hidden;}
+	.edu_pers09_box .edu_w50l {width:100%; float:none;}
+	.edu_pers09_box .edu_w50r {width:100%; float:none;}
+
+	.edu_pers10_box {padding:100px 0 0 0; background: url(/images/co/jo/bg_edu_pers10.gif) no-repeat center top;}
+	
+
+}
+
+@media screen and (max-width:560px) {
+
+
+}
+
+@media screen and (max-width:480px) {
+
+	
+}
+
+@media screen and (max-width:380px) {
+
+	
+}

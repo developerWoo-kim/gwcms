@@ -1,0 +1,171 @@
+﻿@charset "utf-8";
+
+
+.MC_wrap2 { position: relative; background: #1b2d68; }
+.MC_wrap2 .container { display: flex; flex-direction: row; justify-content: space-between; align-items: center; padding: 20px 0; }
+.MC_wrap3 { position: relative; padding: 64px 0; }
+
+
+h2.heading { font-weight: 700; }
+
+
+/* 메인비주얼 */
+.M_Visual { position: relative; width: 100%; height: 374px; background: url('/images/template/H0001/main/m_visual.png') no-repeat center / cover; }
+.M_Visual .slogan { position: absolute; top: 114px; left: 50%; transform: translateX(-50%); width: 100%; padding: 0 20px;color: #fff; text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.54); text-align: center; font-family: 'SCDream'; font-weight: 600; }
+.M_Visual .slogan .txt1 { font-size: 38px; font-weight: 700; }
+.M_Visual .slogan .txt2 { position: relative; font-size: 16px; margin-top: 60px; }
+.M_Visual .slogan .txt2::before { position: absolute; top: -28px; left: 50%; transform: translateX(-50%); width: 48px; height: 2px; background: #fff; content: ""; }
+
+/* 처리현황 */
+.M_stus { position: relative; width: calc(100% - 515px); color: #fff; font-size: 0; }
+.M_stus h2.heading { display: inline-block; line-height: 40px; font-size: 20px; margin-right: 36px; }
+.M_stus .titTab { display: inline-block; font-size: 0; }
+.M_stus .titTab li { display: inline-block; }
+.M_stus .titTab li a { display: block; line-height: 40px; padding: 0 20px; font-size: 20px; font-weight: 600; color: #fff; text-align: center; }
+.M_stus .list_box { display: none; }
+.M_stus .list_box ul { font-size: 0; width: calc(100% + 120px); margin-left: -60px; margin-top: 20px; }
+.M_stus .list_box ul li { position: relative; display: inline-block; padding: 0 60px; font-size: 16px; }
+.M_stus .list_box ul li + li::before { position: absolute; left: 0; top: 50%; transform: translateY(-50%); width: 1px; height: 100%; background: #fff; content: ""; }
+.M_stus .list_box ul li p { font-size: 30px; font-weight: 600; line-height: 30px; margin-top: 4px; }
+/* 처리현황 : active */
+.M_stus .list_box.on { display: block; }
+.M_stus .titTab li a:hover,
+.M_stus .titTab li a.current { background: #fff; color: #1b2d68; border-radius: 20px; }
+
+/* 바로가기 */
+.M_link01 { position: relative; width: 515px; font-family: 'SCDream'; }
+.M_link01 ul { display: table; table-layout: fixed; width: calc(100% + 10px); margin-left: -5px; }
+.M_link01 li { display: table-cell; padding: 0 5px; vertical-align: middle; }
+.M_link01 li a { display: flex; flex-direction: column; justify-content: center; align-items: center; height: 120px; background: #059edb; color: #fff; text-align: center; padding: 0 10px; }
+.M_link01 li a .txt { position: relative; display: block; font-size: 16px; font-weight: 600; margin-top: 8px; padding: 0 30px 0 0; word-break: keep-all; line-height: 20px; }
+.M_link01 li a .txt i { position: absolute; top: 0; right: 0; width: 20px; height: 20px; line-height: 20px; background: #fff; color: #059edb; font-size: 22px; border-radius: 50%; text-align: center; }
+/* 바로가기 : active */
+.M_link01 li a:hover .img img { transform: translateY(-4px); }
+.M_link01 li a .img img { transition: all 0.2s; -webkit-transition: all 0.2s; }
+
+/* 공지사항 */
+.notice { position: relative; width: calc(100% - 573px); float: left; }
+.notice h2.heading { font-size: 24px; color: #333; line-height: 46px; }
+.notice li { width: 100%; }
+.notice li + li { border-top: 1px solid #cfd6dd; }
+.notice li a { display: block; }
+.notice li a dl { position: relative; padding: 24px 0 24px 106px; }
+.notice li a dl dt { display: block; font-size: 18px; color: #222; font-weight: 600; white-space: nowrap; text-overflow: ellipsis; overflow: hidden; }
+.notice li a dl dd { margin-top: 14px; }
+.notice li a dl dd > p { font-size: 16px; color: #555; line-height: 25px; height: 50px; overflow: hidden; }
+.notice li a dl dd .date { position: absolute; top: 24px; left: 24px; display: flex; flex-direction: column; align-items: center; font-size: 15px; color: #555; }
+.notice li a dl dd .date em { width: 57px; height: 57px; line-height: 57px; text-align: center; color: #005ead; background: #ecf5ff; border-radius: 50%; font-size: 30px; font-style: initial; font-weight: 600; }
+.notice .btn_more { position: absolute; display: flex; justify-content: center; align-items: center; top: 0; right: 0; width: 40px; height: 40px; border: 2px solid #00315b; color: #333; font-size: 24px; }
+/* 공지사항 : active */
+.notice li a:hover dl dt { text-decoration: underline; }
+.notice .btn_more:hover i { transform: rotate(180deg); -webkit-transform: rotate(180deg); }
+.notice .btn_more i { transition: all 0.3s; -webkit-transition: all 0.3s; }
+
+/* 운영시간 */
+.oprHrs { position: relative; width: 512px; border: 3px solid #ecf5ff; padding: 33px 30px; float: right; font-family: 'SCDream'; font-size: 0; }
+.oprHrs::before { position: absolute; bottom: 33px; right: 0; background: url('/images/template/H0001/main/center_bg.png') no-repeat center / contain; width: 261px; height: 181px; content: ""; }
+.oprHrs h2.heading { font-size: 24px; color: #333; margin-bottom: 18px; }
+.oprHrs dl + dl { margin-top: 20px; }
+.oprHrs dl dt { font-size: 16px; color: #333; margin-bottom: 4px; }
+.oprHrs dl dd { font-size: 16px; color: #059edb; font-weight: 700; }
+.oprHrs dl dd .time { position: relative; padding-left: 60px; }
+.oprHrs dl dd .time span { position: absolute; top: 0; left: 0; }
+
+
+@media screen and (max-width: 1240px) {
+    .MC_wrap2 .container { padding: 20px; }
+
+    /* 처리현황 */
+    .M_stus { width: calc(100% - 490px); }
+
+    /* 바로가기 */
+    .M_link01 { width: 490px; }
+
+    /* 공지사항 */
+    .notice { width: calc(100% - 550px); }
+
+}
+
+@media screen and (max-width: 1024px) {
+
+    .MC_wrap2 .container { display: block; }
+    .MC_wrap3 { padding: 20px 0; }
+
+    /* 메인비주얼 */
+    .M_Visual .slogan .txt1 { font-size: 30px; }
+
+    /* 처리현황 */
+    .M_stus { width: 100%; }
+    .M_stus h2.heading { display: block; width: 100%; margin-bottom: 20px; }
+    .M_stus .titTab { width: 100px; vertical-align: middle; }
+    .M_stus .titTab li { display: block; }
+    .M_stus .titTab li + li { margin-top: 4px; }
+    .M_stus .tabWrap { display: inline-block; width: calc(100% - 100px); vertical-align: middle; padding-left: 20px; }
+    .M_stus .list_box ul { display: table; table-layout: fixed; margin-top: 0; margin-left: 0; width: 100%; }
+    .M_stus .list_box ul li { display: table-cell; padding: 0; text-align: center; }
+
+    /* 바로가기 */
+    .M_link01 { width: 100%; margin-top: 25px; }
+
+    /* 공지사항 */
+    .notice { width: 100%; }
+
+    /* 운영시간 */
+    .oprHrs { width: 100%; margin-top: 20px; padding: 25px 190px 25px 25px; }
+    .oprHrs::before { bottom: 5px; width: 213px; height: 150px; }
+    .oprHrs dl { display: inline-block; width: 50%; vertical-align: top; }
+    .oprHrs dl + dl { margin-top: 0; }
+
+}
+
+@media screen and (max-width: 680px) {
+
+    /* 처리현황 */
+    .M_stus .list_box ul li p { font-size: 25px; }
+
+    /* 공지사항 */
+    .notice h2.heading { font-size: 20px; line-height: 36px; }
+    .notice li a dl { padding: 20px 0 20px 80px; }
+    .notice li a dl dd .date { left: 0; }
+    .notice li a dl dd .date em { font-size: 24px; }
+    .notice .btn_more { width: 36px; height: 36px; }
+
+    /* 운영시간 */
+    .oprHrs h2.heading { font-size: 20px; }
+    .oprHrs dl { width: 100%; }
+    .oprHrs dl + dl { margin-top: 20px; }
+
+
+
+}
+
+@media screen and (max-width: 540px) {
+
+    /* 메인비주얼 */
+    .M_Visual .slogan { top: 50px; }
+    .M_Visual .slogan .txt1 { font-size: 26px; }
+
+    /* 처리현황 */
+    .M_stus h2.heading { line-height: 1; margin-bottom: 15px; }
+    .M_stus .titTab { width: 100%; }
+    .M_stus .titTab li { display: inline-block; }
+    .M_stus .tabWrap { width: 100%; padding-left: 0; margin-top: 20px; }
+
+    /* 바로가기 */
+    .M_link01 li { display: block; width: 100%; }
+    .M_link01 li + li { margin-top: 10px; }
+    .M_link01 li a { height: auto; flex-direction: row; padding: 10px; }
+    .M_link01 li a .img { width: 80px; }
+    .M_link01 li a .txt { margin-top: 0; width: calc(100% - 80px); padding: 0 25px 0 15px; text-align: left; }
+
+    /* 운영시간 */
+    .oprHrs { padding: 25px 140px 25px 25px; }
+    .oprHrs::before { width: 165px; height: 117px; }
+}
+
+@media screen and (max-width: 480px) {
+    /* 운영시간 */
+    .oprHrs { padding: 25px; }
+    .oprHrs::before { display: none; }
+
+}

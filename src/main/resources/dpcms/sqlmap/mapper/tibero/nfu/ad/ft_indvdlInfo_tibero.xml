@@ -1,0 +1,426 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="ft_indvdl">
+
+	<!-- 개인정보처리방침 시스템  리스트 sql-->
+	<sql id ="selectIndvdlSmList">
+	  SELECT   IT.INSTT_CODE
+	          ,IT.INSTT_NM
+	          ,IT.INSTT_TY
+	          ,SM.SYS_ID
+	          ,SM.SYS_NM
+	          ,SM.SYS_TY
+              ,(SELECT COUNT(*) FROM TCO_NA_NTT_MANAGE NM, TCO_NA_NTT_FILE NF
+				WHERE NM.NTT_SN = NF.NTT_SN
+				AND NM.NTT_USE_AT = 'Y'
+				AND NM.BBS_ID = (SELECT BM.BBS_ID FROM TAP_BM_BBS_MANAGE BM WHERE SM.SYS_ID = BM.SYS_ID AND BM.BBS_TY = 'INDVDL')) AS TOTAL_CNT
+              <!-- 관리자 페이지에서 각 학교별 게시판 링크를 위한 BBS_ID 조회 추가 hckim 2023.01.26 -->
+              ,(SELECT BM.BBS_ID FROM TAP_BM_BBS_MANAGE BM WHERE SM.SYS_ID = BM.SYS_ID AND BM.BBS_TY = 'INDVDL') AS INDVDL_BBS_ID
+	    FROM   TAP_IM_INSTT_MANAGE IT, TAP_SM_SYS_MANAGE SM
+	   WHERE   IT.INSTT_CODE = SM.INSTT_CODE
+         AND   SM.SYS_STTUS = 'O'
+	   <include refid="srchIndvdlSmList" />
+	ORDER BY   IT.INSTT_CODE, IT.INSTT_LEVEL DESC
+	</sql>
+
+	 <!--  개인정보처리방침 시스템  리스트 검색조건 sql-->
+	<sql id ="srchIndvdlSmList">
+
+        <if test='@egovframework.MybatisUtils@isEmpty(author) || author != "master"'>
+         AND SM.SYS_ID NOT IN ('apple')
+        </if>
+
+        <if test="@egovframework.MybatisUtils@isNotEmpty(insttCode)">
+	     AND   ( IT.INSTT_CODE =  #{insttCode}
+
+                    OR  IT.UPPER_INSTT_CODE = #{upperInsttCode}
+                    OR  IT.BSIS_INSTT_CODE = #{bsisInsttCode}
+
+               	)
+         </if>
+
+	     <if test="@egovframework.MybatisUtils@isNotEmpty(srchSmTxt)">
+	       AND  (
+	       				 SM.SYS_NM like '%'||#{srchSmTxt}||'%'
+	              	  OR SM.SYS_TY like '%'||#{srchSmTxt}||'%'
+
+	            )
+	    </if>
+
+	</sql>
+
+	<!--  개인정보처리방침 시스템  리스트  -->
+    <select id="selectIndvdlSmList" parameterType="egovMap" resultType="egovMap">
+	 	<include refid="selectIndvdlSmList" />
+	 </select>
+
+	<!-- 개인정보처리방침 시스템  리스트(페이징) -->
+    <select id="selectIndvdlSmListPaging" parameterType="map" resultType="egovMap">
+    	SELECT
+    		PL.*
+    	FROM (
+        	SELECT
+        		PO.*
+        		,rownum as rsn
+			FROM (
+	    		<include refid="selectIndvdlSmList" />
+				) PO
+		) PL
+		WHERE
+		<![CDATA[
+			rsn <= #{maxSn}
+			AND rsn > #{minSn}
+		]]>
+    </select>
+
+    <!-- 개인정보처리방침 시스템  리스트 (페이징 전체 카운트) -->
+    <select id="selectIndvdlSmListPagingCount" parameterType="map" resultType="int">
+    	SELECT   COUNT(*)
+	      FROM   TAP_IM_INSTT_MANAGE IT, TAP_SM_SYS_MANAGE SM
+	     WHERE   IT.INSTT_CODE = SM.INSTT_CODE
+           AND   SM.SYS_STTUS = 'O'
+           <include refid="srchIndvdlSmList" />
+	  ORDER BY   IT.INSTT_CODE, IT.INSTT_LEVEL DESC
+    </select>
+
+	<resultMap id="clobMap" type="egovMap">
+        <result property="IN_EDITR_CN" column="IN_EDITR_CN" jdbcType="CLOB" javaType="java.lang.String"/>
+    </resultMap>
+
+	<!--개인정보처리방침 시퀀스조회 -->
+    <select id="selectIndvdlManageSn"  resultType="egovMap">
+    	SELECT SEQ_INDVDL_MANAGE_SN.NEXTVAL FROM DUAL
+    </select>
+
+	<!--개인정보처리방침 검사 -->
+    <select id="selectIndvdlCount"  resultType="egovMap">
+    	SELECT COUNT(*) AS INSERT_AT
+      	  FROM TAP_IN_INDVDL_MANAGE
+      	 WHERE SYS_ID = #{sysId}
+    </select>
+
+	<!--개인정보처리방침 조회 -->
+    <select id="selectIndvdlManageInfo" parameterType="map" resultMap="clobMap">
+       	SELECT   IV.SYS_ID
+				,IV.IN_INDVDL_SN
+			    ,IV.IN_RSPNBER_NM
+				,IV.IN_RSPNBER_RSPOFC
+				,IV.IN_RSPNBER_TELNO
+				,IV.IN_RSPNBER_EMAIL
+				,IV.IN_CHARGER_NM
+	   		    ,IV.IN_CHARGER_RSPOFC
+				,IV.IN_CHARGER_TELNO
+				,IV.IN_CHARGER_EMAIL
+				,TO_CHAR(IV.REG_DT, 'YYYY/MM/DD') AS REG_DT
+				,IV.REG_USID
+				,IV.REG_USNM
+				,IV.REG_USIP
+				,IV.IN_EDITR_AT
+				,IV.IN_EDITR_CN AS IN_EDITR_CN
+       	        ,SM.SYS_NM
+	   	  FROM   TAP_IN_INDVDL_MANAGE IV, TAP_SM_SYS_MANAGE SM
+	     WHERE   IV.SYS_ID = SM.SYS_ID
+	       AND   IV.SYS_ID = #{sysId}
+    </select>
+
+	<!--개인정보처리방침 위탁관리 조회 -->
+    <select id="selectIndvdlCnsgnList" parameterType="map" resultType="egovMap">
+       	SELECT    IN_CNSGN_SN
+				 ,IN_CNSGN_CN
+				 ,IN_CNSGN_TRUINSTT
+				 ,IN_CNSGN_CHCK
+				 ,IN_INDVDL_SN
+				 ,TO_CHAR(IN_CNSGN_BGNDE, 'YYYY/MM/DD') AS IN_CNSGN_BGNDE
+				 ,TO_CHAR(IN_CNSGN_ENDDE, 'YYYY/MM/DD') AS IN_CNSGN_ENDDE
+	   	  FROM   TAP_IN_INDVDL_CNSGN
+	     WHERE   IN_INDVDL_SN = #{inIndvdlSn}
+	  ORDER BY   IN_CNSGN_SN
+    </select>
+
+	<!--개인정보처리방침 부서관리 조회 -->
+    <select id="selectIndvdlDeptList" parameterType="map" resultType="egovMap">
+       	SELECT   *
+	   	  FROM   TAP_IN_INDVDL_DEPT
+	     WHERE   IN_INDVDL_SN = #{inIndvdlSn}
+	  ORDER BY   IN_DEPT_SN
+    </select>
+
+	<!--개인정보처리방침 파일관리조회 -->
+    <select id="selectIndvdlFileList" parameterType="map" resultType="egovMap">
+       	SELECT   IN_FILE_SN
+				,IN_FILE_NM
+				,IN_INDVDL_SN
+				,TO_CHAR(IN_FILE_BGNDE, 'YYYY/MM/DD') AS IN_FILE_BGNDE
+				,TO_CHAR(IN_FILE_ENDDE, 'YYYY/MM/DD') AS IN_FILE_ENDDE
+	   	  FROM   TAP_IN_INDVDL_FILE
+	     WHERE   IN_INDVDL_SN = #{inIndvdlSn}
+	  ORDER BY   IN_FILE_BGNDE, IN_FILE_SN
+    </select>
+
+	<!--개인정보처리방침 제공관리조회 -->
+    <select id="selectIndvdlProvdList" parameterType="map" resultType="egovMap">
+       	SELECT   *
+	   	  FROM   TAP_IN_INDVDL_PROVD
+	     WHERE   IN_INDVDL_SN = #{inIndvdlSn}
+	  ORDER BY   IN_PROVD_SN
+    </select>
+
+  	<!-- 개인정보처리방침 등록 -->
+	<insert id="insertIndvdlInfo" parameterType="map" >
+    	INSERT INTO TAP_IN_INDVDL_MANAGE (
+             SYS_ID
+		    ,IN_INDVDL_SN
+			,IN_RSPNBER_NM
+			,IN_RSPNBER_RSPOFC
+			,IN_RSPNBER_TELNO
+			,IN_RSPNBER_EMAIL
+			,IN_CHARGER_NM
+			,IN_CHARGER_RSPOFC
+			,IN_CHARGER_TELNO
+			,IN_CHARGER_EMAIL
+			,IN_EDITR_AT
+			,IN_EDITR_CN
+			,REG_DT
+			,REG_USID
+			,REG_USNM
+			,REG_USIP
+        ) VALUES (
+             #{sysId}
+		    ,#{inIndvdlSn}
+			,#{inRspnberNm}
+			,#{inRspnberRspofc}
+			,#{inRspnberTelno}
+			,#{inRspnberEmail}
+			,#{inChargerNm}
+			,#{inChargerRspofc}
+			,#{inChargerTelno}
+			,#{inChargerEmail}
+			,#{inEditrAt}
+			,#{inEditrCn}
+			,SYSDATE
+			,#{regUsid}
+			,#{regUsnm}
+			,#{regUsip}
+        )
+	</insert>
+
+  	<!-- 개인정보처리 제공 정보 등록 -->
+	<insert id="insertIndvdlProvdInfo" parameterType="map" >
+    	INSERT INTO TAP_IN_INDVDL_PROVD (
+             IN_PROVD_SN
+            ,IN_INDVDL_SN
+			,IN_PROVD_INFO
+			,IN_PROVD_RECPTR
+			,IN_PROVD_PURPS
+			,IN_PROVD_IEM
+			,IN_PROVD_PD
+        ) VALUES (
+             SEQ_INDVDL_PROVD_SN.NEXTVAL
+            ,#{inIndvdlSn}
+			,#{inProvdInfo}
+			,#{inProvdRecptr}
+			,#{inProvdPurps}
+			,#{inProvdIem}
+			,#{inProvdPd}
+        )
+	</insert>
+
+  	<!-- 개인정보처리 위탁 정보 등록 -->
+	<insert id="insertIndvdlCnsgnInfo" parameterType="map" >
+    	INSERT INTO TAP_IN_INDVDL_CNSGN	(
+			 IN_CNSGN_SN
+			,IN_INDVDL_SN
+			,IN_CNSGN_CN
+			,IN_CNSGN_BGNDE
+			,IN_CNSGN_ENDDE
+			,IN_CNSGN_TRUINSTT
+			,IN_CNSGN_CHCK
+        ) VALUES (
+             SEQ_INDVDL_CNSGN_SN.NEXTVAL
+            ,#{inIndvdlSn}
+			,#{inCnsgnCn}
+			,#{inCnsgnBgnde}
+			,#{inCnsgnEndde}
+			,#{inCnsgnTruinstt}
+			,#{inCnsgnChck}
+        )
+	</insert>
+
+  	<!-- 개인정보처리 부서 정보 등록 -->
+	<insert id="insertIndvdlDeptInfo" parameterType="map" >
+    	INSERT INTO TAP_IN_INDVDL_DEPT (
+			 IN_DEPT_SN
+			,IN_INDVDL_SN
+			,IN_INDVD_NM
+			,IN_DEPT_NM
+			,IN_DEPT_TELNO
+        ) VALUES (
+              SEQ_INDVDL_DEPT_SN.NEXTVAL
+            ,#{inIndvdlSn}
+			,#{inIndvdNm}
+			,#{inDeptNm}
+			,#{inDeptTelno}
+        )
+	</insert>
+
+  	<!-- 개인정보처리 파일 정보 등록 -->
+	<insert id="insertIndvdlFileInfo" parameterType="map" >
+    	INSERT INTO TAP_IN_INDVDL_FILE (
+			 IN_FILE_SN
+			,IN_INDVDL_SN
+			,IN_FILE_NM
+			,IN_FILE_BGNDE
+			,IN_FILE_ENDDE
+        ) VALUES (
+        	 #{inFileSn}
+            ,#{inIndvdlSn}
+			,#{inFileNm}
+			,#{inFileBgnde}
+			,#{inFileEndde}
+        )
+	</insert>
+
+    <!-- 개인정보처리방침 수정 -->
+    <update id="updateIndvdlInfo" parameterType ="map">
+		UPDATE   TAP_IN_INDVDL_MANAGE
+		   SET   SYS_ID 		   = #{sysId}
+				,IN_RSPNBER_NM     = #{inRspnberNm}
+				,IN_RSPNBER_RSPOFC = #{inRspnberRspofc}
+				,IN_RSPNBER_TELNO  = #{inRspnberTelno}
+				,IN_RSPNBER_EMAIL  = #{inRspnberEmail}
+				,IN_CHARGER_NM     = #{inChargerNm}
+				,IN_CHARGER_RSPOFC = #{inChargerRspofc}
+				,IN_CHARGER_TELNO  = #{inChargerTelno}
+				,IN_CHARGER_EMAIL  = #{inChargerEmail}
+				,IN_EDITR_AT       = #{inEditrAt}
+				,IN_EDITR_CN       = #{inEditrCn}
+		WHERE   IN_INDVDL_SN       = #{inIndvdlSn}
+	</update>
+
+    <!-- 개인정보처리방침 에디터 사용여부 수정 -->
+    <update id="updateInEditrAtInfo" parameterType ="map">
+		UPDATE   TAP_IN_INDVDL_MANAGE
+		   SET   IN_EDITR_AT  = #{inEditrAt}
+		 WHERE   IN_INDVDL_SN = #{inIndvdlSn}
+	</update>
+
+	<!-- 개인정보처리 제공 정보 수정 -->
+    <update id="updateIndvdlProvdInfo" parameterType ="map">
+		UPDATE   TAP_IN_INDVDL_PROVD
+		   SET   IN_PROVD_INFO   = #{inProvdInfo}
+				,IN_PROVD_RECPTR = #{inProvdRecptr}
+				,IN_PROVD_PURPS  = #{inProvdPurps}
+				,IN_PROVD_IEM    = #{inProvdIem}
+				,IN_PROVD_PD     = #{inProvdPd}
+		WHERE   IN_PROVD_SN      = #{inProvdSn}
+	</update>
+
+	<!-- 개인정보처리 위탁 정보 수정 -->
+    <update id="updateIndvdlCnsgnInfo" parameterType ="map">
+		UPDATE   TAP_IN_INDVDL_CNSGN
+		   SET   IN_CNSGN_CN       = #{inCnsgnCn}
+				,IN_CNSGN_BGNDE    = TO_DATE(#{inCnsgnBgnde},'YYYY/MM/DD')
+				,IN_CNSGN_ENDDE    = TO_DATE(#{inCnsgnEndde},'YYYY/MM/DD')
+				,IN_CNSGN_TRUINSTT = #{inCnsgnTruinstt}
+				,IN_CNSGN_CHCK     = #{inCnsgnChck}
+		WHERE    IN_CNSGN_SN       = #{inCnsgnSn}
+	</update>
+
+	<!-- 개인정보처리 부서 정보 수정 -->
+    <update id="updateIndvdlDeptInfo" parameterType ="map">
+		UPDATE   TAP_IN_INDVDL_DEPT
+		   SET   IN_INDVD_NM    = #{inIndvdNm}
+				,IN_DEPT_NM     = #{inDeptNm}
+				,IN_DEPT_TELNO  = #{inDeptTelno}
+		WHERE    IN_DEPT_SN     = #{inDeptSn}
+	</update>
+
+	<!-- 개인정보처리 파일 정보 수정 -->
+    <update id="updateIndvdlFileInfo" parameterType ="map">
+		UPDATE   TAP_IN_INDVDL_FILE
+		   SET   IN_FILE_SN    = #{inNewFileSn}
+		   		,IN_FILE_NM    = #{inFileNm}
+				,IN_FILE_BGNDE = #{inFileBgnde}
+				,IN_FILE_ENDDE = #{inFileEndde}
+		 WHERE   IN_FILE_SN    = #{inFileSn}
+	</update>
+
+	<!--개인정보처리 삭제 -->
+	<delete id="deleteIndvdlInfo" parameterType="map" >
+    	DELETE FROM TAP_IN_INDVDL_MANAGE
+         WHERE IN_INDVDL_SN = #{inIndvdlSn}
+   	</delete>
+
+	<!--개인정보처리 제공정보 삭제 -->
+	<delete id="deleteIndvdlProvdInfo" parameterType="map" >
+    	DELETE FROM TAP_IN_INDVDL_PROVD
+         WHERE IN_PROVD_SN = #{inProvdSn}
+   	</delete>
+
+	<!--개인정보처리 위탁정보 삭제 -->
+	<delete id="deleteIndvdlCnsgnInfo" parameterType="map" >
+    	DELETE FROM TAP_IN_INDVDL_CNSGN
+         WHERE IN_CNSGN_SN = #{inCnsgnSn}
+   	</delete>
+
+	<!--개인정보처리 부서정보 삭제 -->
+	<delete id="deleteIndvdlDeptInfo" parameterType="map" >
+    	DELETE FROM TAP_IN_INDVDL_DEPT
+         WHERE IN_DEPT_SN = #{inDeptSn}
+   	</delete>
+
+	<!--개인정보처리 파일정보 삭제 -->
+	<delete id="deleteIndvdlFileInfo" parameterType="map" >
+    	DELETE FROM TAP_IN_INDVDL_FILE
+         WHERE IN_FILE_SN = #{inFileSn}
+   	</delete>
+
+   	<!--개인정보처리 제공정보 삭제 (개인정보처리방침 전체 삭제 시) -->
+	<delete id="deleteAllIndvdlProvdInfo" parameterType="map" >
+    	DELETE FROM TAP_IN_INDVDL_PROVD
+         WHERE IN_INDVDL_SN = #{inIndvdlSn}
+   	</delete>
+
+	<!--개인정보처리 위탁정보 삭제 (개인정보처리방침 전체 삭제 시)-->
+	<delete id="deleteAllIndvdlCnsgnInfo" parameterType="map" >
+    	DELETE FROM TAP_IN_INDVDL_CNSGN
+         WHERE IN_INDVDL_SN = #{inIndvdlSn}
+   	</delete>
+
+	<!--개인정보처리 부서정보 삭제 (개인정보처리방침 전체 삭제 시)-->
+	<delete id="deleteAllIndvdlDeptInfo" parameterType="map" >
+    	DELETE FROM TAP_IN_INDVDL_DEPT
+         WHERE IN_INDVDL_SN = #{inIndvdlSn}
+   	</delete>
+
+	<!--개인정보처리 파일정보 삭제 (개인정보처리방침 전체 삭제 시) -->
+	<delete id="deleteAllIndvdlFileInfo" parameterType="map" >
+    	DELETE FROM TAP_IN_INDVDL_FILE
+         WHERE IN_INDVDL_SN = #{inIndvdlSn}
+   	</delete>
+
+   	<!--학교 개인정보처리방침 BBS_ID 조회 hckim 2023.01.28 -->
+    <select id="selectBbsInfo" parameterType="map" resultType="egovMap">
+       	SELECT
+       		BBS_ID,
+       		MENU_ID
+		FROM
+	   	  	TAP_BM_BBS_MANAGE
+		WHERE BBS_TY = #{bbsTy}
+		AND SYS_ID = #{sysId}
+    </select>
+
+	<!-- 개인정보처리방침 파일 조회 hckim 2023.01.28 -->
+    <select id="selectFileInfo" parameterType="map" resultType="egovMap">
+	    SELECT
+	    	NF.FILE_SN,
+	    	NF.DWLD_URL
+	    FROM
+	    	TCO_NA_NTT_FILE NF, TCO_NA_NTT_MANAGE NM
+	    WHERE NF.NTT_SN = NM.NTT_SN
+	    AND NF.BBS_ID = #{bbsId}
+	    AND FILE_SN = (SELECT MAX(FILE_SN) FROM TCO_NA_NTT_FILE WHERE BBS_ID = #{bbsId})
+	    AND NM.NTT_USE_AT = 'Y'
+    </select>
+</mapper>

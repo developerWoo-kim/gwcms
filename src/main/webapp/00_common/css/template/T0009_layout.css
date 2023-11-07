@@ -1,0 +1,86 @@
+
+/* 통합검색 */
+.totalSearch { position:relative; width: 11rem; height: 2rem; padding-right: 2rem; overflow: hidden; }
+.totalSearch input { padding: 0 10px; width: 100%; height: 2rem; line-height: 2rem; font-size: 0.6rem; border: none; font-family: '돋움', Dotum; background:#eaeaea; border-radius: 19px;}
+.totalSearch button { position: absolute; top: 0; right: 0; padding: 0; width: 2rem; height: 2rem; line-height:2rem; color:#fff; background: #00bde3; border: none; border-radius: 50%; font-size:.9rem; }
+.totalSearch input::-webkit-input-placeholder { color: #555; }
+.totalSearch input::placeholder { color: #555; }
+
+/* gnb color */
+/* gnb : default */
+#gnb{ background:#fff; }/* gnb 배경색 */
+#gnb .depth01 > ul > li.on > a{ color:#00bde3; } /* 1차메뉴 active 텍스트 색상 */
+#gnb .depth01 > ul > li > a{ color:#333; }/* 1차메뉴 텍스트 색상 */
+#gnb .depth01 > ul > li > a:before{ background:#00bde3;} /* 1차메뉴 active underline 색상*/
+#gnb .depth01 > ul > li > a > span:before{background:#e4faff; } /* 1차메뉴 active 그림자 색상 */
+#gnb .depth02 > ul > li > a{ color:#111; }/* 2차메뉴 텍스트 색상 */
+/* gnb : fullDown */
+#nav.fullDown #gnb:before { height: 2px; background: #50bcdf; }
+#nav.fullDown .depth02 > ul > li > a:hover,
+#nav.fullDown .depth02 > ul > li > a:focus,
+#nav.fullDown .depth02 > ul > li.active > a{ color:#fff; background:#00bde3; }/* 2차메뉴 active 효과 */
+/* gnb : oneDown */
+#nav.oneDown #gnb:before { height: 2px; background: #50bcdf; }
+#nav.oneDown .depth02{ border:2px solid #00bde3;}/* 2차메뉴 border-color */
+#nav.oneDown .depth02 > ul > li > a:hover,
+#nav.oneDown .depth02 > ul > li > a:focus,
+#nav.oneDown .depth02 > ul > li.dep.active > a{ color:#00bde3; font-weight:600; }/* 2차메뉴 active 텍스트 색상 */
+/* gnb : oneFull */
+#nav.oneFull #gnb:before { height: 2px; background: #50bcdf; }
+#nav.oneFull .depth02 > ul > li > a:hover,
+#nav.oneFull .depth02 > ul > li > a:focus,
+#nav.oneFull .depth02 > ul > li.dep.active > a{ color:#fff; background:#00bde3; }/* 2차메뉴 active 배경색 */
+#nav.oneFull .depth03 > ul > li > a:before{background:#00bde3;}/* 3차메뉴 블릿 색상 */
+
+/* footer */
+#footer { border-top:1px solid #cbcbcb; color:#323232; }/* footer 배경, 폰트색상, border */
+.footer_link li a:before{ border-left:1px solid #ccc; }/* footer link 영역 라인색상 */
+.footer_link li a strong { color: #5cb1cc; }/* footer link 강조 폰트색상 */
+#footer .copyright { color:#565454; }/* copyright 폰트색상 */
+#footer .btn_top{ background:#e37648; color:#fff;}/* footer 상단이동 버튼 색상 */
+
+/* 방문자수 */
+.visitant{background:#5cb1cc; }
+.visitant ul li{ color:#000;}
+.visitant ul li strong { color:#fff;}
+.visitant ul li + li:before{ border-left:1px solid #ccc;}
+
+/* moblie  */
+#header .mBtn.mSearch{ background: #5cb1cc; color:#fff;}/* 모바일 검색 버튼 */
+#header .mBtn.mNav{ background: #e37648; color:#fff;}/* 모바일 메뉴 버튼 */
+
+/* moblie navigation  */
+#mNav #mNavClose { border-radius:.5rem; color:#fff; background:#e37648;}/* 모바일 메뉴 닫기 버튼 */
+#mgnb .depth02{ background:#f7faff;}/* 2차메뉴 배경 */
+#mgnb .depth02 > ul > li:before{ background:#e37648;}/* 2차메뉴 블릿 색상*/
+#mgnb .depth03{ border-top:2px solid #e37648;}/* 3차메뉴 border 색상 */
+#mgnb .depth01 > ul > li.active > a { color: #fff; background-color:#e37648; }/* 1차메뉴 active */
+#mgnb .depth02 > ul > li.active > a { color: #e37648; }/* 2차메뉴 active */
+
+/* moblie search  */
+#mSearch .btnSearch { background: #5cb1cc; }
+#mSearch .btnClose { background:#5cb1cc;  }
+
+/* lnb */
+#lnb h2{ color:#fff;background: #5cb1cc;
+    background: -moz-linear-gradient(90deg, #5cb1cc 0%, #1f42a4 100%);
+    background: -webkit-linear-gradient(90deg, #5cb1cc 0%, #1f42a4 100%);
+    background: linear-gradient(90deg, #5cb1cc 0%, #1f42a4 100%); }
+/* lnb:active */
+#lnb .dep01 > li > a:before{ background:#f0faff;}
+#lnb .dep01 > li.active > a{ border-color:#5cb1cc;}
+#lnb .dep02 > li > a:before{ background:#5cb1cc;}
+#lnb .dep02 > li.active > a{ color:#5cb1cc; }
+#lnb .dep03 { border-top:2px solid #5cb1cc;}
+#lnb ul > li > a:hover,
+#lnb ul > li > a:focus{color:#5cb1cc;}
+
+/* location : snsBox */
+.snsBox button.active,
+.snsBox button:hover,
+.snsBox button:focus{ color:#fff; border-color:#5cb1cc; background:#5cb1cc;}
+
+@media (max-width:1024px){
+    /* header */
+    #header { border-bottom-color: #dfdfdf; }
+}

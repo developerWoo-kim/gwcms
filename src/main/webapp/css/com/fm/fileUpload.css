@@ -1,0 +1,66 @@
+@charset "utf-8";
+/* CSS Document */
+
+#popWrap { position:relative; border:6px solid #2692ff; text-align:left; }
+#popWrap .popHeader { position:relative; padding:18px 0 0 20px; height:28px; background:url("../images/sub/pop_Rbg.gif") no-repeat 100% 0; }
+#popWrap .popHeader .title {font-size:20px; line-height:29px; font-weight:bold; font-family:"NanumBold" !important; color:#444 !important;}
+#popWrap .popHeader .Close { position:absolute; right:-7px; top:-7px; width:36px; height:36px; overflow:hidden; white-space:nowrap; text-indent:-9999px; font-size:0; background:url("../images/sub/btn_close.gif") 0 0 no-repeat; }
+#popWrap .popContainer { position:relative; z-index:2; padding:20px 18px 20px; border-left:1px solid #dad9d9; border-right:1px solid #dad9d9; *zoom:1; font:normal 12px/1.4 Dotum,"돋움", Helvetica, Arial, Sans-serif !important; }
+.Scroll {position:relative;  overflow-y:auto; border:1px solid #ccc; padding:20px}
+
+/* 트리 */
+.tree { line-height:20px; font-size:12px; background:url(../images/sub/line_tree_vr.gif) repeat-y left 0}
+.tree li { padding-left:15px; margin:2px 0;  background:url(../images/sub/line_tree_hr.gif) no-repeat 0 5px;}
+.tree li:last-child { background:url(../images/sub/line_tree_hr_.gif) no-repeat left 5px;}
+.tree li a {padding:1px 0 0 15px; color:#333}
+.tree li a.off {background:url(../images/sub/tree_off.gif) no-repeat 0 0;}
+.tree li a.on {background:url(../images/sub/tree_on.gif) no-repeat 0 0;}
+.tree li a span.folder {padding:2px 0 2px 20px;  background:url(../images/sub/folder16.png) no-repeat 0 0}
+.tree li > ul {margin-left:5px; background:url(../images/sub/line_tree_vr.gif) repeat-y 0 0}
+.tree li > ul > li { margin:0; padding:0 0 0 15px; background:url(../images/sub/line_tree_hr.gif) no-repeat 0 5px; font-size:11px}
+.tree li > ul > li input[type="text"] { width:50px; height:13px; line-height:13px; font-size:12px;}
+
+
+/* 하자일정관리_첨부파일 */
+#popup { position:relative; width:100%; padding-bottom:15px; text-align:left; background:#f7f7f7; overflow:hidden }
+#popup h2 { font-family:"NotoSans"; font-size:16px; color:#fff; line-height:20px; padding:8px 15px; background:#53657d;}
+.button_file {position:absolute; top:5px; right:10px; border:1px solid #e7e7e7; border-radius:1px; padding:5px 10px; font-family:"NotoSans"; font-size:14px; color:#e7e7e7 !important;}
+.button_file:hover {color:#fff !important; border:1px solid #fff;}
+
+#fileListDiv {padding:0 15px 0; font-family:"NotoSans"; font-size:14px; color:#222;}
+.fileNoti {font-size:14px; font-family:"NotoSans"; color:#666;}
+#file-list {height:79px; padding:5px 0; overflow-y:auto; margin-top:10px; background:#fff; border:1px solid #ddd;}
+#file-list li {padding:8px 10px; border-bottom:1px dashed #e7e7e7; overflow:hidden}
+#file-list li:last-child {border-bottom:none;}
+#file-list li:hover {background-color:#fcfcfc;}
+.fileName {float:left;width:300px; color:#666;}
+.fileSize {float:right; color:#888; font-size:13px;}
+#delete {float:right; width:15px; height:15px; margin-top:2px; vertical-align:middle; margin-left:5px; cursor:pointer}
+
+
+#mfileListDiv{padding:0 15px 0; font-family:"NotoSans"; font-size:14px; color:#222;}
+.fileNoti {font-size:14px; font-family:"NotoSans"; color:#666;}
+#mfile-list {height:79px; padding:5px 0; overflow-y:auto; margin-top:10px; background:#fff; border:1px solid #ddd;}
+#mfile-list li {padding:8px 10px; border-bottom:1px dashed #e7e7e7; overflow:hidden}
+#mfile-list li:last-child{border-bottom:none;}
+#mfile-list li:hover {background-color:#fcfcfc;}
+.fileName {float:left;width:300px; color:#666;}
+.fileSize {float:right; color:#888; font-size:13px;}
+
+.progress { position:relative; font-family:"NotoSans"; font-size:14px; color:#333; height:8px; margin:15px 50px 0 0; background:#f7f7f7; border:1px solid #ddd; border-radius:5px;}
+.bar {position:absolute; top:-1px; left:-1px; background-color:#0081dd; width:0; height:8px; border-radius:5px 0 0 5px;}
+.percent { position:absolute; top:-5px; right:-50px; color:#0081dd; font-weight:600;}
+
+.btn_bottom { text-align:right; padding:5px 10px 15px; letter-spacing:-1px}
+.button_Del { display:inline-block; *display:inline; zoom:1; border-radius:2px; background:#637187; padding:10px 15px; font-family:"NanumBold"; font-size:13px; color:#fff !important;}
+.button_Save {display:inline-block; *display:inline; zoom:1; border-radius:2px; background:#00b864; padding:10px 15px; font-family:"NanumBold"; font-size:13px; color:#fff !important; margin-left:2px}
+.button_Del:hover, .button_Save:hover { opacity:0.9}
+
+/* 팝업_버튼 */
+.p_btn_wrap { position:absolute; top:22px; right:30px}
+
+/* 비밀번호찾기 팝업 안내 문구 추가 170613 */
+.pop_idpw_info {margin:20px 10px; padding:10px 20px;border:1px dotted #c6cddd;}
+.pop_idpw_info p { line-height:20px; font-family:'Nanum'; color:#222; font-size:13px; letter-spacing:-1px;}
+.pop_idpw_info p strong {font-family:'NanumBold'}
+.pop_idpw_info p strong.point { color:#506ac7}

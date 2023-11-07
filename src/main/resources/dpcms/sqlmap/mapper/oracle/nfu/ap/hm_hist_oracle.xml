@@ -1,0 +1,260 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="hm_hist">
+	<select id="selectHistList" resultType="egovMap">
+		SELECT HIST_SN
+		, TO_CHAR(HIST_DT, 'YYYY.MM.DD') AS HIST_DT
+		, TO_CHAR(HIST_DT, 'YYYY') AS HIST_DT_YEAR
+		, HIST_CN
+		, WRTER_ID
+		, TO_CHAR(WRTER_DT, 'YYYY.MM.DD') AS WRTER_DT
+		FROM TAP_HM_HIST_MANAGE
+		WHERE SYS_ID = #{sysId}
+		ORDER BY HIST_DT DESC
+
+	</select>
+
+	<insert id="insertHistInfo" parameterType="map">
+		<selectKey keyProperty="hist_sn" resultType="int" order="BEFORE">
+			SELECT TAP_HM_HIST_MANAGE_SEQ.NEXTVAL AS HIST_SN FROM DUAL
+		</selectKey>
+		INSERT INTO TAP_HM_HIST_MANAGE (
+			  HIST_SN
+			, HIST_DT
+			, HIST_CN
+			, WRTER_ID
+			, WRTER_DT
+			, WRTER_IP
+			, SYS_ID
+        ) VALUES (
+			  #{hist_sn}
+			, TO_DATE(#{hist_dt}, 'YYYY.MM.DD')
+			, #{hist_cn}
+			, #{wrter_id}
+			, SYSDATE
+			, #{wrter_ip}
+			, #{sysId}
+           )
+	</insert>
+
+	<update id="updateHistInfo" parameterType="map">
+    <![CDATA[
+		UPDATE TAP_HM_HIST_MANAGE
+		   SET HIST_DT = TO_DATE(#{hist_dt}, 'YYYY.MM.DD')
+			 , HIST_CN = #{hist_cn}
+		 	 , UPDUSR_ID = #{updusr_id}
+			 , UPDUSR_DT = SYSDATE
+			 , UPDUSR_IP = #{updusr_ip}
+		 WHERE 1=1
+		   AND HIST_SN = #{hist_sn}
+    ]]>
+	</update>
+
+	<delete id="deleteHistInfo" parameterType="map">
+		DELETE FROM TAP_HM_HIST_MANAGE
+		WHERE HIST_SN = #{hist_sn}
+	</delete>
+
+	<delete id="deleteHistInfoList" parameterType="map">
+     <![CDATA[
+		DELETE FROM TAP_HM_HIST_MANAGE
+    ]]>
+		WHERE HIST_SN IN 
+		<foreach collection="hist_sn" item="item" index="index" open="(" close=")" separator=",">
+		#{item}
+		</foreach>
+	</delete>
+	
+	<!-- 연혁 시스템 리스트 쿼리문 시작 +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ -->
+      
+	<!-- 연혁 시스템 리스트 통계 sql -->
+    <sql id="selectHistState">
+    	SELECT COUNT(*) FROM TAP_HM_HIST_MANAGE WHERE SYS_ID = SM.SYS_ID 
+    </sql>
+    
+    <!-- 연혁 시스템 리스트 sql -->
+	<sql id="selectHistSmList">
+		SELECT IT.INSTT_CODE
+	          ,IT.INSTT_NM
+	          ,IT.INSTT_TY
+	          ,IT.INSTT_GRAD
+	          ,SM.SYS_ID
+			  ,SM.SYS_NM 
+			  ,SM.SYS_TY 
+			  ,rank() OVER (ORDER BY IT.INSTT_CODE DESC, IT.INSTT_LEVEL) as rank
+			  ,( <include refid="selectHistState" /> ) AS CNT   
+			  ,CMMN_DETAIL_CODE_NM AS TYNAME                                                      
+			  FROM TAP_IM_INSTT_MANAGE IT,  TAP_CD_CMMNCODE_DETAIL CD, TAP_SM_SYS_MANAGE SM 
+			  WHERE IT.INSTT_CODE = SM.INSTT_CODE
+			  AND CMMN_CODE='sysTy' and CMMN_DETAIL_CODE = SM.SYS_TY
+			  AND SM.SYS_STTUS = 'O'
+			  AND CD.USE_AT = 'Y'
+			<if test='@egovframework.MybatisUtils@isEmpty(author) || author != "master"'>
+	         AND SM.SYS_ID NOT IN ('apple')
+	        </if>
+	        
+	        <if test="@egovframework.MybatisUtils@isNotEmpty(insttCode)">
+		     AND   ( IT.INSTT_CODE =  #{insttCode}
+		     
+	                    OR  IT.UPPER_INSTT_CODE = #{upperInsttCode}
+	                    OR  IT.BSIS_INSTT_CODE = #{bsisInsttCode}
+	                    
+	               	)
+	         </if>
+	         
+		     <if test="@egovframework.MybatisUtils@isNotEmpty(insttGrad)">
+		     AND   ( IT.INSTT_GRAD IS NULL
+		     
+		     		 <if test="@egovframework.MybatisUtils@isNotEmpty(dtnt)">
+		                OR IT.INSTT_GRAD = #{dtnt}
+		             </if>
+		             <if test="@egovframework.MybatisUtils@isNotEmpty(elesch)">
+		                OR IT.INSTT_GRAD = #{elesch}
+		             </if>
+		             <if test="@egovframework.MybatisUtils@isNotEmpty(mskul)">    
+		                OR IT.INSTT_GRAD = #{mskul}
+		             </if> 
+		             <if test="@egovframework.MybatisUtils@isNotEmpty(hgschl)">
+		                OR IT.INSTT_GRAD = #{hgschl}
+		             </if>
+		             <if test="@egovframework.MybatisUtils@isNotEmpty(kndrgr)">     
+		                OR IT.INSTT_GRAD = #{kndrgr}
+		             </if>
+		             <if test="@egovframework.MybatisUtils@isNotEmpty(spcl)">
+		                OR IT.INSTT_GRAD = #{spcl}
+		             </if>
+		             
+		           )
+		     </if>
+	        
+	        <if test="@egovframework.MybatisUtils@isNotEmpty(mberId)">
+		      AND SM.SYS_ID IN (
+					SELECT SYS_ID
+					  FROM TAP_AU_AUTHOR_MBER 
+					 WHERE MBER_ID = #{mberId}
+						   AND SYS_ID != 'apple'
+					   AND AUTHOR_CODE IN (1,2)	
+	        	)
+		     </if>
+		     
+		     <if test="@egovframework.MybatisUtils@isNotEmpty(sysTy)">
+		      AND   SM.SYS_TY = #{sysTy}
+		     </if>
+		     
+		     <if test="@egovframework.MybatisUtils@isNotEmpty(srchTxt)">
+		       AND  (  		 
+       				 SM.SYS_NM like '%'||#{srchTxt}||'%'
+              	  OR SM.SYS_TY like '%'||#{srchTxt}||'%' 
+		              	 
+		       )
+		    </if>
+		     
+			 ORDER BY   IT.INSTT_CODE, IT.INSTT_LEVEL DESC
+	</sql>
+	
+	<!-- 연혁 시스템 리스트 -->
+	<select id="selectHistSmList" parameterType="map" resultType="egovMap">
+		<include refid="selectHistSmList"/>
+	</select>
+	
+	<!-- 연혁 시스템 페이징 -->
+	<select id="selectHistSmListPaging" parameterType="map" resultType="egovMap">
+		SELECT
+    		PL.*
+    	FROM (
+        	SELECT 
+        		PO.*
+        		,rownum as rsn
+			FROM (
+	    		<include refid="selectHistSmList" /> 
+				) PO
+		) PL
+		WHERE
+		<![CDATA[
+			rsn <= #{maxSn} 
+			AND rsn > #{minSn}
+		]]>
+	</select>
+	
+	<!-- 연혁 시스템 페이징 카운트 -->
+	<select id="selectHistSmListPagingCount" parameterType="map" resultType="int">
+		SELECT 
+			COUNT(*)
+			FROM TAP_IM_INSTT_MANAGE IT, TAP_SM_SYS_MANAGE SM 
+			  WHERE IT.INSTT_CODE = SM.INSTT_CODE
+			  AND SM.SYS_STTUS = 'O'
+			
+			<if test='@egovframework.MybatisUtils@isEmpty(author) || author != "master"'>
+	         AND SM.SYS_ID NOT IN ('apple')
+	        </if>
+	        
+	        <if test="@egovframework.MybatisUtils@isNotEmpty(insttCode)">
+		     AND   ( IT.INSTT_CODE =  #{insttCode}
+		     
+	                    OR  IT.UPPER_INSTT_CODE = #{upperInsttCode}
+	                    OR  IT.BSIS_INSTT_CODE = #{bsisInsttCode}
+	                    
+	               	)
+	         </if>
+	         
+		     <if test="@egovframework.MybatisUtils@isNotEmpty(insttGrad)">
+		     AND   ( IT.INSTT_GRAD IS NULL
+		     
+		     		 <if test="@egovframework.MybatisUtils@isNotEmpty(dtnt)">
+		                OR IT.INSTT_GRAD = #{dtnt}
+		             </if>
+		             <if test="@egovframework.MybatisUtils@isNotEmpty(elesch)">
+		                OR IT.INSTT_GRAD = #{elesch}
+		             </if>
+		             <if test="@egovframework.MybatisUtils@isNotEmpty(mskul)">    
+		                OR IT.INSTT_GRAD = #{mskul}
+		             </if> 
+		             <if test="@egovframework.MybatisUtils@isNotEmpty(hgschl)">
+		                OR IT.INSTT_GRAD = #{hgschl}
+		             </if>
+		             <if test="@egovframework.MybatisUtils@isNotEmpty(kndrgr)">     
+		                OR IT.INSTT_GRAD = #{kndrgr}
+		             </if>
+		             <if test="@egovframework.MybatisUtils@isNotEmpty(spcl)">
+		                OR IT.INSTT_GRAD = #{spcl}
+		             </if>
+		             
+		           )
+		     </if>
+	        
+	        <if test="@egovframework.MybatisUtils@isNotEmpty(mberId)">
+		      AND SM.SYS_ID IN (
+					SELECT SYS_ID
+					  FROM TAP_AU_AUTHOR_MBER 
+					 WHERE MBER_ID = #{mberId}
+						   AND SYS_ID != 'apple'
+					   AND AUTHOR_CODE IN (1,2)	
+	        	)
+		     </if>
+		     
+		     <if test="@egovframework.MybatisUtils@isNotEmpty(sysTy)">
+		      AND   SM.SYS_TY = #{sysTy}
+		     </if>
+		     
+		     <if test="@egovframework.MybatisUtils@isNotEmpty(srchTxt)">
+		       AND  (  		 
+       				 SM.SYS_NM like '%'||#{srchTxt}||'%'
+              	  OR SM.SYS_TY like '%'||#{srchTxt}||'%' 
+		              	 
+		       )
+		    </if>
+			 
+			 ORDER BY   IT.INSTT_CODE, IT.INSTT_LEVEL DESC
+	</select>
+     
+     
+	<select id="sysTyList" parameterType="map" resultType="egovMap">
+    	SELECT * 
+    	FROM TAP_CD_CMMNCODE_DETAIL 
+    	WHERE CMMN_CODE = 'sysTy'
+    	AND USE_AT = 'Y'
+	</select>
+	<!-- 연혁 시스템 리스트 쿼리문 종료 +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ -->
+	
+</mapper>

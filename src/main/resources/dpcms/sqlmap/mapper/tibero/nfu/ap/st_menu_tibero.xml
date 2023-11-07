@@ -1,0 +1,376 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="st_menu">
+
+	<!-- 메뉴통계 리스트 -->
+	<sql id="selectMenuCountBase">
+		  SELECT MN.SYS_NM
+		        ,MN.SYS_ID
+		        ,MN.MENU_NM
+		        ,MN.MENU_LEVEL
+		        ,MN.UPPER_MENU_ID
+		        ,MN.SORT_ORDR
+		        ,TO_CHAR(ST.MENU_DE, 'YYYY') MENU_YY
+		        ,TO_CHAR(ST.MENU_DE, 'MM') MENU_MM
+		        ,TO_CHAR(ST.MENU_DE, 'DD') MENU_DD
+		        ,ST.MENU_ID
+		        ,COUNT(*) MENU_CO
+		    FROM TAP_ST_MENU_STATS ST, TAP_MN_MENU_MANAGE MN	
+	</sql>
+	
+	<!-- 메뉴통계 리스트 (년) -->
+	<sql id="selectMenuYearSort">
+		<![CDATA[
+		  SELECT MN.MENU_ID
+		  		,MN.MENU_LEVEL
+		        ,MN.MENU_NM
+		        ,MN.UPPER_MENU_ID
+		        ,SUM(CASE WHEN TO_CHAR(ST.MENU_DE, 'MM') = '01' THEN 1 ELSE 0 END) AS "JAN"
+		        ,SUM(CASE WHEN TO_CHAR(ST.MENU_DE, 'MM') = '02' THEN 1 ELSE 0 END) AS "FEB"
+		        ,SUM(CASE WHEN TO_CHAR(ST.MENU_DE, 'MM') = '03' THEN 1 ELSE 0 END) AS "MAR"
+		        ,SUM(CASE WHEN TO_CHAR(ST.MENU_DE, 'MM') = '04' THEN 1 ELSE 0 END) AS "APR"
+		        ,SUM(CASE WHEN TO_CHAR(ST.MENU_DE, 'MM') = '05' THEN 1 ELSE 0 END) AS "MAY"
+		        ,SUM(CASE WHEN TO_CHAR(ST.MENU_DE, 'MM') = '06' THEN 1 ELSE 0 END) AS "JUN"
+		        ,SUM(CASE WHEN TO_CHAR(ST.MENU_DE, 'MM') = '07' THEN 1 ELSE 0 END) AS "JUL"
+		        ,SUM(CASE WHEN TO_CHAR(ST.MENU_DE, 'MM') = '08' THEN 1 ELSE 0 END) AS "AUG"
+		        ,SUM(CASE WHEN TO_CHAR(ST.MENU_DE, 'MM') = '09' THEN 1 ELSE 0 END) AS "SEP"
+		        ,SUM(CASE WHEN TO_CHAR(ST.MENU_DE, 'MM') = '10' THEN 1 ELSE 0 END) AS "OCT"
+		        ,SUM(CASE WHEN TO_CHAR(ST.MENU_DE, 'MM') = '11' THEN 1 ELSE 0 END) AS "NOV"
+		        ,SUM(CASE WHEN TO_CHAR(ST.MENU_DE, 'MM') = '12' THEN 1 ELSE 0 END) AS "DEC"
+		        ,COUNT(*) AS "TOTAL"
+		    FROM TAP_ST_MENU_STATS ST, TAP_MN_MENU_MANAGE MN
+		]]>	
+	</sql>
+	
+	<!-- 메뉴통계 리스트 (년) [sysId, menuYy] -->
+    <select id="st_menu.selectMenuYearCount" parameterType="egovMap" resultType="egovMap">
+	    <![CDATA[
+		  SELECT MN.SYS_NM
+		        ,MN.SYS_ID
+		        ,MN.MENU_NM
+		        ,MN.MENU_LEVEL
+		        ,MN.UPPER_MENU_ID
+		        ,MN.SORT_ORDR
+		        ,TO_CHAR(ST.MENU_DE, 'YYYY') MENU_YY
+		        ,TO_CHAR(ST.MENU_DE, 'MM') MENU_MM
+		        ,ST.MENU_ID
+		        ,COUNT(*) MENU_CO
+		    FROM TAP_ST_MENU_STATS ST, TAP_MN_MENU_MANAGE MN
+		   WHERE ST.MENU_ID = MN.MENU_ID
+		     AND ST.SYS_ID = #{sysId}
+		     AND TO_CHAR(ST.MENU_DE, 'YYYY') = #{menuYy}
+		GROUP BY MN.SYS_NM, MN.SYS_ID, MN.MENU_NM, MN.MENU_LEVEL, MN.UPPER_MENU_ID, MN.SORT_ORDR, TO_CHAR(ST.MENU_DE, 'YYYY'), TO_CHAR(ST.MENU_DE, 'MM'), ST.MENU_ID
+		ORDER BY TO_CHAR(ST.MENU_DE, 'MM'), MN.MENU_LEVEL, MN.SORT_ORDR
+	    ]]>
+    </select>
+    
+	<!-- 메뉴통계 리스트 (년) [sysId, menuYy] -->
+    <select id="st_menu.selectMenuYearSortCount" parameterType="egovMap" resultType="egovMap">
+	    <![CDATA[
+	    SELECT D.MENU_ID
+			,D.MENU_LEVEL
+			,D.MENU_NM
+			,D.UPPER_MENU_ID 
+			,NVL(B.JAN,0) JAN ,NVL(B.FEB,0) FEB ,NVL(B.MAR,0) MAR ,NVL(B.APR,0) APR ,NVL(B.MAY,0) MAY ,NVL(B.JUN,0) JUN ,NVL(B.JUL,0) JUL
+			,NVL(B.AUG,0) AUG ,NVL(B.SEP,0) SEP ,NVL(B.OCT,0) OCT ,NVL(B.NOV,0) NOV ,NVL(B.DEC,0) DEC ,NVL(B.TOTAL,0) TOTAL
+			,B.MENU_URL
+		 FROM DUAL,
+		(
+			SELECT MN.MENU_ID
+			,MN.MENU_LEVEL
+			,MN.MENU_NM
+			,MN.UPPER_MENU_ID 
+			FROM TAP_MN_MENU_MANAGE MN
+			WHERE MN.SYS_ID = #{sysId}     
+			AND USE_AT = 'Y'
+			ORDER BY MN.SORT_ORDR
+		) D
+		LEFT OUTER JOIN
+		(
+			SELECT MN.MENU_ID
+			,MN.MENU_LEVEL
+			,MN.MENU_NM
+			,MN.UPPER_MENU_ID
+			,SUM(CASE WHEN TO_CHAR(ST.MENU_DE, 'MM') = '01' THEN 1 ELSE 0 END) AS "JAN"
+			,SUM(CASE WHEN TO_CHAR(ST.MENU_DE, 'MM') = '02' THEN 1 ELSE 0 END) AS "FEB"
+			,SUM(CASE WHEN TO_CHAR(ST.MENU_DE, 'MM') = '03' THEN 1 ELSE 0 END) AS "MAR"
+			,SUM(CASE WHEN TO_CHAR(ST.MENU_DE, 'MM') = '04' THEN 1 ELSE 0 END) AS "APR"
+			,SUM(CASE WHEN TO_CHAR(ST.MENU_DE, 'MM') = '05' THEN 1 ELSE 0 END) AS "MAY"
+			,SUM(CASE WHEN TO_CHAR(ST.MENU_DE, 'MM') = '06' THEN 1 ELSE 0 END) AS "JUN"
+			,SUM(CASE WHEN TO_CHAR(ST.MENU_DE, 'MM') = '07' THEN 1 ELSE 0 END) AS "JUL"
+			,SUM(CASE WHEN TO_CHAR(ST.MENU_DE, 'MM') = '08' THEN 1 ELSE 0 END) AS "AUG"
+			,SUM(CASE WHEN TO_CHAR(ST.MENU_DE, 'MM') = '09' THEN 1 ELSE 0 END) AS "SEP"
+			,SUM(CASE WHEN TO_CHAR(ST.MENU_DE, 'MM') = '10' THEN 1 ELSE 0 END) AS "OCT"
+			,SUM(CASE WHEN TO_CHAR(ST.MENU_DE, 'MM') = '11' THEN 1 ELSE 0 END) AS "NOV"
+			,SUM(CASE WHEN TO_CHAR(ST.MENU_DE, 'MM') = '12' THEN 1 ELSE 0 END) AS "DEC"
+			,COUNT(*) AS "TOTAL"
+			,MN.MENU_URL
+			FROM TAP_ST_MENU_STATS ST, TAP_MN_MENU_MANAGE MN
+			WHERE ST.SYS_ID = MN.SYS_ID
+			AND ST.MENU_ID = MN.MENU_ID
+			AND ST.SYS_ID = #{sysId}     
+			AND TO_CHAR(ST.MENU_DE, 'YYYY') = #{menuYy}
+			GROUP BY MN.MENU_ID,MN.MENU_LEVEL, MN.MENU_NM, MN.UPPER_MENU_ID, MN.SORT_ORDR,MN.MENU_URL
+			ORDER BY MN.SORT_ORDR
+		) B ON D.MENU_ID = B.MENU_ID
+	    ]]>
+    </select>
+    
+	<!-- 메뉴통계 리스트 (년, 자세히) [sysId, menuYy, menuId] -->
+    <select id="st_menu.selectMenuDetailCount" parameterType="egovMap" resultType="egovMap">
+    	<include refid="selectMenuYearSort" />
+	    <![CDATA[
+			   WHERE ST.MENU_ID = MN.MENU_ID
+			     AND ST.SYS_ID = MN.SYS_ID
+			     AND ST.SYS_ID = #{sysId}     
+			     AND ST.MENU_ID = #{menuId}
+			     AND TO_CHAR(ST.MENU_DE, 'YYYY') = #{menuYy}
+			GROUP BY MN.MENU_ID,MN.MENU_LEVEL , MN.MENU_NM, MN.UPPER_MENU_ID
+	    ]]>
+    </select>       
+    
+	<!-- 메뉴통계 리스트 (기간) [sysId, menuYy, menuMm, menuDd] -->
+    <select id="st_menu.selectMenuPeriodCount" parameterType="egovMap" resultType="egovMap">
+		<include refid="selectMenuCountBase" />    
+		   WHERE ST.MENU_ID = MN.MENU_ID
+		     AND ST.SYS_ID = #{sysId}
+		     AND TO_CHAR(ST.MENU_DE, 'YYYY') = #{menuYy}
+		     AND TO_CHAR(ST.MENU_DE, 'MM') = #{menuMm}
+		     AND TO_CHAR(ST.MENU_DE, 'DD') = #{menuDd}
+		GROUP BY MN.SYS_NM, MN.SYS_ID, MN.MENU_NM, MN.MENU_LEVEL, MN.UPPER_MENU_ID, MN.SORT_ORDR, TO_CHAR(ST.MENU_DE, 'YYYY'), TO_CHAR(ST.MENU_DE, 'MM'), TO_CHAR(ST.MENU_DE, 'DD'), ST.MENU_ID
+		ORDER BY TO_CHAR(ST.MENU_DE, 'MM'), MN.MENU_LEVEL, MN.SORT_ORDR
+    </select>
+    
+	<!-- 메뉴 그룹 리스트 조회 -->
+    <select id="st_menu.selectMenuGrpCount" parameterType="egovMap" resultType="egovMap">
+		  SELECT MENU_NM
+		        ,MENU_ID
+		        ,MENU_LEVEL
+		        ,UPPER_MENU_ID
+		        ,SORT_ORDR        
+		    FROM TAP_MN_MENU_MANAGE
+		   WHERE SYS_ID = #{sysId}
+		     AND MENU_LEVEL = #{menuLevel}
+		GROUP BY MENU_NM, MENU_ID, MENU_LEVEL, UPPER_MENU_ID, SORT_ORDR
+		ORDER BY MENU_LEVEL, SORT_ORDR
+    </select>
+    
+    <!-- 검색 년도 조회  -->
+    <select id="st_menu.selectStatsYearList" resultType="egovMap">
+		  SELECT TO_CHAR(MENU_DE, 'YYYY') MENU_YY 
+		    FROM TAP_ST_MENU_STATS 
+		GROUP BY TO_CHAR(MENU_DE, 'YYYY')
+		ORDER BY MENU_YY DESC
+    </select>
+    
+    <!-- 메뉴접속통계등록 -->
+    <insert id="insertMenuStatInfo" parameterType="map">
+    	INSERT INTO TAP_ST_MENU_STATS (
+		    MENU_SEQ
+			,MENU_DE
+			,MENU_ID
+			,SYS_ID
+    	) VALUES (
+    		SEQ_MENU_SEQ.NEXTVAL
+    		,SYSDATE
+    		,#{menuId}
+    		,#{sysId}
+    	)
+    </insert>
+    
+    <!-- 메뉴 총관리자 리스트 +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ -->
+    <!-- 메뉴 시스템 리스트 통계 sql -->
+    <sql id="selectMenuTotalState">
+		SELECT COUNT(mn.MENU_ID) 
+		FROM TAP_MN_MENU_MANAGE MN
+		WHERE MN.SYS_ID= SM.SYS_ID
+		AND MN.USE_AT = 'Y'
+	</sql>
+	
+	<sql id="selectMenuState">
+		SELECT COUNT(*) AS CNT
+		FROM TAP_ST_MENU_STATS ST, TAP_MN_MENU_MANAGE MN
+		WHERE ST.MENU_ID = MN.MENU_ID
+		AND ST.SYS_ID= SM.SYS_ID
+		AND MN.USE_AT = 'Y'
+	</sql>
+	
+	<!-- 메뉴 시스템 리스트 sql -->
+	<sql id="selectMenuSmList">
+		SELECT 
+		       ROW_NUMBER() OVER(ORDER BY IT.INSTT_CODE, IT.INSTT_LEVEL DESC) AS RSN,
+		       IT.INSTT_CODE
+	          ,IT.INSTT_NM
+	          ,IT.INSTT_TY
+	          ,SM.SYS_ID
+			  ,SM.SYS_NM 
+			  ,( <include refid="selectMenuTotalState" /> ) AS M_CNT
+			  ,(SELECT COUNT(MN.MENU_ID) FROM TAP_MN_MENU_MANAGE MN WHERE MN.SYS_ID = SM.SYS_ID) AS TOTAL_CNT                                                                
+			  ,( <include refid="selectMenuState" /> AND TO_CHAR(MENU_DE,'YYYY/MM') = to_char(add_months(SYSDATE,-1),'YYYY/MM')) AS L_MONTH
+			  ,( <include refid="selectMenuState" /> AND TO_CHAR(MENU_DE,'YYYY/MM') = TO_CHAR(SYSDATE,'YYYY/MM')) AS T_MONTH
+			  ,( <include refid="selectMenuState" /> AND TO_CHAR(MENU_DE, 'YYYY/MM/DD') =TO_CHAR(SYSDATE, 'YYYY/MM/DD')) AS T_CNT
+			  FROM TAP_IM_INSTT_MANAGE IT, TAP_SM_SYS_MANAGE SM 
+			  WHERE IT.INSTT_CODE = SM.INSTT_CODE
+			  AND SM.SYS_STTUS = 'O'
+			
+			<if test='@egovframework.MybatisUtils@isEmpty(author) || author != "master"'>
+	         AND SM.SYS_ID NOT IN ('apple')
+	        </if>
+	        
+	        <if test="@egovframework.MybatisUtils@isNotEmpty(mberId)">
+		      AND SM.SYS_ID IN (
+					SELECT SYS_ID
+					  FROM TAP_AU_AUTHOR_MBER 
+					 WHERE MBER_ID = #{mberId}
+						   AND SYS_ID != 'apple'
+					   AND AUTHOR_CODE IN (1,2)	
+	        	)
+		     </if>
+		     
+	        <if test="@egovframework.MybatisUtils@isNotEmpty(insttCode)">
+		     AND   ( IT.INSTT_CODE =  #{insttCode}
+		     
+	                    OR  IT.UPPER_INSTT_CODE = #{upperInsttCode}
+	                    OR  IT.BSIS_INSTT_CODE = #{bsisInsttCode}
+	                    
+	               	)
+	         </if>
+	         
+		     <if test="@egovframework.MybatisUtils@isNotEmpty(insttGrad)">
+		     AND   ( IT.INSTT_GRAD IS NULL
+		     
+		     		 <if test="@egovframework.MybatisUtils@isNotEmpty(dtnt)">
+		                OR IT.INSTT_GRAD = #{dtnt}
+		             </if>
+		             <if test="@egovframework.MybatisUtils@isNotEmpty(elesch)">
+		                OR IT.INSTT_GRAD = #{elesch}
+		             </if>
+		             <if test="@egovframework.MybatisUtils@isNotEmpty(mskul)">    
+		                OR IT.INSTT_GRAD = #{mskul}
+		             </if> 
+		             <if test="@egovframework.MybatisUtils@isNotEmpty(hgschl)">
+		                OR IT.INSTT_GRAD = #{hgschl}
+		             </if>
+		             <if test="@egovframework.MybatisUtils@isNotEmpty(kndrgr)">     
+		                OR IT.INSTT_GRAD = #{kndrgr}
+		             </if>
+		             <if test="@egovframework.MybatisUtils@isNotEmpty(spcl)">
+		                OR IT.INSTT_GRAD = #{spcl}
+		             </if>
+		             
+		           )
+		     </if>
+		     
+		     <if test="@egovframework.MybatisUtils@isNotEmpty(sysTy)">
+		      AND   SM.SYS_TY = #{sysTy}
+		     </if>
+		     
+		     <if test="@egovframework.MybatisUtils@isNotEmpty(srchTxt)">
+		       AND  (  		 
+       				 SM.SYS_NM like '%'||#{srchTxt}||'%'
+              	  OR SM.SYS_TY like '%'||#{srchTxt}||'%' 
+		              	 
+		       )
+		    </if>
+			 
+			 ORDER BY   IT.INSTT_CODE, IT.INSTT_LEVEL DESC
+	</sql>
+	
+	<!-- 메뉴 시스템 리스트 -->
+	<select id="selectMenuSmList" parameterType="map" resultType="egovMap">
+		<include refid="selectMenuSmList"/>
+	</select>
+	
+	<!-- 메뉴 시스템 페이징 -->
+	<select id="selectMenuSmListPaging" parameterType="map" resultType="egovMap">
+		SELECT
+    		PL.*
+    	FROM (
+        	SELECT 
+        		PO.*
+<!--         		,rownum as rsn -->
+			FROM (
+	    		<include refid="selectMenuSmList" /> 
+				) PO
+		) PL
+		WHERE
+		<![CDATA[
+			rsn <= #{maxSn} 
+			AND rsn > #{minSn}
+		]]>
+	</select>
+	
+	<!-- 메뉴 시스템 페이징 카운트 -->
+	<select id="selectMenuSmListPagingCount" parameterType="map" resultType="int">
+		SELECT 
+			COUNT(*)
+			FROM TAP_IM_INSTT_MANAGE IT, TAP_SM_SYS_MANAGE SM 
+			  WHERE IT.INSTT_CODE = SM.INSTT_CODE
+			  AND SM.SYS_STTUS = 'O'
+			
+			<if test='@egovframework.MybatisUtils@isEmpty(author) || author != "master"'>
+	         AND SM.SYS_ID NOT IN ('apple')
+	        </if>
+	        
+	        <if test="@egovframework.MybatisUtils@isNotEmpty(insttCode)">
+		     AND   ( IT.INSTT_CODE =  #{insttCode}
+		     
+	                    OR  IT.UPPER_INSTT_CODE = #{upperInsttCode}
+	                    OR  IT.BSIS_INSTT_CODE = #{bsisInsttCode}
+	                    
+	               	)
+	         </if>
+	         
+		     <if test="@egovframework.MybatisUtils@isNotEmpty(insttGrad)">
+		     AND   ( IT.INSTT_GRAD IS NULL
+		     
+		     		 <if test="@egovframework.MybatisUtils@isNotEmpty(dtnt)">
+		                OR IT.INSTT_GRAD = #{dtnt}
+		             </if>
+		             <if test="@egovframework.MybatisUtils@isNotEmpty(elesch)">
+		                OR IT.INSTT_GRAD = #{elesch}
+		             </if>
+		             <if test="@egovframework.MybatisUtils@isNotEmpty(mskul)">    
+		                OR IT.INSTT_GRAD = #{mskul}
+		             </if> 
+		             <if test="@egovframework.MybatisUtils@isNotEmpty(hgschl)">
+		                OR IT.INSTT_GRAD = #{hgschl}
+		             </if>
+		             <if test="@egovframework.MybatisUtils@isNotEmpty(kndrgr)">     
+		                OR IT.INSTT_GRAD = #{kndrgr}
+		             </if>
+		             <if test="@egovframework.MybatisUtils@isNotEmpty(spcl)">
+		                OR IT.INSTT_GRAD = #{spcl}
+		             </if>
+		             
+		           )
+		     </if>
+	        
+	        <if test="@egovframework.MybatisUtils@isNotEmpty(mberId)">
+		      AND SM.SYS_ID IN (
+					SELECT SYS_ID
+					  FROM TAP_AU_AUTHOR_MBER 
+					 WHERE MBER_ID = #{mberId}
+						   AND SYS_ID != 'apple'
+					   AND AUTHOR_CODE IN (1,2)	
+	        	)
+		     </if>
+		     
+		     <if test="@egovframework.MybatisUtils@isNotEmpty(sysTy)">
+		      AND   SM.SYS_TY = #{sysTy}
+		     </if>
+		     
+		     <if test="@egovframework.MybatisUtils@isNotEmpty(srchTxt)">
+		       AND  (  		 
+       				 SM.SYS_NM like '%'||#{srchTxt}||'%'
+              	  OR SM.SYS_TY like '%'||#{srchTxt}||'%' 
+		              	 
+		       )
+		    </if>
+			 
+			 ORDER BY   IT.INSTT_CODE, IT.INSTT_LEVEL DESC
+	</select>
+    <!-- 메뉴 총관리자 리스트 +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ -->
+        
+</mapper>
